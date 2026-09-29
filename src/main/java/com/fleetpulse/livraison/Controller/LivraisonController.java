@@ -36,6 +36,13 @@ public class LivraisonController {
         }
     }
 
+    // US-06 : le client suit les commandes qu'il a creees
+    @GetMapping("/mes")
+    @PreAuthorize("hasRole('CLIENT')")
+    public List<LivraisonResponse> mesLivraisons(Authentication authentication) {
+        return livraisonService.listForClient(authentication.getName());
+    }
+
     // US-07
     @GetMapping
     @PreAuthorize("hasRole('RESPONSABLE')")

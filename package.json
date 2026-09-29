@@ -1,0 +1,10 @@
+{
+  "name": "fleetpulse",
+  "private": true,
+  "workspaces": ["mobile-client", "mobile-livreur", "packages/*"],
+  "scripts": {
+    "client": "npm run start -w mobile-client",
+    "livreur": "npm run start -w mobile-livreur",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

@@ -51,6 +51,12 @@ public class LivraisonService {
                 .map(LivraisonResponse::from).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<LivraisonResponse> listForClient(String clientEmail) {
+        return livraisonRepository.findAllByClientEmailOrderByDateCreationDesc(clientEmail).stream()
+                .map(LivraisonResponse::from).toList();
+    }
+
     private void validate(CreateLivraisonRequest request) {
         if (request == null || request.adresse() == null || request.adresse().isBlank()
                 || !validCoordinates(request.latitude(), request.longitude())

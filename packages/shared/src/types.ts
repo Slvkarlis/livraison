@@ -1,0 +1,74 @@
+// Miroir des DTO du backend (package com.fleetpulse.livraison.Dto).
+
+export type Role = 'CLIENT' | 'LIVREUR' | 'RESPONSABLE';
+
+export type StatutLivraison =
+  | 'EN_PREPARATION'
+  | 'AFFECTEE'
+  | 'EN_COURS'
+  | 'A_PROXIMITE'
+  | 'ARRIVEE'
+  | 'LIVREE'
+  | 'ECHEC'
+  | 'RETOURNEE';
+
+export type ModePaiement = 'COD';
+
+export interface Vehicule {
+  id: number;
+  immatriculation: string;
+  type: string | null;
+  capaciteKg: number | null;
+  consommationLitres100Km: number;
+  actif: boolean;
+  livreurId: number | null;
+}
+
+export interface Profil {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string | null;
+  role: Role;
+  vehicule: Vehicule | null;
+}
+
+export interface Livraison {
+  id: number;
+  codeSuivi: string;
+  clientEmail: string;
+  adresse: string;
+  latitude: number;
+  longitude: number;
+  creneauDebut: string;
+  creneauFin: string;
+  modePaiement: ModePaiement;
+  montantACollecter: number;
+  statut: StatutLivraison;
+  dateCreation: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  type: string;
+  expiresInMs: number;
+}
+
+export interface SignupRequest {
+  nom: string;
+  prenom: string;
+  email: string;
+  motDePasse: string;
+  telephone?: string;
+}
+
+export interface CreateLivraisonRequest {
+  adresse: string;
+  latitude: number;
+  longitude: number;
+  creneauDebut: string;
+  creneauFin: string;
+  modePaiement: ModePaiement;
+  montantACollecter: number;
+}

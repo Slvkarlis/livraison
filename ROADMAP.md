@@ -6,7 +6,18 @@
 
 ---
 
-## 0. Current state (end of session 2026-09-28)
+## 0. Current state (end of session 2026-09-29)
+
+**Session 2026-09-29 — mobile apps (sprint 1 scope):**
+- Git repo initialised (`main`). npm workspaces at the root: `mobile-client/`, `mobile-livreur/`, `packages/shared/` (Expo SDK 57, Expo Router, TypeScript). See `README.md` for how to run.
+- Backend **not moved** to `backend/` yet: VS Code's Java language server locks `src/`. Do it with the editor closed (`git mv src pom.xml mvnw mvnw.cmd .mvn backend/`).
+- Backend additions: `GET /api/me` (profile + role + livreur's vehicle), `GET /api/livraisons/mes` (client's orders), 401 (not 403) when the JWT is missing/invalid.
+- Client app: login, signup, orders list with status chips, new order (map pin / "Utiliser ma position" + reverse geocoding, 2 h slots, COD, amount), order detail with map.
+- Livreur app: login (LIVREUR accounts only), home with assigned vehicle + profile, pull to refresh.
+- Checks: typecheck + ESLint + `expo export` (Android bundle) + expo-doctor pass for both apps; `scripts/e2e_mobile_api.py` 20/20 against a scratch DB (`livraison_e2e`, can be dropped). **Not yet tried on a real phone with Expo Go.**
+
+**End of session 2026-09-28:**
+
 
 - Backend = **sprint 1 only** (US-01 … US-07), Spring Boot 4.1 / Java 17 / MySQL, JWT auth, port `8083`.
   - Roles: `CLIENT`, `LIVREUR`, `RESPONSABLE`. Public signup creates clients only; admin seeded at startup (`admin@fleetpulse.tn` / `admin12345`).
@@ -15,7 +26,7 @@
 - **Reusable code backed up** in `C:\Users\user\Downloads\livraison_backup_avant_sprint1\`:
   Glovo-style pricing (`TarificationService` + unit tests), driver offers (`DispatchService`, `OffreLivraison`, accept/refuse/expire),
   GPS positions (`PositionGps`), SSE notifications. Reuse instead of rewriting.
-- Not a git repo yet → **first action of next session: `git init` + initial commit.**
+- ~~Not a git repo yet~~ → done 2026-09-29.
 - Stripe: **later**, not in this roadmap's scope (keep `ModePaiement` extensible: `COD`, later `CARTE`).
 
 ---
@@ -80,7 +91,7 @@ Every transition goes through **one** method (`LivraisonWorkflow.transition(livr
 | `OffreLivraison` | restore from backup (offer to one livreur, expires) |
 | `Message` (chat) | `livraison`, `auteur`, `contenu`, `dateEnvoi`, `lu` |
 | `DevicePushToken` | `utilisateur`, `expoToken`, `plateforme` |
-| `Livraison` additions | `adresseRecuperation` + lat/lng (pickup point), `routePolyline`, `livreur`, `vehicule`, `dateRecuperation`, `dateLivraison` |
+| `Livraison` additions | (pickup = single depot from config, no per-order field), `routePolyline`, `livreur`, `vehicule`, `dateRecuperation`, `dateLivraison` |
 
 ### Vehicle auto-assignment on shift booking
 When a livreur books a `Creneau`: pick an **active** vehicle **not already assigned** to an overlapping `AffectationCreneau`
@@ -98,13 +109,15 @@ Only livreurs `PRESENT` on the current shift receive order notifications.
 Each phase ends with: backend tests passing, a scripted end-to-end check (like `sprint1.py` used before), and a short demo note.
 
 ### Phase A — Foundation
-- [ ] `git init`, move backend to `backend/`, create monorepo folders, root README with how to run everything
+- [x] `git init`, create monorepo folders (npm workspaces), root README with how to run everything
+- [ ] Move backend to `backend/` (blocked by the IDE lock on 2026-09-29)
 - [ ] Enum → VARCHAR fix + Flyway (baseline from current schema)
 - [ ] Global exception handler (`@RestControllerAdvice`) returning `{code, message}` JSON — all front-ends rely on it
-- [ ] CORS config for the web app + Expo dev
-- [ ] `GET /api/me` (profile + role) for all apps
+- [ ] CORS config for the web app (not needed for native Expo apps)
+- [x] `GET /api/me` (profile + role + livreur vehicle) for all apps
 - [ ] WebSocket STOMP endpoint `/ws` with JWT auth on CONNECT (token in STOMP header), user destinations `/user/queue/...`
-- [ ] `packages/shared`: API types generated or hand-written from DTOs, axios client with token, status labels/colors, `geo.ts`
+- [x] `packages/shared`: hand-written API types, fetch client with token, JWT session (SecureStore), status labels/colors, UI kit
+- [ ] `packages/shared/geo.ts` + unit test (with phase D)
 
 ### Phase B — Shifts & vehicles (livreur)
 - [ ] `Creneau` + `AffectationCreneau` entities, responsable CRUD for shifts (`/api/admin/creneaux`)
@@ -113,10 +126,10 @@ Each phase ends with: backend tests passing, a scripted end-to-end check (like `
 - [ ] Tests: vehicle picked by availability, no double booking of a car, presence window
 
 ### Phase C — Order lifecycle, dispatch & notifications (backend)
-- [ ] Pickup point on orders; `LivraisonWorkflow` state machine + `HistoriqueStatut`
+- [ ] Single depot pickup point (config `app.depot.*`); `LivraisonWorkflow` state machine + `HistoriqueStatut`
 - [ ] Order becomes `PRETE`: responsable action `PUT /api/admin/livraisons/{id}/prete` (+ demo mode: auto-ready N seconds after creation, configurable)
 - [ ] Dispatch when `PRETE`: restore `DispatchService`/`OffreLivraison`/`TarificationService` from backup, candidates = livreurs `PRESENT` on the current shift with their shift car
-- [ ] Manual assignment by responsable: `PUT /api/admin/livraisons/{id}/livreur/{livreurId}` (sends the same notification, livreur still accepts/refuses — confirm with user)
+- [ ] Manual assignment by responsable: `PUT /api/admin/livraisons/{id}/livreur/{livreurId}` (imposed: livreur is notified and cannot refuse — confirmed 2026-09-29)
 - [ ] Notifications: WebSocket `/user/queue/offres` + Expo push when app in background (`DevicePushToken` registration endpoint)
 - [ ] Livreur actions: accept / refuse offer, `POST .../recuperation` (validate pickup — scan code or button), `POST .../incident` (→ `ECHEC_RECUPERATION`, notifies responsable), `POST .../livree`, `POST .../echec`
 - [ ] Tests for every allowed and forbidden transition
@@ -129,7 +142,8 @@ Each phase ends with: backend tests passing, a scripted end-to-end check (like `
 
 ### Phase E — Mobile livreur app (React Native / Expo)
 Screens (bottom tabs: **Planning · Courses · Profil**):
-- [ ] Login
+- [x] Login
+- [x] Sprint 1 home: assigned vehicle + profile (becomes the Profil tab when Planning/Courses exist)
 - [ ] Planning: week view of shifts, book/cancel, shows assigned car
 - [ ] Current shift card: "Marquer ma présence" button (asks location permission)
 - [ ] Offer modal (push + in-app): pickup/drop-off, distance, earnings, countdown, Accept / Refuse
@@ -139,9 +153,11 @@ Screens (bottom tabs: **Planning · Courses · Profil**):
 
 ### Phase F — Mobile client app (React Native / Expo)
 Screens (bottom tabs: **Commandes · Profil**):
-- [ ] Signup / Login
+- [x] Signup / Login
 - [ ] "Générer une commande" button → `POST /api/client/livraisons/faker` (Datafaker: random products, amount, address around Tunis with valid GPS, slot in the next 2 h)
-- [ ] Orders list with colored status chips
+- [x] Orders list with colored status chips
+- [x] New order form (sprint 1 US-05/06): map pin or current position + reverse geocoding, 2 h slot chips, COD, amount
+- [x] Order detail: info + static map (timeline/live map come with phases C/D)
 - [ ] Order detail: status timeline (from `HistoriqueStatut`), live map (livreur marker + polyline), live updates over WebSocket
 - [ ] Chat with the livreur (if time allows — see phase H)
 
@@ -171,7 +187,17 @@ Layout: left sidebar (**Carte · Commandes · Livreurs · Véhicules · Créneau
 
 ---
 
-## 4. Open questions to confirm with the user at the start of next session
+## 4. Open questions
+
+**Answered 2026-09-29:**
+1. "Prête": **responsable action + configurable demo auto-ready**.
+2. Manual assignment by the responsable is **imposed** — the livreur cannot refuse (only report an incident).
+3. Shift rules: not answered → default 4 h slots, cancel ≥ 2 h before; confirm when phase B starts.
+4. Pickup: **single depot** (address + GPS in config) — drop per-order `adresseRecuperation`.
+5. French only (assumed).
+6. User asked to build the React Native apps now; they were built on the sprint 1 API only. Before phases B–D, ask again whether sprint 2+ US must be written first.
+
+**Original questions:**
 1. Who marks an order **"prête"** — the responsable, or automatic after a preparation delay (demo mode)?
 2. When the responsable **assigns** an order manually, can the livreur still refuse it?
 3. Shift length and booking rules (e.g. 4 h slots, max per week, cancellation deadline)?
