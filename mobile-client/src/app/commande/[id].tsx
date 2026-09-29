@@ -1,10 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {
+  Bouton,
   Chargement,
   Ligne,
-  MODES_PAIEMENT,
   MessageErreur,
   PastilleStatut,
+  STATUTS_PAIEMENT,
   api,
   formatCreneau,
   formatDistance,
@@ -15,14 +16,17 @@ import {
 } from '@fleetpulse/shared';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { CarteLeaflet } from '../../composants/CarteLeaflet';
+import { payerCommande } from '../../paiement';
 import { theme } from '../../theme';
 
 export default function DetailCommande() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, message } = useLocalSearchParams<{ id: string; message?: string }>();
   const [livraison, setLivraison] = useState<Livraison | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [avis, setAvis] = useState<string | null>(message ?? null);
+  const [paiement, setPaiement] = useState(false);
 
   useEffect(() => {
     api.mesLivraisons()
@@ -40,22 +44,26 @@ export default function DetailCommande() {
   const position = { latitude: livraison.latitude, longitude: livraison.longitude };
   const creee = new Date(livraison.dateCreation);
   const immediate = livraison.typeLivraison === 'IMMEDIATE';
+  const carte = livraison.modePaiement === 'CARTE';
+  const statutPaiement = STATUTS_PAIEMENT[livraison.statutPaiement ?? 'A_LA_LIVRAISON'];
+  const aPayer = carte && livraison.statutPaiement !== 'PAYE';
+
+  async function payer() {
+    if (!livraison) return;
+    setPaiement(true);
+    setAvis(null);
+    const resultat = await payerCommande(livraison);
+    if (resultat.etat === 'paye') setLivraison(resultat.livraison);
+    else if (resultat.etat === 'erreur') setAvis(resultat.message);
+    setPaiement(false);
+  }
 
   return (
     <ScrollView style={styles.page} bounces={false}>
-      {/* Carte pleine largeur, sans arrondi : en mode "lite" sur Android (image statique fiable dans un ScrollView). */}
-      <MapView
-        style={styles.carteGeo}
-        liteMode={Platform.OS === 'android'}
-        initialRegion={{ ...position, latitudeDelta: 0.008, longitudeDelta: 0.008 }}
-        scrollEnabled={false}
-        zoomEnabled={false}
-        rotateEnabled={false}
-        pitchEnabled={false}
-        toolbarEnabled={false}
-      >
-        <Marker coordinate={position} pinColor={theme.accent} />
-      </MapView>
+      {/* Apercu fige : les gestes vont au defilement de la page, pas a la carte. */}
+      <View pointerEvents="none">
+        <CarteLeaflet style={styles.carteGeo} centre={position} zoom={16} interactive={false} marqueur />
+      </View>
 
       <View style={styles.feuille}>
         <PastilleStatut statut={livraison.statut} />
@@ -76,15 +84,35 @@ export default function DetailCommande() {
         <View style={styles.bloc}>
           <Ligne
             libelle={`Livraison${livraison.distanceKm ? ` (${formatDistance(livraison.distanceKm)})` : ''}`}
-            valeur={formatMontant(livraison.fraisLivraison || livraison.montantACollecter)}
+            valeur={formatMontant(livraison.fraisLivraison || livraison.montantTotal)}
           />
           {livraison.supplementImmediat > 0 ? (
             <Ligne libelle="Supplément immédiat" valeur={`+${formatMontant(livraison.supplementImmediat)}`} />
           ) : null}
           <View style={styles.separateur} />
-          <Ligne libelle="Total à payer" valeur={formatMontant(livraison.montantACollecter)} fort />
-          <Text style={styles.note}>{MODES_PAIEMENT[livraison.modePaiement]}, en espèces au livreur.</Text>
+          <Ligne libelle="Total" valeur={formatMontant(livraison.montantTotal)} fort />
+          <View style={styles.statutPaiement}>
+            <Ionicons
+              name={carte ? 'card' : 'cash'}
+              size={16}
+              color={statutPaiement.couleur}
+            />
+            <Text style={[styles.statutPaiementTexte, { color: statutPaiement.couleur }]}>
+              {statutPaiement.libelle}
+            </Text>
+          </View>
         </View>
+
+        {avis ? <View style={styles.avis}><MessageErreur message={avis} /></View> : null}
+        {aPayer ? (
+          <Bouton
+            titre={`Payer maintenant · ${formatMontant(livraison.montantTotal)}`}
+            onPress={payer}
+            chargement={paiement}
+            icone={<Ionicons name="card" size={18} color={theme.surAccent} />}
+            style={styles.payer}
+          />
+        ) : null}
 
         <Text style={styles.creee}>Commandée {formatJour(creee).toLowerCase()} à {formatHeure(creee)}</Text>
       </View>
@@ -95,7 +123,7 @@ export default function DetailCommande() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.surface },
   erreur: { flex: 1, padding: 20, paddingTop: 120, backgroundColor: theme.fond },
-  carteGeo: { height: 300, backgroundColor: theme.fond },
+  carteGeo: { height: 300 },
   feuille: {
     backgroundColor: theme.surface,
     borderTopLeftRadius: 28,
@@ -129,6 +157,9 @@ const styles = StyleSheet.create({
   section: { fontSize: 17, fontWeight: '700', color: theme.texte, marginTop: 22, marginBottom: 4 },
   bloc: { backgroundColor: theme.fond, borderRadius: 18, padding: 14 },
   separateur: { height: 1, backgroundColor: theme.bordure, marginVertical: 6 },
-  note: { fontSize: 13, color: theme.secondaire, marginTop: 6 },
+  statutPaiement: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  statutPaiementTexte: { fontSize: 14, fontWeight: '600' },
+  avis: { marginTop: 14 },
+  payer: { marginTop: 14 },
   creee: { fontSize: 13, color: theme.secondaire, textAlign: 'center', marginTop: 20 },
 });

@@ -12,7 +12,9 @@ export type StatutLivraison =
   | 'ECHEC'
   | 'RETOURNEE';
 
-export type ModePaiement = 'COD';
+export type ModePaiement = 'COD' | 'CARTE';
+
+export type StatutPaiement = 'A_LA_LIVRAISON' | 'EN_ATTENTE' | 'PAYE' | 'ECHOUE';
 
 export type TypeLivraison = 'IMMEDIATE' | 'PLANIFIEE';
 
@@ -47,9 +49,13 @@ export interface Livraison {
   creneauFin: string;
   typeLivraison: TypeLivraison;
   modePaiement: ModePaiement;
+  statutPaiement: StatutPaiement | null;
   distanceKm: number;
   fraisLivraison: number;
   supplementImmediat: number;
+  /** Prix de la livraison (frais + supplement). */
+  montantTotal: number;
+  /** A remettre au livreur : 0 si deja paye par carte. */
   montantACollecter: number;
   statut: StatutLivraison;
   dateCreation: string;
@@ -94,4 +100,17 @@ export interface Devis {
   supplementImmediat: number;
   total: number;
   delaiImmediatMinutes: number;
+}
+
+export interface PaiementConfig {
+  carteDisponible: boolean;
+  clePublique: string | null;
+  devise: string;
+}
+
+export interface Paiement {
+  clientSecret: string | null;
+  montant: number;
+  devise: string;
+  dejaPaye: boolean;
 }

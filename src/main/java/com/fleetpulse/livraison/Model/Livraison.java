@@ -15,7 +15,12 @@ public class Livraison {
     @Column(nullable = false) private Instant creneauDebut;
     @Column(nullable = false) private Instant creneauFin;
     @Enumerated(EnumType.STRING) private StatutLivraison statut = StatutLivraison.EN_PREPARATION;
-    @Enumerated(EnumType.STRING) private ModePaiement modePaiement = ModePaiement.COD;
+    // varchar et non ENUM MySQL : ddl-auto=update n'ajoute jamais de nouvelle valeur a un ENUM
+    @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(20)")
+    private ModePaiement modePaiement = ModePaiement.COD;
+    @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(20)")
+    private StatutPaiement statutPaiement = StatutPaiement.A_LA_LIVRAISON;
+    private String stripePaymentIntentId;
     @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(20)")
     private TypeLivraison typeLivraison = TypeLivraison.PLANIFIEE;
     private double distanceKm;             // depot -> adresse, calculee par le systeme

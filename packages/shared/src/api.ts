@@ -5,6 +5,8 @@ import type {
   DevisRequest,
   Livraison,
   LoginResponse,
+  Paiement,
+  PaiementConfig,
   Profil,
   SignupRequest,
 } from './types';
@@ -97,4 +99,11 @@ export const api = {
   devis: (data: DevisRequest) => request<Devis>('POST', '/api/livraisons/devis', data),
 
   creerLivraison: (data: CreateLivraisonRequest) => request<Livraison>('POST', '/api/livraisons', data),
+
+  paiementConfig: () => request<PaiementConfig>('GET', '/api/paiements/config'),
+
+  demarrerPaiement: (livraisonId: number) => request<Paiement>('POST', `/api/livraisons/${livraisonId}/paiement`),
+
+  verifierPaiement: (livraisonId: number) =>
+    request<Livraison>('POST', `/api/livraisons/${livraisonId}/paiement/verifier`),
 };

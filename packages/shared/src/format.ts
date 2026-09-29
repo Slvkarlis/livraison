@@ -11,7 +11,14 @@ export const STATUTS: Record<StatutLivraison, { libelle: string; couleur: string
   RETOURNEE: { libelle: 'Retournée', couleur: '#4B5563', fond: '#F3F4F6' },
 };
 
-export const MODES_PAIEMENT = { COD: 'Paiement à la livraison' } as const;
+export const MODES_PAIEMENT = { COD: 'Paiement à la livraison', CARTE: 'Carte bancaire' } as const;
+
+export const STATUTS_PAIEMENT = {
+  A_LA_LIVRAISON: { libelle: 'À régler au livreur', couleur: '#6E6B85' },
+  EN_ATTENTE: { libelle: 'Paiement en attente', couleur: '#B45309' },
+  PAYE: { libelle: 'Payée par carte', couleur: '#16A34A' },
+  ECHOUE: { libelle: 'Paiement échoué', couleur: '#C2410C' },
+} as const;
 
 export const TYPES_LIVRAISON = { IMMEDIATE: 'Immédiate', PLANIFIEE: 'Créneau planifié' } as const;
 

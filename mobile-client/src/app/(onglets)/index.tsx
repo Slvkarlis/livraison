@@ -97,14 +97,18 @@ function CarteCommande({ livraison }: { livraison: Livraison }) {
       <View style={styles.carteCorps}>
         <View style={styles.carteEntete}>
           <Text style={styles.adresse} numberOfLines={1}>{livraison.adresse}</Text>
-          <Text style={styles.montant}>{formatMontant(livraison.montantACollecter)}</Text>
+          <Text style={styles.montant}>{formatMontant(livraison.montantTotal)}</Text>
         </View>
         <Text style={styles.creneau}>
           {immediate ? 'Immédiate · ' : ''}{formatCreneau(livraison.creneauDebut, livraison.creneauFin)}
         </Text>
         <View style={styles.cartePied}>
           <PastilleStatut statut={livraison.statut} />
-          <Text style={styles.code}>{livraison.codeSuivi}</Text>
+          {livraison.modePaiement === 'CARTE' && livraison.statutPaiement !== 'PAYE' ? (
+            <Text style={styles.aPayer}>À payer</Text>
+          ) : (
+            <Text style={styles.code}>{livraison.codeSuivi}</Text>
+          )}
         </View>
       </View>
     </Pressable>
@@ -172,4 +176,5 @@ const styles = StyleSheet.create({
   creneau: { fontSize: 14, color: theme.secondaire },
   cartePied: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   code: { fontSize: 12, color: theme.secondaire, letterSpacing: 0.3 },
+  aPayer: { fontSize: 13, fontWeight: '700', color: '#B45309' },
 });

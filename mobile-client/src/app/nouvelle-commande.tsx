@@ -10,13 +10,15 @@ import {
   formatJour,
   formatMontant,
   type Devis,
+  type ModePaiement,
   type TypeLivraison,
 } from '@fleetpulse/shared';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdresseChoisie } from '../brouillon';
+import { payerCommande, usePaiementConfig } from '../paiement';
 import { theme } from '../theme';
 
 type Creneau = { debut: Date; fin: Date };
@@ -51,6 +53,9 @@ export default function NouvelleCommande() {
   const adresse = useAdresseChoisie();
   const creneaux = useMemo(() => prochainsCreneaux(), []);
   const [type, setType] = useState<TypeLivraison | null>(null);
+  const [mode, setMode] = useState<ModePaiement | null>(null);
+  const paiementConfig = usePaiementConfig();
+  const carteDisponible = paiementConfig?.carteDisponible === true;
   const [creneau, setCreneau] = useState<Creneau | null>(null);
   const [resultatDevis, setResultatDevis] =
     useState<{ cle: string; devis: Devis | null; erreur: string | null } | null>(null);
@@ -83,6 +88,7 @@ export default function NouvelleCommande() {
   const verifications = [
     { libelle: 'Adresse de livraison', ok: adresse !== null },
     { libelle: 'Moment de livraison', ok: type === 'IMMEDIATE' || (type === 'PLANIFIEE' && creneau !== null) },
+    { libelle: 'Mode de paiement', ok: mode !== null },
     { libelle: 'Prix calculé', ok: devis !== null },
   ];
   const pret = verifications.every((v) => v.ok);
@@ -92,7 +98,7 @@ export default function NouvelleCommande() {
     : creneau ? `${formatJour(creneau.debut)}, ${formatHeure(creneau.debut)} – ${formatHeure(creneau.fin)}` : '';
 
   async function commander() {
-    if (!adresse || !type) return;
+    if (!adresse || !type || !mode) return;
     setErreur(null);
     setEnvoi(true);
     try {
@@ -103,9 +109,17 @@ export default function NouvelleCommande() {
         typeLivraison: type,
         creneauDebut: type === 'PLANIFIEE' ? creneau?.debut.toISOString() : undefined,
         creneauFin: type === 'PLANIFIEE' ? creneau?.fin.toISOString() : undefined,
-        modePaiement: 'COD',
+        modePaiement: mode,
       });
       setConfirmation(false);
+      if (mode === 'CARTE') {
+        // La commande existe deja : quoi qu'il arrive on ouvre son suivi (paiement relancable depuis le detail).
+        const resultat = await payerCommande(livraison);
+        const message = resultat.etat === 'annule' ? 'Paiement annulé : vous pouvez payer depuis cette page.'
+          : resultat.etat === 'erreur' ? resultat.message : undefined;
+        router.replace({ pathname: '/commande/[id]', params: { id: livraison.id, message } });
+        return;
+      }
       router.replace(`/commande/${livraison.id}`);
     } catch (e) {
       setErreur(e instanceof Error ? e.message : 'Commande impossible.');
@@ -191,16 +205,27 @@ export default function NouvelleCommande() {
         </Section>
 
         <Section numero={3} titre="Paiement">
-          <View style={[styles.option, styles.optionActive]}>
-            <View style={styles.pastilleIcone}>
-              <Ionicons name="cash" size={20} color={theme.accent} />
-            </View>
-            <View style={styles.flex}>
-              <Text style={styles.optionTitre}>{MODES_PAIEMENT.COD}</Text>
-              <Text style={styles.optionTexte}>En espèces, remis au livreur</Text>
-            </View>
-            <Ionicons name="checkmark-circle" size={22} color={theme.accent} />
-          </View>
+          <OptionMoment
+            actif={mode === 'CARTE'}
+            icone="card"
+            couleurIcone={theme.accent}
+            fondIcone={theme.accentDoux}
+            titre={MODES_PAIEMENT.CARTE}
+            texte={carteDisponible ? 'Paiement sécurisé par Stripe' : paiementConfig ? 'Indisponible pour le moment' : 'Vérification…'}
+            prix=""
+            desactive={!carteDisponible}
+            onPress={() => setMode('CARTE')}
+          />
+          <OptionMoment
+            actif={mode === 'COD'}
+            icone="cash"
+            couleurIcone="#15803D"
+            fondIcone="#DCFCE7"
+            titre="Espèces à la livraison"
+            texte="Remises au livreur à l’arrivée"
+            prix=""
+            onPress={() => setMode('COD')}
+          />
         </Section>
 
         <Section numero={4} titre="Prix">
@@ -261,11 +286,14 @@ export default function NouvelleCommande() {
           <View style={styles.recap}>
             <Recap icone="location" texte={adresse?.adresse ?? ''} />
             <Recap icone={type === 'IMMEDIATE' ? 'flash' : 'calendar'} texte={libelleMoment} />
-            <Recap icone="cash" texte={`${MODES_PAIEMENT.COD} · ${total != null ? formatMontant(total) : ''}`} />
+            <Recap
+              icone={mode === 'CARTE' ? 'card' : 'cash'}
+              texte={`${mode === 'CARTE' ? 'Carte bancaire, payée maintenant' : 'Espèces à la livraison'} · ${total != null ? formatMontant(total) : ''}`}
+            />
           </View>
           <MessageErreur message={erreur} />
           <Bouton
-            titre={`Confirmer · ${total != null ? formatMontant(total) : ''}`}
+            titre={`${mode === 'CARTE' ? 'Payer' : 'Confirmer'} · ${total != null ? formatMontant(total) : ''}`}
             onPress={commander}
             chargement={envoi}
           />
@@ -288,22 +316,26 @@ function Section({ numero, titre, children }: { numero: number; titre: string; c
   );
 }
 
+type NomIcone = ComponentProps<typeof Ionicons>['name'];
+
 function OptionMoment(props: {
   actif: boolean;
-  icone: 'flash' | 'calendar';
+  icone: NomIcone;
   couleurIcone: string;
   fondIcone: string;
   titre: string;
   texte: string;
   prix: string;
+  desactive?: boolean;
   onPress: () => void;
 }) {
   return (
     <Pressable
       accessibilityRole="radio"
-      accessibilityState={{ selected: props.actif }}
+      accessibilityState={{ selected: props.actif, disabled: props.desactive }}
       onPress={props.onPress}
-      style={[styles.option, props.actif && styles.optionActive]}
+      disabled={props.desactive}
+      style={[styles.option, props.actif && styles.optionActive, props.desactive && styles.optionDesactivee]}
     >
       <View style={[styles.pastilleIcone, { backgroundColor: props.fondIcone }]}>
         <Ionicons name={props.icone} size={20} color={props.couleurIcone} />
@@ -312,12 +344,18 @@ function OptionMoment(props: {
         <Text style={styles.optionTitre}>{props.titre}</Text>
         <Text style={styles.optionTexte}>{props.texte}</Text>
       </View>
-      <Text style={styles.optionPrix}>{props.prix}</Text>
+      {props.prix ? <Text style={styles.optionPrix}>{props.prix}</Text> : (
+        <Ionicons
+          name={props.actif ? 'radio-button-on' : 'radio-button-off'}
+          size={22}
+          color={props.actif ? theme.accent : theme.bordure}
+        />
+      )}
     </Pressable>
   );
 }
 
-function Recap({ icone, texte }: { icone: 'location' | 'flash' | 'calendar' | 'cash'; texte: string }) {
+function Recap({ icone, texte }: { icone: NomIcone; texte: string }) {
   return (
     <View style={styles.recapLigne}>
       <Ionicons name={icone} size={18} color={theme.accent} />
@@ -386,6 +424,7 @@ const styles = StyleSheet.create({
     ...ombre,
   },
   optionActive: { borderColor: theme.accent },
+  optionDesactivee: { opacity: 0.5 },
   optionTitre: { fontSize: 16, fontWeight: '600', color: theme.texte },
   optionTexte: { fontSize: 14, color: theme.secondaire, marginTop: 2, lineHeight: 20 },
   optionPrix: { fontSize: 14, fontWeight: '700', color: theme.texte },

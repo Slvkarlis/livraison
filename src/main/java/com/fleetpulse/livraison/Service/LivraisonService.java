@@ -7,6 +7,8 @@ import com.fleetpulse.livraison.Dto.DevisResponse;
 import com.fleetpulse.livraison.Dto.LivraisonResponse;
 import com.fleetpulse.livraison.Model.Client;
 import com.fleetpulse.livraison.Model.Livraison;
+import com.fleetpulse.livraison.Model.enums.ModePaiement;
+import com.fleetpulse.livraison.Model.enums.StatutPaiement;
 import com.fleetpulse.livraison.Model.enums.TypeLivraison;
 import com.fleetpulse.livraison.Repository.LivraisonRepository;
 import com.fleetpulse.livraison.Repository.UtilisateurRepository;
@@ -27,15 +29,18 @@ public class LivraisonService {
     private final UtilisateurRepository utilisateurRepository;
     private final TarificationService tarificationService;
     private final TarificationProperties tarification;
+    private final StripeService stripeService;
 
     public LivraisonService(LivraisonRepository livraisonRepository,
                             UtilisateurRepository utilisateurRepository,
                             TarificationService tarificationService,
-                            TarificationProperties tarification) {
+                            TarificationProperties tarification,
+                            StripeService stripeService) {
         this.livraisonRepository = livraisonRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.tarificationService = tarificationService;
         this.tarification = tarification;
+        this.stripeService = stripeService;
     }
 
     /** Prix affiche au client avant qu'il confirme sa commande. */
@@ -79,7 +84,10 @@ public class LivraisonService {
         livraison.setDistanceKm(devis.distanceKm());
         livraison.setFraisLivraison(devis.fraisLivraison());
         livraison.setSupplementImmediat(devis.supplementImmediat());
-        livraison.setMontantACollecter(devis.total());
+        // Carte : payee en ligne avant la livraison, le livreur n'encaisse rien.
+        boolean carte = request.modePaiement() == ModePaiement.CARTE;
+        livraison.setStatutPaiement(carte ? StatutPaiement.EN_ATTENTE : StatutPaiement.A_LA_LIVRAISON);
+        livraison.setMontantACollecter(carte ? 0 : devis.total());
         livraison.setDateCreation(maintenant);
         return LivraisonResponse.from(livraisonRepository.save(livraison));
     }
@@ -108,6 +116,9 @@ public class LivraisonService {
         }
         if (request.modePaiement() == null) {
             throw new IllegalArgumentException("Choisissez un mode de paiement.");
+        }
+        if (request.modePaiement() == ModePaiement.CARTE && !stripeService.actif()) {
+            throw new IllegalArgumentException("Le paiement par carte n'est pas disponible pour le moment.");
         }
         if (request.typeLivraison() == TypeLivraison.PLANIFIEE) {
             Instant debut = request.creneauDebut();

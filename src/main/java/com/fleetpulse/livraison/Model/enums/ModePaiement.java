@@ -1,3 +1,4 @@
 package com.fleetpulse.livraison.Model.enums;
 
-public enum ModePaiement { COD }
+/** COD : especes au livreur. CARTE : paiement Stripe avant la livraison. */
+public enum ModePaiement { COD, CARTE }

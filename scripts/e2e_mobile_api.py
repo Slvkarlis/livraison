@@ -133,6 +133,31 @@ verifier("client voit ses 2 commandes", statut == 200 and [l["id"] for l in list
 verifier("coordonnees conservees (lat, lng)",
          liste[1]["latitude"] == 36.8515 and liste[1]["longitude"] == 10.1815)
 
+verifier("commande especes : a regler au livreur",
+         creee["statutPaiement"] == "A_LA_LIVRAISON" and creee["montantACollecter"] == creee["montantTotal"])
+
+# Paiement par carte (Stripe) : sans cles STRIPE_* sur le serveur, la carte est proprement desactivee.
+statut, config = appel("GET", "/api/paiements/config", jeton=jeton_client)
+verifier("config paiement lisible par le client", statut == 200 and "carteDisponible" in config)
+statut, carte = appel("POST", "/api/livraisons", {**commande, "modePaiement": "CARTE"}, jeton_client)
+if config and config["carteDisponible"]:
+    verifier("commande carte : en attente, rien a encaisser par le livreur",
+             statut == 201 and carte["statutPaiement"] == "EN_ATTENTE" and carte["montantACollecter"] == 0)
+    statut, paiement = appel("POST", f"/api/livraisons/{carte['id']}/paiement", jeton=jeton_client)
+    verifier("PaymentIntent Stripe cree (client_secret)",
+             statut == 200 and paiement["clientSecret"].startswith("pi_") and paiement["montant"] == carte["montantTotal"])
+    statut, verifiee = appel("POST", f"/api/livraisons/{carte['id']}/paiement/verifier", jeton=jeton_client)
+    verifier("paiement non confirme reste en attente", statut == 200 and verifiee["statutPaiement"] == "EN_ATTENTE")
+else:
+    verifier("commande carte refusee tant que Stripe n'est pas configure (400)",
+             statut == 400 and "carte" in (carte or {}).get("message", ""))
+statut, _ = appel("POST", f"/api/livraisons/{creee['id']}/paiement", jeton=jeton_client)
+verifier("paiement carte refuse sur une commande en especes (400)", statut == 400)
+statut, _ = appel("GET", "/api/paiements/config", jeton=jeton_livreur)
+verifier("livreur interdit sur la config paiement (403)", statut == 403)
+statut, _ = appel("POST", "/api/stripe/webhook", {"type": "payment_intent.succeeded"})
+verifier("webhook sans signature refuse", statut == 400)
+
 statut, _ = appel("GET", "/api/livraisons", jeton=jeton_client)
 verifier("client interdit sur la liste responsable (403)", statut == 403)
 statut, toutes = appel("GET", "/api/livraisons", jeton=admin)

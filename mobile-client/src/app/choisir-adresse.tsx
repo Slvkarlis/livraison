@@ -4,12 +4,12 @@ import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { type Region } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { definirAdresse, useAdresseChoisie } from '../brouillon';
+import { CarteLeaflet, type CarteLeafletRef, type Point } from '../composants/CarteLeaflet';
 import { TUNIS, theme } from '../theme';
 
-const ZOOM_RUE = { latitudeDelta: 0.006, longitudeDelta: 0.006 };
+const ZOOM_RUE = 17;
 
 function adresseLisible(a: Location.LocationGeocodedAddress): string {
   if (a.formattedAddress) return a.formattedAddress;
@@ -17,13 +17,10 @@ function adresseLisible(a: Location.LocationGeocodedAddress): string {
   return [rue, a.district, a.postalCode, a.city].filter(Boolean).join(', ');
 }
 
-/**
- * US-05 : le client place son adresse sur une carte plein ecran (repere fixe au centre).
- * La carte n'est ni arrondie ni dans un ScrollView : ces deux cas donnent une carte noire sur Android.
- */
+/** US-05 : le client place son adresse en deplacant la carte sous un repere fixe au centre. */
 export default function ChoisirAdresse() {
   const insets = useSafeAreaInsets();
-  const carte = useRef<MapView>(null);
+  const carte = useRef<CarteLeafletRef>(null);
   const existante = useAdresseChoisie();
   const [centre, setCentre] = useState(existante ?? TUNIS);
   const [adresse, setAdresse] = useState(existante?.adresse ?? '');
@@ -32,8 +29,6 @@ export default function ChoisirAdresse() {
   const [localisation, setLocalisation] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  const allerA = (latitude: number, longitude: number) =>
-    carte.current?.animateToRegion({ latitude, longitude, ...ZOOM_RUE }, 500);
 
   async function maPosition(demander: boolean) {
     setErreur(null);
@@ -47,7 +42,9 @@ export default function ChoisirAdresse() {
         return;
       }
       const { coords } = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      allerA(coords.latitude, coords.longitude);
+      const point = { latitude: coords.latitude, longitude: coords.longitude };
+      carte.current?.afficherMaPosition(point);
+      carte.current?.allerA(point, ZOOM_RUE);
     } catch {
       if (demander) setErreur('Position introuvable : déplacez la carte pour placer le repère.');
     } finally {
@@ -55,9 +52,8 @@ export default function ChoisirAdresse() {
     }
   }
 
-  async function surFinDeplacement(region: Region) {
+  async function surFinDeplacement(point: Point) {
     setDeplacement(false);
-    const point = { latitude: region.latitude, longitude: region.longitude };
     setCentre(point);
     setRecherche(true);
     try {
@@ -82,17 +78,15 @@ export default function ChoisirAdresse() {
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.zoneCarte}>
-        <MapView
+        <CarteLeaflet
           ref={carte}
           style={StyleSheet.absoluteFill}
-          initialRegion={{ ...centre, ...ZOOM_RUE }}
+          centre={centre}
+          zoom={existante ? ZOOM_RUE : 13}
           // Premiere ouverture : on centre sur le client si la localisation est deja autorisee.
-          onMapReady={() => { if (!existante) void maPosition(false); }}
-          onRegionChange={() => { if (!deplacement) setDeplacement(true); }}
-          onRegionChangeComplete={surFinDeplacement}
-          showsUserLocation
-          showsMyLocationButton={false}
-          toolbarEnabled={false}
+          onPret={() => { if (!existante) void maPosition(false); }}
+          onDeplacementDebut={() => setDeplacement(true)}
+          onDeplacementFin={surFinDeplacement}
         />
         <View pointerEvents="none" style={styles.repere}>
           <Ionicons name="location" size={46} color={theme.accent} />

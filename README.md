@@ -3,7 +3,7 @@
 | Dossier | Contenu |
 |---|---|
 | `src/`, `pom.xml` | Backend Spring Boot 4 / Java 17 / MySQL (port `8083`) |
-| `mobile-client/` | Application client (Expo / React Native) : inscription, connexion, commandes |
+| `mobile-client/` | Application client (Expo / React Native) : inscription, commandes, carte OpenStreetMap, paiement Stripe |
 | `mobile-livreur/` | Application livreur (Expo / React Native) : connexion, véhicule affecté |
 | `packages/shared/` | Code partagé : types API, client HTTP, session JWT, libellés, composants UI |
 | `scripts/e2e_mobile_api.py` | Vérification de bout en bout des appels API utilisés par les apps |
@@ -19,6 +19,23 @@ Compte responsable créé au démarrage : `admin@fleetpulse.tn` / `admin12345`.
 Les frais de livraison sont calculés par le serveur (distance dépôt → adresse, rémunération livreur + carburant,
 marge bénéficiaire, supplément pour une livraison immédiate). Paramètres : `app.depot.*` et `app.tarification.*`
 dans `application.properties`.
+
+### Paiement par carte (Stripe, mode test)
+
+Sans clés, le paiement par carte est désactivé (l'app propose seulement les espèces). Clés de test sur
+https://dashboard.stripe.com/test/apikeys, puis dans PowerShell :
+
+```powershell
+$env:STRIPE_SECRET_KEY="sk_test_..."
+$env:STRIPE_PUBLISHABLE_KEY="pk_test_..."
+./mvnw spring-boot:run
+```
+
+- Carte de test : `4242 4242 4242 4242`, date future, CVC quelconque (`4000 0027 6000 3184` pour tester 3-D Secure).
+- Devise : `tnd` par défaut (millimes). Si Stripe refuse la devise sur votre compte : `$env:STRIPE_CURRENCY="eur"`.
+- Webhook (facultatif, l'app vérifie déjà le paiement) : `stripe listen --forward-to localhost:8083/api/stripe/webhook`,
+  puis `$env:STRIPE_WEBHOOK_SECRET="whsec_..."`.
+- Les clés ne doivent jamais être commitées.
 
 ## Lancer les applications mobiles
 

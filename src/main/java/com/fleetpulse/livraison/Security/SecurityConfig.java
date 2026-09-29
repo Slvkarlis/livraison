@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/error").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/stripe/webhook", "/error").permitAll()
                         .anyRequest().authenticated())
                 // 401 sans jeton valide (403 reste reserve aux roles insuffisants)
                 .exceptionHandling(exceptions -> exceptions

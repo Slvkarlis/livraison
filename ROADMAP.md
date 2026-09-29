@@ -8,6 +8,12 @@
 
 ## 0. Current state (end of session 2026-09-29)
 
+**Session 2026-09-29 (3) — map + Stripe (user request, pulled forward from "Later"):**
+- Client maps now use **Leaflet + OpenStreetMap tiles in a WebView** (`mobile-client/src/composants/CarteLeaflet.tsx`), not react-native-maps / Google (map never worked on the user's phone in Expo Go). OSM tiles need the WebView `baseUrl` (Referer). CARTO tiles now require an API key, so don't use them. Verified by rendering the page in headless Edge.
+- **Stripe**: `ModePaiement.CARTE`, `StatutPaiement` (A_LA_LIVRAISON / EN_ATTENTE / PAYE / ECHOUE), `PaiementService` + `StripeService` (stripe-java 29.2.0), PaymentSheet in the client app, server-side verification + optional webhook. Keys via env `STRIPE_*` (see README); without keys card is disabled. TND amounts in millimes (last digit 0).
+- Enum columns are now `varchar(20)` (`mode_paiement` ALTERed on `livraison` and `livraison_e2e`).
+- Tests: `PaiementServiceTest` 8/8, `TarificationServiceTest` 5/5, e2e 32/32. Not tested yet: a real Stripe test payment (no keys) and the WebView map on the user's phone.
+
 **Session 2026-09-29 (2) — user feedback on the client app:**
 - 500 on order creation = `nettoyage_sprint1.sql` never run: stale NOT NULL columns dropped from the (empty) `livraison` and `livreur` tables. Old tables (`offre_livraison`, `zone`, ...) left untouched.
 - Price is now **computed by the backend**, never typed by the client: `TarificationService` (depot → address distance × road factor, livreur pay + fuel, × (1 + 30 % margin), min 3 DT), config `app.tarification.*` / `app.depot.*`, `POST /api/livraisons/devis`, unit tests.
@@ -57,7 +63,7 @@ livraison/                     (monorepo)
 | Web | React + Vite | same language/components logic as mobile |
 | Realtime | **WebSocket STOMP** (`spring-boot-starter-websocket`, `@stomp/stompjs` on all 3 front-ends) | one channel for GPS, status changes, chat, notifications; replaces the old SSE code |
 | Push (app in background) | **Expo Push Notifications** (backend calls `https://exp.host/--/api/v2/push/send`) | free, no Firebase config needed with Expo |
-| Maps mobile | `react-native-maps` | standard |
+| Maps mobile | **Leaflet in `react-native-webview`** + OSM tiles | react-native-maps (Google) didn't render in Expo Go on the user's phone; same library as the web app |
 | Maps web | **Leaflet** + `react-leaflet`, OpenStreetMap tiles | free, no API key |
 | Directions | **OSRM** (public demo server `router.project-osrm.org`, or self-host later) called **by the backend** | see "map synchronization" below |
 | Fake orders | `net.datafaker:datafaker` on the backend | client button calls one endpoint |
@@ -191,7 +197,7 @@ Layout: left sidebar (**Carte · Commandes · Livreurs · Véhicules · Créneau
 - [ ] Update the school sprint backlog / US list to match what was built
 
 ### Later (explicitly out of scope for now)
-- Stripe payments (`ModePaiement.CARTE`, PaymentIntent created at order, captured on `LIVREE`)
+- ~~Stripe payments~~ → done 2026-09-29 (charged at order time, not captured on `LIVREE`; refund on failed delivery still to do)
 - Self-hosted OSRM, proof of delivery photo/signature, returns, COD cash reconciliation
 
 ---
