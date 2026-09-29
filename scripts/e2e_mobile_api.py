@@ -16,6 +16,7 @@ echecs = 0
 
 
 def appel(methode, chemin, corps=None, jeton=None):
+    """Renvoie (statut HTTP, corps JSON ou None)."""
     donnees = json.dumps(corps).encode() if corps is not None else None
     requete = urllib.request.Request(BASE + chemin, data=donnees, method=methode)
     requete.add_header("Content-Type", "application/json")
@@ -26,7 +27,11 @@ def appel(methode, chemin, corps=None, jeton=None):
             texte = reponse.read().decode()
             return reponse.status, json.loads(texte) if texte else None
     except urllib.error.HTTPError as erreur:
-        return erreur.code, None
+        texte = erreur.read().decode()
+        try:
+            return erreur.code, json.loads(texte) if texte else None
+        except ValueError:
+            return erreur.code, None
 
 
 def verifier(libelle, condition):
@@ -87,20 +92,46 @@ statut, liste = appel("GET", "/api/livraisons/mes", jeton=jeton_client)
 verifier("client sans commande", statut == 200 and liste == [])
 
 debut = (datetime.now(timezone.utc) + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+iso = lambda d: d.isoformat().replace("+00:00", "Z")
+position = {"latitude": 36.8515, "longitude": 10.1815}  # ~6,5 km de route depuis le depot
+
+statut, devis_creneau = appel("POST", "/api/livraisons/devis", {**position, "typeLivraison": "PLANIFIEE"}, jeton_client)
+verifier("devis creneau : tarif normal sans supplement",
+         statut == 200 and devis_creneau["supplementImmediat"] == 0 and devis_creneau["total"] == devis_creneau["fraisLivraison"] > 0)
+statut, devis_immediat = appel("POST", "/api/livraisons/devis", {**position, "typeLivraison": "IMMEDIATE"}, jeton_client)
+verifier("devis immediat : supplement en plus du tarif normal",
+         statut == 200 and devis_immediat["supplementImmediat"] > 0
+         and devis_immediat["fraisLivraison"] == devis_creneau["fraisLivraison"]
+         and abs(devis_immediat["total"] - devis_creneau["total"] - devis_immediat["supplementImmediat"]) < 0.001)
+statut, corps = appel("POST", "/api/livraisons/devis", {"latitude": 35.8256, "longitude": 10.6084,
+                                                        "typeLivraison": "PLANIFIEE"}, jeton_client)
+verifier("adresse hors zone refusee avec message (400)", statut == 400 and "zone" in (corps or {}).get("message", ""))
+
 commande = {
-    "adresse": "Avenue Habib Bourguiba, Tunis", "latitude": 36.8008, "longitude": 10.1800,
-    "creneauDebut": debut.isoformat().replace("+00:00", "Z"),
-    "creneauFin": (debut + timedelta(hours=2)).isoformat().replace("+00:00", "Z"),
-    "modePaiement": "COD", "montantACollecter": 42.5,
+    "adresse": "Avenue Habib Bourguiba, Tunis", **position, "typeLivraison": "PLANIFIEE",
+    "creneauDebut": iso(debut), "creneauFin": iso(debut + timedelta(hours=2)), "modePaiement": "COD",
+    "montantACollecter": 0.001,  # ignore : le prix est calcule par le serveur
 }
 statut, creee = appel("POST", "/api/livraisons", commande, jeton_client)
-verifier("creation commande", statut == 201 and creee["statut"] == "EN_PREPARATION")
-statut, _ = appel("POST", "/api/livraisons", {**commande, "latitude": 123}, jeton_client)
-verifier("commande avec GPS invalide (400)", statut == 400)
+verifier("creation commande sur creneau", statut == 201 and creee["statut"] == "EN_PREPARATION"
+         and creee["typeLivraison"] == "PLANIFIEE")
+verifier("montant calcule par le serveur (= devis)", creee and creee["montantACollecter"] == devis_creneau["total"])
+
+statut, immediate = appel("POST", "/api/livraisons", {**commande, "typeLivraison": "IMMEDIATE",
+                                                       "creneauDebut": None, "creneauFin": None}, jeton_client)
+verifier("creation commande immediate avec supplement",
+         statut == 201 and immediate["montantACollecter"] == devis_immediat["total"]
+         and immediate["supplementImmediat"] == devis_immediat["supplementImmediat"])
+
+statut, corps = appel("POST", "/api/livraisons", {**commande, "latitude": 123}, jeton_client)
+verifier("commande avec GPS invalide (400 + message)", statut == 400 and corps and corps.get("message"))
+statut, _ = appel("POST", "/api/livraisons", {**commande, "creneauDebut": iso(debut - timedelta(hours=5)),
+                                               "creneauFin": iso(debut - timedelta(hours=3))}, jeton_client)
+verifier("creneau passe refuse (400)", statut == 400)
 statut, liste = appel("GET", "/api/livraisons/mes", jeton=jeton_client)
-verifier("client voit sa commande", statut == 200 and [l["id"] for l in liste] == [creee["id"]])
+verifier("client voit ses 2 commandes", statut == 200 and [l["id"] for l in liste] == [immediate["id"], creee["id"]])
 verifier("coordonnees conservees (lat, lng)",
-         liste[0]["latitude"] == 36.8008 and liste[0]["longitude"] == 10.1800)
+         liste[1]["latitude"] == 36.8515 and liste[1]["longitude"] == 10.1815)
 
 statut, _ = appel("GET", "/api/livraisons", jeton=jeton_client)
 verifier("client interdit sur la liste responsable (403)", statut == 403)

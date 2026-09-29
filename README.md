@@ -16,6 +16,10 @@
 
 Compte responsable créé au démarrage : `admin@fleetpulse.tn` / `admin12345`.
 
+Les frais de livraison sont calculés par le serveur (distance dépôt → adresse, rémunération livreur + carburant,
+marge bénéficiaire, supplément pour une livraison immédiate). Paramètres : `app.depot.*` et `app.tarification.*`
+dans `application.properties`.
+
 ## Lancer les applications mobiles
 
 Prérequis : Node 20.19+, l'application **Expo Go** sur le téléphone, téléphone et PC sur le même Wi-Fi.

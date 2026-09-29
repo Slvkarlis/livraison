@@ -1,7 +1,7 @@
-import { AccentProvider, AuthProvider, Chargement, couleurs, useAuth } from '@fleetpulse/shared';
+import { AuthProvider, Chargement, ThemeProvider, useAuth } from '@fleetpulse/shared';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ACCENT } from '../theme';
+import { theme } from '../theme';
 
 function Navigation() {
   const { profil, chargement } = useAuth();
@@ -12,20 +12,32 @@ function Navigation() {
     <Stack
       screenOptions={{
         headerShadowVisible: false,
-        headerTintColor: ACCENT,
-        headerTitleStyle: { color: couleurs.texte },
+        headerTintColor: theme.accent,
+        headerTitleStyle: { color: theme.texte, fontWeight: '700' },
+        headerStyle: { backgroundColor: theme.fond },
         headerBackButtonDisplayMode: 'minimal',
-        contentStyle: { backgroundColor: couleurs.fond },
+        contentStyle: { backgroundColor: theme.fond },
       }}
     >
       <Stack.Protected guard={!connecte}>
         <Stack.Screen name="connexion" options={{ headerShown: false }} />
-        <Stack.Screen name="inscription" options={{ title: '' }} />
+        <Stack.Screen
+          name="inscription"
+          options={{
+            title: '',
+            headerStyle: { backgroundColor: theme.surface },
+            contentStyle: { backgroundColor: theme.surface },
+          }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={connecte}>
         <Stack.Screen name="(onglets)" options={{ headerShown: false }} />
         <Stack.Screen name="nouvelle-commande" options={{ title: 'Nouvelle commande' }} />
-        <Stack.Screen name="commande/[id]" options={{ title: 'Commande' }} />
+        <Stack.Screen
+          name="choisir-adresse"
+          options={{ title: 'Adresse de livraison', headerStyle: { backgroundColor: theme.surface } }}
+        />
+        <Stack.Screen name="commande/[id]" options={{ title: '', headerTransparent: true }} />
       </Stack.Protected>
     </Stack>
   );
@@ -33,11 +45,11 @@ function Navigation() {
 
 export default function RootLayout() {
   return (
-    <AccentProvider couleur={ACCENT}>
+    <ThemeProvider theme={theme}>
       <AuthProvider role="CLIENT">
         <StatusBar style="dark" />
         <Navigation />
       </AuthProvider>
-    </AccentProvider>
+    </ThemeProvider>
   );
 }

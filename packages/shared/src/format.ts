@@ -13,8 +13,14 @@ export const STATUTS: Record<StatutLivraison, { libelle: string; couleur: string
 
 export const MODES_PAIEMENT = { COD: 'Paiement à la livraison' } as const;
 
+export const TYPES_LIVRAISON = { IMMEDIATE: 'Immédiate', PLANIFIEE: 'Créneau planifié' } as const;
+
+export function formatDistance(km: number): string {
+  return `${km.toFixed(1).replace('.', ',')} km`;
+}
+
 export function formatMontant(montant: number): string {
-  return `${montant.toFixed(3).replace('.', ',')} DT`;
+  return `${montant.toFixed(1).replace('.', ',')} DT`;
 }
 
 function deuxChiffres(n: number) {

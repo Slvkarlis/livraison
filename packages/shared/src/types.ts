@@ -14,6 +14,8 @@ export type StatutLivraison =
 
 export type ModePaiement = 'COD';
 
+export type TypeLivraison = 'IMMEDIATE' | 'PLANIFIEE';
+
 export interface Vehicule {
   id: number;
   immatriculation: string;
@@ -43,7 +45,11 @@ export interface Livraison {
   longitude: number;
   creneauDebut: string;
   creneauFin: string;
+  typeLivraison: TypeLivraison;
   modePaiement: ModePaiement;
+  distanceKm: number;
+  fraisLivraison: number;
+  supplementImmediat: number;
   montantACollecter: number;
   statut: StatutLivraison;
   dateCreation: string;
@@ -67,8 +73,25 @@ export interface CreateLivraisonRequest {
   adresse: string;
   latitude: number;
   longitude: number;
-  creneauDebut: string;
-  creneauFin: string;
+  typeLivraison: TypeLivraison;
+  /** Uniquement pour une livraison planifiee. */
+  creneauDebut?: string;
+  creneauFin?: string;
   modePaiement: ModePaiement;
-  montantACollecter: number;
+}
+
+export interface DevisRequest {
+  latitude: number;
+  longitude: number;
+  typeLivraison: TypeLivraison;
+}
+
+/** Prix calcule par le backend (distance depot -> adresse + marge). */
+export interface Devis {
+  typeLivraison: TypeLivraison;
+  distanceKm: number;
+  fraisLivraison: number;
+  supplementImmediat: number;
+  total: number;
+  delaiImmediatMinutes: number;
 }

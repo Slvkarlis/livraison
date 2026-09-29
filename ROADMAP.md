@@ -8,6 +8,15 @@
 
 ## 0. Current state (end of session 2026-09-29)
 
+**Session 2026-09-29 (2) — user feedback on the client app:**
+- 500 on order creation = `nettoyage_sprint1.sql` never run: stale NOT NULL columns dropped from the (empty) `livraison` and `livreur` tables. Old tables (`offre_livraison`, `zone`, ...) left untouched.
+- Price is now **computed by the backend**, never typed by the client: `TarificationService` (depot → address distance × road factor, livreur pay + fuel, × (1 + 30 % margin), min 3 DT), config `app.tarification.*` / `app.depot.*`, `POST /api/livraisons/devis`, unit tests.
+- `TypeLivraison`: `IMMEDIATE` (+50 %, livreur within 60 min) or `PLANIFIEE` (slot, livreur guaranteed, normal fee).
+- JSON errors `{code, message}` via `GestionErreurs` (`@RestControllerAdvice`).
+- Client app: full-screen address picker (fixes the black map: no rounded/clipped MapView inside a ScrollView), "Maintenant / Planifier" choice, price breakdown, "Avant de commander" checklist + confirmation sheet.
+- Distinct identities: client = light lavender/violet, rounded; livreur = dark UI, green accent, plate-style vehicle card. Shared UI now takes a full `Theme`.
+- e2e 26/26, pricing tests 5/5. **Still not tried in Expo Go on a phone by me** (no emulator installed).
+
 **Session 2026-09-29 — mobile apps (sprint 1 scope):**
 - Git repo initialised (`main`). npm workspaces at the root: `mobile-client/`, `mobile-livreur/`, `packages/shared/` (Expo SDK 57, Expo Router, TypeScript). See `README.md` for how to run.
 - Backend **not moved** to `backend/` yet: VS Code's Java language server locks `src/`. Do it with the editor closed (`git mv src pom.xml mvnw mvnw.cmd .mvn backend/`).
@@ -112,7 +121,7 @@ Each phase ends with: backend tests passing, a scripted end-to-end check (like `
 - [x] `git init`, create monorepo folders (npm workspaces), root README with how to run everything
 - [ ] Move backend to `backend/` (blocked by the IDE lock on 2026-09-29)
 - [ ] Enum → VARCHAR fix + Flyway (baseline from current schema)
-- [ ] Global exception handler (`@RestControllerAdvice`) returning `{code, message}` JSON — all front-ends rely on it
+- [x] Global exception handler (`@RestControllerAdvice`) returning `{code, message}` JSON — all front-ends rely on it
 - [ ] CORS config for the web app (not needed for native Expo apps)
 - [x] `GET /api/me` (profile + role + livreur vehicle) for all apps
 - [ ] WebSocket STOMP endpoint `/ws` with JWT auth on CONNECT (token in STOMP header), user destinations `/user/queue/...`

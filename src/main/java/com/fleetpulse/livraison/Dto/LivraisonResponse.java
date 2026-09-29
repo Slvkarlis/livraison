@@ -3,6 +3,7 @@ package com.fleetpulse.livraison.Dto;
 import com.fleetpulse.livraison.Model.Livraison;
 import com.fleetpulse.livraison.Model.enums.ModePaiement;
 import com.fleetpulse.livraison.Model.enums.StatutLivraison;
+import com.fleetpulse.livraison.Model.enums.TypeLivraison;
 import java.time.Instant;
 
 public record LivraisonResponse(
@@ -14,7 +15,11 @@ public record LivraisonResponse(
         Double longitude,
         Instant creneauDebut,
         Instant creneauFin,
+        TypeLivraison typeLivraison,
         ModePaiement modePaiement,
+        double distanceKm,
+        double fraisLivraison,
+        double supplementImmediat,
         double montantACollecter,
         StatutLivraison statut,
         Instant dateCreation) {
@@ -29,7 +34,11 @@ public record LivraisonResponse(
                 livraison.getLongitude(),
                 livraison.getCreneauDebut(),
                 livraison.getCreneauFin(),
+                livraison.getTypeLivraison(),
                 livraison.getModePaiement(),
+                livraison.getDistanceKm(),
+                livraison.getFraisLivraison(),
+                livraison.getSupplementImmediat(),
                 livraison.getMontantACollecter(),
                 livraison.getStatut(),
                 livraison.getDateCreation());

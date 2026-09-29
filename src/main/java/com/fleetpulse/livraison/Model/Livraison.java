@@ -16,7 +16,12 @@ public class Livraison {
     @Column(nullable = false) private Instant creneauFin;
     @Enumerated(EnumType.STRING) private StatutLivraison statut = StatutLivraison.EN_PREPARATION;
     @Enumerated(EnumType.STRING) private ModePaiement modePaiement = ModePaiement.COD;
-    private double montantACollecter;
+    @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(20)")
+    private TypeLivraison typeLivraison = TypeLivraison.PLANIFIEE;
+    private double distanceKm;             // depot -> adresse, calculee par le systeme
+    private double fraisLivraison;         // tarif normal (cout de revient + marge)
+    private double supplementImmediat;     // 0 pour un creneau planifie
+    private double montantACollecter;      // total paye au livreur (COD)
     private Instant dateCreation = Instant.now();
 
     @ManyToOne(optional = false) private Client client;

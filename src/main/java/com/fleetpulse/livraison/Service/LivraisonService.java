@@ -1,11 +1,17 @@
 package com.fleetpulse.livraison.Service;
 
+import com.fleetpulse.livraison.Config.TarificationProperties;
 import com.fleetpulse.livraison.Dto.CreateLivraisonRequest;
+import com.fleetpulse.livraison.Dto.DevisRequest;
+import com.fleetpulse.livraison.Dto.DevisResponse;
 import com.fleetpulse.livraison.Dto.LivraisonResponse;
 import com.fleetpulse.livraison.Model.Client;
 import com.fleetpulse.livraison.Model.Livraison;
+import com.fleetpulse.livraison.Model.enums.TypeLivraison;
 import com.fleetpulse.livraison.Repository.LivraisonRepository;
 import com.fleetpulse.livraison.Repository.UtilisateurRepository;
+import com.fleetpulse.livraison.Service.TarificationService.Devis;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -14,13 +20,32 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LivraisonService {
+    private static final Duration DUREE_MAX_CRENEAU = Duration.ofHours(4);
+    private static final Duration TOLERANCE_CRENEAU = Duration.ofMinutes(5);
+
     private final LivraisonRepository livraisonRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final TarificationService tarificationService;
+    private final TarificationProperties tarification;
 
     public LivraisonService(LivraisonRepository livraisonRepository,
-                            UtilisateurRepository utilisateurRepository) {
+                            UtilisateurRepository utilisateurRepository,
+                            TarificationService tarificationService,
+                            TarificationProperties tarification) {
         this.livraisonRepository = livraisonRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.tarificationService = tarificationService;
+        this.tarification = tarification;
+    }
+
+    /** Prix affiche au client avant qu'il confirme sa commande. */
+    public DevisResponse devis(DevisRequest request) {
+        if (request == null || !validCoordinates(request.latitude(), request.longitude())) {
+            throw new IllegalArgumentException("Position de livraison invalide.");
+        }
+        TypeLivraison type = request.typeLivraison() == null ? TypeLivraison.PLANIFIEE : request.typeLivraison();
+        Devis devis = tarificationService.devis(request.latitude(), request.longitude(), type);
+        return DevisResponse.from(type, devis, tarification.delaiImmediatMinutes());
     }
 
     @Transactional
@@ -31,17 +56,31 @@ public class LivraisonService {
                 .map(Client.class::cast)
                 .orElseThrow(() -> new IllegalArgumentException("L'utilisateur n'est pas un client"));
 
+        TypeLivraison type = request.typeLivraison();
+        Instant maintenant = Instant.now();
+        // Le prix est toujours recalcule ici : le client ne peut pas le fixer.
+        Devis devis = tarificationService.devis(request.latitude(), request.longitude(), type);
+
         Livraison livraison = new Livraison();
         livraison.setCodeSuivi("FP-" + UUID.randomUUID().toString().substring(0, 12).toUpperCase());
         livraison.setClient(client);
         livraison.setAdresse(request.adresse().trim());
         livraison.setLatitude(request.latitude());
         livraison.setLongitude(request.longitude());
-        livraison.setCreneauDebut(request.creneauDebut());
-        livraison.setCreneauFin(request.creneauFin());
+        livraison.setTypeLivraison(type);
+        if (type == TypeLivraison.IMMEDIATE) {
+            livraison.setCreneauDebut(maintenant);
+            livraison.setCreneauFin(maintenant.plus(Duration.ofMinutes(tarification.delaiImmediatMinutes())));
+        } else {
+            livraison.setCreneauDebut(request.creneauDebut());
+            livraison.setCreneauFin(request.creneauFin());
+        }
         livraison.setModePaiement(request.modePaiement());
-        livraison.setMontantACollecter(request.montantACollecter());
-        livraison.setDateCreation(Instant.now());
+        livraison.setDistanceKm(devis.distanceKm());
+        livraison.setFraisLivraison(devis.fraisLivraison());
+        livraison.setSupplementImmediat(devis.supplementImmediat());
+        livraison.setMontantACollecter(devis.total());
+        livraison.setDateCreation(maintenant);
         return LivraisonResponse.from(livraisonRepository.save(livraison));
     }
 
@@ -58,13 +97,26 @@ public class LivraisonService {
     }
 
     private void validate(CreateLivraisonRequest request) {
-        if (request == null || request.adresse() == null || request.adresse().isBlank()
-                || !validCoordinates(request.latitude(), request.longitude())
-                || request.creneauDebut() == null || request.creneauFin() == null
-                || !request.creneauFin().isAfter(request.creneauDebut())
-                || request.modePaiement() == null
-                || request.montantACollecter() < 0) {
-            throw new IllegalArgumentException("Commande invalide");
+        if (request == null || request.adresse() == null || request.adresse().isBlank()) {
+            throw new IllegalArgumentException("Indiquez l'adresse de livraison.");
+        }
+        if (!validCoordinates(request.latitude(), request.longitude())) {
+            throw new IllegalArgumentException("Position de livraison invalide.");
+        }
+        if (request.typeLivraison() == null) {
+            throw new IllegalArgumentException("Choisissez une livraison immédiate ou un créneau.");
+        }
+        if (request.modePaiement() == null) {
+            throw new IllegalArgumentException("Choisissez un mode de paiement.");
+        }
+        if (request.typeLivraison() == TypeLivraison.PLANIFIEE) {
+            Instant debut = request.creneauDebut();
+            Instant fin = request.creneauFin();
+            if (debut == null || fin == null || !fin.isAfter(debut)
+                    || debut.isBefore(Instant.now().minus(TOLERANCE_CRENEAU))
+                    || Duration.between(debut, fin).compareTo(DUREE_MAX_CRENEAU) > 0) {
+                throw new IllegalArgumentException("Créneau invalide ou déjà passé.");
+            }
         }
     }
 

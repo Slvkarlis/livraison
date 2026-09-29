@@ -1,6 +1,7 @@
-import { Bouton, Champ, MessageErreur, Titre, api, couleurs, useAuth } from '@fleetpulse/shared';
+import { Bouton, Champ, MessageErreur, Titre, api, useAuth } from '@fleetpulse/shared';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { theme } from '../theme';
 
 type Formulaire = { prenom: string; nom: string; email: string; telephone: string; motDePasse: string };
 
@@ -65,7 +66,7 @@ export default function Inscription() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: couleurs.fond },
+  page: { flex: 1, backgroundColor: theme.surface },
   contenu: { padding: 24, paddingTop: 8 },
   bouton: { marginTop: 8 },
 });

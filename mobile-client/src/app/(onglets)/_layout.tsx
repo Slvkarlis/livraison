@@ -1,31 +1,35 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { couleurs } from '@fleetpulse/shared';
 import { Tabs } from 'expo-router';
-import { ACCENT } from '../../theme';
+import { theme } from '../../theme';
 
 export default function OngletsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: ACCENT,
-        tabBarInactiveTintColor: couleurs.secondaire,
-        tabBarStyle: { borderTopColor: couleurs.bordure },
-        sceneStyle: { backgroundColor: couleurs.fond },
+        tabBarActiveTintColor: theme.accent,
+        tabBarInactiveTintColor: theme.secondaire,
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarStyle: { backgroundColor: theme.surface, borderTopWidth: 0, elevation: 12, shadowOpacity: 0.06 },
+        sceneStyle: { backgroundColor: theme.fond },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Commandes',
-          tabBarIcon: ({ color, size }) => <Ionicons name="receipt-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'bag-handle' : 'bag-handle-outline'} size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profil"
         options={{
           title: 'Profil',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} size={size} color={color} />
+          ),
         }}
       />
     </Tabs>

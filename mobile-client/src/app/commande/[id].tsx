@@ -1,13 +1,13 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import {
-  Carte,
   Chargement,
   Ligne,
   MODES_PAIEMENT,
   MessageErreur,
   PastilleStatut,
   api,
-  couleurs,
   formatCreneau,
+  formatDistance,
   formatHeure,
   formatJour,
   formatMontant,
@@ -15,9 +15,9 @@ import {
 } from '@fleetpulse/shared';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { ACCENT } from '../../theme';
+import { theme } from '../../theme';
 
 export default function DetailCommande() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,53 +34,101 @@ export default function DetailCommande() {
       .catch((e) => setErreur(e instanceof Error ? e.message : 'Chargement impossible.'));
   }, [id]);
 
-  if (erreur) return <View style={styles.contenu}><MessageErreur message={erreur} /></View>;
+  if (erreur) return <View style={styles.erreur}><MessageErreur message={erreur} /></View>;
   if (!livraison) return <Chargement />;
 
   const position = { latitude: livraison.latitude, longitude: livraison.longitude };
   const creee = new Date(livraison.dateCreation);
+  const immediate = livraison.typeLivraison === 'IMMEDIATE';
 
   return (
-    <ScrollView contentContainerStyle={styles.contenu}>
-      <View style={styles.entete}>
-        <Text style={styles.code}>{livraison.codeSuivi}</Text>
+    <ScrollView style={styles.page} bounces={false}>
+      {/* Carte pleine largeur, sans arrondi : en mode "lite" sur Android (image statique fiable dans un ScrollView). */}
+      <MapView
+        style={styles.carteGeo}
+        liteMode={Platform.OS === 'android'}
+        initialRegion={{ ...position, latitudeDelta: 0.008, longitudeDelta: 0.008 }}
+        scrollEnabled={false}
+        zoomEnabled={false}
+        rotateEnabled={false}
+        pitchEnabled={false}
+        toolbarEnabled={false}
+      >
+        <Marker coordinate={position} pinColor={theme.accent} />
+      </MapView>
+
+      <View style={styles.feuille}>
         <PastilleStatut statut={livraison.statut} />
-      </View>
-
-      <View style={styles.carteGeo}>
-        <MapView
-          style={StyleSheet.absoluteFill}
-          initialRegion={{ ...position, latitudeDelta: 0.01, longitudeDelta: 0.01 }}
-          scrollEnabled={false}
-          zoomEnabled={false}
-          rotateEnabled={false}
-          pitchEnabled={false}
-        >
-          <Marker coordinate={position} pinColor={ACCENT} />
-        </MapView>
-      </View>
-
-      <Carte>
-        <Text style={styles.libelle}>Adresse de livraison</Text>
         <Text style={styles.adresse}>{livraison.adresse}</Text>
-      </Carte>
+        <Text style={styles.code}>Commande {livraison.codeSuivi}</Text>
 
-      <Carte style={styles.bloc}>
-        <Ligne libelle="Créneau" valeur={formatCreneau(livraison.creneauDebut, livraison.creneauFin)} />
-        <Ligne libelle="Paiement" valeur={MODES_PAIEMENT[livraison.modePaiement]} />
-        <Ligne libelle="Montant" valeur={formatMontant(livraison.montantACollecter)} />
-        <Ligne libelle="Créée" valeur={`${formatJour(creee)}, ${formatHeure(creee)}`} />
-      </Carte>
+        <View style={styles.moment}>
+          <View style={[styles.icone, immediate && { backgroundColor: '#FEF3C7' }]}>
+            <Ionicons name={immediate ? 'flash' : 'calendar'} size={20} color={immediate ? '#B45309' : theme.accent} />
+          </View>
+          <View style={styles.flex}>
+            <Text style={styles.momentTitre}>{immediate ? 'Livraison immédiate' : 'Créneau planifié'}</Text>
+            <Text style={styles.momentTexte}>{formatCreneau(livraison.creneauDebut, livraison.creneauFin)}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.section}>Paiement</Text>
+        <View style={styles.bloc}>
+          <Ligne
+            libelle={`Livraison${livraison.distanceKm ? ` (${formatDistance(livraison.distanceKm)})` : ''}`}
+            valeur={formatMontant(livraison.fraisLivraison || livraison.montantACollecter)}
+          />
+          {livraison.supplementImmediat > 0 ? (
+            <Ligne libelle="Supplément immédiat" valeur={`+${formatMontant(livraison.supplementImmediat)}`} />
+          ) : null}
+          <View style={styles.separateur} />
+          <Ligne libelle="Total à payer" valeur={formatMontant(livraison.montantACollecter)} fort />
+          <Text style={styles.note}>{MODES_PAIEMENT[livraison.modePaiement]}, en espèces au livreur.</Text>
+        </View>
+
+        <Text style={styles.creee}>Commandée {formatJour(creee).toLowerCase()} à {formatHeure(creee)}</Text>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  contenu: { padding: 20, backgroundColor: couleurs.fond },
-  entete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  code: { fontSize: 18, fontWeight: '700', color: couleurs.texte },
-  carteGeo: { height: 200, borderRadius: 16, overflow: 'hidden', marginBottom: 16, backgroundColor: couleurs.surface },
-  libelle: { fontSize: 13, color: couleurs.secondaire, marginBottom: 4 },
-  adresse: { fontSize: 16, fontWeight: '500', color: couleurs.texte },
-  bloc: { marginTop: 16 },
+  page: { flex: 1, backgroundColor: theme.surface },
+  erreur: { flex: 1, padding: 20, paddingTop: 120, backgroundColor: theme.fond },
+  carteGeo: { height: 300, backgroundColor: theme.fond },
+  feuille: {
+    backgroundColor: theme.surface,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    marginTop: -28,
+    padding: 24,
+    gap: 6,
+  },
+  adresse: { fontSize: 22, fontWeight: '800', color: theme.texte, letterSpacing: -0.4, marginTop: 10 },
+  code: { fontSize: 13, color: theme.secondaire },
+  moment: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: theme.fond,
+    borderRadius: 18,
+    padding: 14,
+    marginTop: 18,
+  },
+  icone: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    backgroundColor: theme.accentDoux,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flex: { flex: 1 },
+  momentTitre: { fontSize: 15, fontWeight: '600', color: theme.texte },
+  momentTexte: { fontSize: 14, color: theme.secondaire, marginTop: 2 },
+  section: { fontSize: 17, fontWeight: '700', color: theme.texte, marginTop: 22, marginBottom: 4 },
+  bloc: { backgroundColor: theme.fond, borderRadius: 18, padding: 14 },
+  separateur: { height: 1, backgroundColor: theme.bordure, marginVertical: 6 },
+  note: { fontSize: 13, color: theme.secondaire, marginTop: 6 },
+  creee: { fontSize: 13, color: theme.secondaire, textAlign: 'center', marginTop: 20 },
 });

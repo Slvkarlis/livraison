@@ -11,7 +11,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
+        "backgroundColor": "#F4F3FA",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -31,6 +31,7 @@
         }
       ]
     ],
-    "scheme": "fleetpulse-client"
+    "scheme": "fleetpulse-client",
+    "backgroundColor": "#F4F3FA"
   }
 }

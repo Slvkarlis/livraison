@@ -1,13 +1,15 @@
 import { apiBaseUrl } from './config';
 import type {
   CreateLivraisonRequest,
+  Devis,
+  DevisRequest,
   Livraison,
   LoginResponse,
   Profil,
   SignupRequest,
 } from './types';
 
-/** Le backend renvoie des corps vides en erreur : le message est deduit du code HTTP. */
+/** Erreur API avec un message affichable tel quel a l'utilisateur. */
 export class ApiError extends Error {
   constructor(public readonly status: number, message: string) {
     super(message);
@@ -54,7 +56,9 @@ async function request<T>(method: string, path: string, body?: unknown, messages
 
   if (!response.ok) {
     if (response.status === 401 && token) onUnauthorized?.();
-    const message = messages[response.status] ?? MESSAGES_PAR_DEFAUT[response.status]
+    // Les erreurs metier arrivent en JSON {code, message} ; sinon message deduit du code HTTP.
+    const corps = await response.json().catch(() => null) as { message?: string } | null;
+    const message = messages[response.status] ?? corps?.message ?? MESSAGES_PAR_DEFAUT[response.status]
       ?? `Erreur inattendue (${response.status}).`;
     throw new ApiError(response.status, message);
   }
@@ -78,8 +82,7 @@ export const api = {
 
   mesLivraisons: () => request<Livraison[]>('GET', '/api/livraisons/mes'),
 
-  creerLivraison: (data: CreateLivraisonRequest) =>
-    request<Livraison>('POST', '/api/livraisons', data, {
-      400: 'Commande invalide : vérifiez l’adresse, la position, le créneau et le montant.',
-    }),
+  devis: (data: DevisRequest) => request<Devis>('POST', '/api/livraisons/devis', data),
+
+  creerLivraison: (data: CreateLivraisonRequest) => request<Livraison>('POST', '/api/livraisons', data),
 };

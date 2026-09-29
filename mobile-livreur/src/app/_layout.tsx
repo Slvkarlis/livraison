@@ -1,7 +1,7 @@
-import { AccentProvider, AuthProvider, Chargement, couleurs, useAuth } from '@fleetpulse/shared';
+import { AuthProvider, Chargement, ThemeProvider, useAuth } from '@fleetpulse/shared';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ACCENT } from '../theme';
+import { theme } from '../theme';
 
 function Navigation() {
   const { profil, chargement } = useAuth();
@@ -9,7 +9,7 @@ function Navigation() {
   const connecte = profil !== null;
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: couleurs.fond } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.fond } }}>
       <Stack.Protected guard={!connecte}>
         <Stack.Screen name="connexion" />
       </Stack.Protected>
@@ -22,11 +22,11 @@ function Navigation() {
 
 export default function RootLayout() {
   return (
-    <AccentProvider couleur={ACCENT}>
+    <ThemeProvider theme={theme}>
       <AuthProvider role="LIVREUR">
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <Navigation />
       </AuthProvider>
-    </AccentProvider>
+    </ThemeProvider>
   );
 }
