@@ -265,3 +265,21 @@ function fabriqueStyles(t: Theme) {
     videTexte: { fontSize: 15, color: t.secondaire, textAlign: 'center', marginBottom: 12, lineHeight: 21 },
   } as const;
 }
+
+/** Affiche quand la session enregistree ne peut pas etre verifiee (backend eteint, pare-feu, autre Wi-Fi). */
+export function EcranServeurInjoignable({ message, onReessayer, onDeconnexion }: {
+  message: string;
+  onReessayer: () => void;
+  onDeconnexion: () => void;
+}) {
+  const theme = useTheme();
+  const s = useStyles(fabriqueStyles);
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', padding: 24, backgroundColor: theme.fond }}>
+      <Text style={s.titre}>Serveur injoignable</Text>
+      <Text style={[s.sousTitre, { marginBottom: 20, lineHeight: 21 }]}>{message}</Text>
+      <Bouton titre="Réessayer" onPress={onReessayer} />
+      <Bouton titre="Se déconnecter" variante="discret" onPress={onDeconnexion} style={{ marginTop: 8 }} />
+    </View>
+  );
+}

@@ -1,11 +1,14 @@
-import { AuthProvider, Chargement, ThemeProvider, useAuth } from '@fleetpulse/shared';
+import { AuthProvider, Chargement, EcranServeurInjoignable, ThemeProvider, useAuth } from '@fleetpulse/shared';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { theme } from '../theme';
 
 function Navigation() {
-  const { profil, chargement } = useAuth();
+  const { profil, chargement, serveurInjoignable, reessayer, logout } = useAuth();
   if (chargement) return <Chargement />;
+  if (serveurInjoignable) {
+    return <EcranServeurInjoignable message={serveurInjoignable} onReessayer={reessayer} onDeconnexion={logout} />;
+  }
   const connecte = profil !== null;
 
   return (

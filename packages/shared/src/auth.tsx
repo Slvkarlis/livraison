@@ -8,6 +8,9 @@ const CLE_TOKEN = 'fleetpulse.token';
 interface AuthState {
   profil: Profil | null;
   chargement: boolean;
+  /** Session enregistree mais serveur injoignable au demarrage : l'app affiche un ecran "Reessayer". */
+  serveurInjoignable: string | null;
+  reessayer: () => void;
   login: (email: string, motDePasse: string) => Promise<void>;
   logout: () => Promise<void>;
   rafraichir: () => Promise<void>;
@@ -25,6 +28,7 @@ const LIBELLE_ROLE: Record<Role, string> = {
 export function AuthProvider({ role, children }: { role: Role; children: ReactNode }) {
   const [profil, setProfil] = useState<Profil | null>(null);
   const [chargement, setChargement] = useState(true);
+  const [serveurInjoignable, setServeurInjoignable] = useState<string | null>(null);
 
   const logout = useCallback(async () => {
     setToken(null);
@@ -42,21 +46,39 @@ export function AuthProvider({ role, children }: { role: Role; children: ReactNo
     setProfil(moi);
   }, [role]);
 
+  const restaurerSession = useCallback(async () => {
+    try {
+      const token = await SecureStore.getItemAsync(CLE_TOKEN);
+      if (token) await ouvrirSession(token);
+      setServeurInjoignable(null);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 0) {
+        // On garde le jeton : la session reprendra des que le serveur repond.
+        setServeurInjoignable(error.message);
+      } else {
+        setServeurInjoignable(null);
+        await logout();
+      }
+    } finally {
+      setChargement(false);
+    }
+  }, [logout, ouvrirSession]);
+
   useEffect(() => {
     setUnauthorizedHandler(() => { void logout(); });
-    (async () => {
-      try {
-        const token = await SecureStore.getItemAsync(CLE_TOKEN);
-        if (token) await ouvrirSession(token);
-      } catch (error) {
-        // Serveur injoignable : on garde le jeton pour reessayer au prochain lancement.
-        if (!(error instanceof ApiError && error.status === 0)) await logout();
-      } finally {
-        setChargement(false);
-      }
-    })();
+    void restaurerSession();
     return () => setUnauthorizedHandler(null);
-  }, [logout, ouvrirSession]);
+  }, [logout, restaurerSession]);
+
+  const reessayer = useCallback(() => {
+    setChargement(true);
+    void restaurerSession();
+  }, [restaurerSession]);
+
+  const oublierSession = useCallback(async () => {
+    setServeurInjoignable(null);
+    await logout();
+  }, [logout]);
 
   const login = useCallback(async (email: string, motDePasse: string) => {
     const { token } = await api.login(email.trim().toLowerCase(), motDePasse);
@@ -68,8 +90,9 @@ export function AuthProvider({ role, children }: { role: Role; children: ReactNo
     setProfil(await api.me());
   }, []);
 
-  const value = useMemo(() => ({ profil, chargement, login, logout, rafraichir }),
-    [profil, chargement, login, logout, rafraichir]);
+  const value = useMemo(
+    () => ({ profil, chargement, serveurInjoignable, reessayer, login, logout: oublierSession, rafraichir }),
+    [profil, chargement, serveurInjoignable, reessayer, login, oublierSession, rafraichir]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
