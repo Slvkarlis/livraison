@@ -8,6 +8,13 @@
 
 ## 0. Current state (end of session 2026-09-29)
 
+**Session 2026-09-29 (4) — responsable web app (sprint 1 scope):**
+- `web-responsable/` (React 19 + Vite + TypeScript + react-router, standalone npm project, not in the `mobile/` workspaces). Blue accent, sidebar layout, French.
+- Pages: login (RESPONSABLE only, token in localStorage, `/api/me` check), Commandes (US-07: status chips, search, detail modal), Livreurs (US-02 CRUD + activate, US-03 vehicle select), Véhicules (US-03 CRUD + activate + assign livreur).
+- No CORS needed: Vite dev/preview proxy `/api` → `:8083` (`API_URL` env to override).
+- Checked: `tsc -b` + `vite build`, 17/17 API calls through the proxy against `livraison_e2e`, screenshots in headless Edge.
+- Note: `backend/mvnw` fails because `.mvn/` stayed at the repo root after the folder move; use `mvn` (installed at `C:pache-maven-3.9.9`) or move `.mvn/` into `backend/`.
+
 **Session 2026-09-29 (3) — map + Stripe (user request, pulled forward from "Later"):**
 - Client maps now use **Leaflet + OpenStreetMap tiles in a WebView** (`mobile-client/src/composants/CarteLeaflet.tsx`), not react-native-maps / Google (map never worked on the user's phone in Expo Go). OSM tiles need the WebView `baseUrl` (Referer). CARTO tiles now require an API key, so don't use them. Verified by rendering the page in headless Edge.
 - **Stripe**: `ModePaiement.CARTE`, `StatutPaiement` (A_LA_LIVRAISON / EN_ATTENTE / PAYE / ECHOUE), `PaiementService` + `StripeService` (stripe-java 29.2.0), PaymentSheet in the client app, server-side verification + optional webhook. Keys via env `STRIPE_*` (see README); without keys card is disabled. TND amounts in millimes (last digit 0).
@@ -128,7 +135,7 @@ Each phase ends with: backend tests passing, a scripted end-to-end check (like `
 - [ ] Move backend to `backend/` (blocked by the IDE lock on 2026-09-29)
 - [ ] Enum → VARCHAR fix + Flyway (baseline from current schema)
 - [x] Global exception handler (`@RestControllerAdvice`) returning `{code, message}` JSON — all front-ends rely on it
-- [ ] CORS config for the web app (not needed for native Expo apps)
+- [x] ~~CORS config for the web app~~ → not needed: Vite proxies `/api` to the backend
 - [x] `GET /api/me` (profile + role + livreur vehicle) for all apps
 - [ ] WebSocket STOMP endpoint `/ws` with JWT auth on CONNECT (token in STOMP header), user destinations `/user/queue/...`
 - [x] `packages/shared`: hand-written API types, fetch client with token, JWT session (SecureStore), status labels/colors, UI kit
@@ -178,10 +185,10 @@ Screens (bottom tabs: **Commandes · Profil**):
 
 ### Phase G — Responsable web app (React + Vite)
 Layout: left sidebar (**Carte · Commandes · Livreurs · Véhicules · Créneaux · Incidents**), content area.
-- [ ] Login (RESPONSABLE only)
+- [x] Login (RESPONSABLE only)
 - [ ] Commandes: table with status filter + search, detail drawer with timeline, "Assigner à un livreur" (select among present livreurs, sorted by distance)
-- [ ] Livreurs: CRUD + activate/deactivate (existing API)
-- [ ] Véhicules: CRUD + activate/deactivate (existing API)
+- [x] Livreurs: CRUD + activate/deactivate (existing API) + vehicle select
+- [x] Véhicules: CRUD + activate/deactivate (existing API) + assign livreur
 - [ ] Créneaux: create shifts, see who booked which car
 - [ ] Incidents: list, mark as handled
 - [ ] **Carte temps réel**: Leaflet map, livreur markers updated via STOMP without reload, click marker → current order + same polyline as the livreur app

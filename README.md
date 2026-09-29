@@ -5,6 +5,7 @@
 | `src/`, `pom.xml` | Backend Spring Boot 4 / Java 17 / MySQL (port `8083`) |
 | `mobile-client/` | Application client (Expo / React Native) : inscription, commandes, carte OpenStreetMap, paiement Stripe |
 | `mobile-livreur/` | Application livreur (Expo / React Native) : connexion, véhicule affecté |
+| `web-responsable/` | Application web du responsable (React + Vite) : connexion, commandes, livreurs, véhicules |
 | `packages/shared/` | Code partagé : types API, client HTTP, session JWT, libellés, composants UI |
 | `scripts/e2e_mobile_api.py` | Vérification de bout en bout des appels API utilisés par les apps |
 
@@ -58,10 +59,25 @@ Si le téléphone n'arrive pas à joindre le backend, autorisez le port 8083 dan
 
 Les comptes livreurs sont créés par le responsable (`POST /api/admin/livreurs`) ; les clients s'inscrivent depuis l'app.
 
+## Lancer l'application web du responsable
+
+```bash
+cd web-responsable
+npm install          # une seule fois
+npm run dev          # http://localhost:5173
+```
+
+Connexion avec le compte responsable (`admin@fleetpulse.tn` / `admin12345`) ; les comptes client et livreur sont refusés.
+Vite relaie `/api` vers `http://localhost:8083` (pas de CORS à configurer). Autre adresse : `API_URL=http://... npm run dev`.
+
+Pages : **Commandes** (US-07, filtre par statut, recherche, détail), **Livreurs** (US-02 création/modification/activation,
+choix du véhicule), **Véhicules** (US-03 création/modification/activation, affectation à un livreur).
+
 ## Vérifications
 
 ```bash
 npm run typecheck                               # TypeScript (apps + shared)
+npm run build --prefix web-responsable          # TypeScript + build de l'app web
 npm run lint -w mobile-client -w mobile-livreur # ESLint
 python scripts/e2e_mobile_api.py                # API (backend lancé)
 ```
