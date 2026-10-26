@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,13 +15,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final JwtService jwtService;
-    private final UtilisateurDetailsService detailsService;
-
-    public JwtAuthenticationFilter(JwtService jwtService, UtilisateurDetailsService detailsService) {
-        this.jwtService = jwtService;
-        this.detailsService = detailsService;
-    }
+    @Autowired
+    private JwtService jwtService;
+    @Autowired
+    private UtilisateurDetailsService detailsService;
 
     @Override
     protected void doFilterInternal(
@@ -38,7 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = jwtService.extractEmail(token);
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails user = detailsService.loadUserByUsername(email);
-                if (jwtService.isValid(token, user.getUsername())) {
+                // Un compte suspendu perd l'acces immediatement, sans attendre l'expiration du jeton
+                if (user.isEnabled() && jwtService.isValid(token, user.getUsername())) {
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

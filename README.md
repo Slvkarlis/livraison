@@ -2,7 +2,7 @@
 
 | Dossier | Contenu |
 |---|---|
-| `src/`, `pom.xml` | Backend Spring Boot 4 / Java 17 / MySQL (port `8083`) |
+| `backend/` | Backend Spring Boot 4 / Java 25 / MySQL (port `8083`) |
 | `mobile-client/` | Application client (Expo / React Native) : inscription, commandes, carte OpenStreetMap, paiement Stripe |
 | `mobile-livreur/` | Application livreur (Expo / React Native) : connexion, véhicule affecté |
 | `web-responsable/` | Application web du responsable (React + Vite) : connexion, commandes, livreurs, véhicules |
@@ -37,6 +37,25 @@ $env:STRIPE_PUBLISHABLE_KEY="pk_test_..."
 - Webhook (facultatif, l'app vérifie déjà le paiement) : `stripe listen --forward-to localhost:8083/api/stripe/webhook`,
   puis `$env:STRIPE_WEBHOOK_SECRET="whsec_..."`.
 - Les clés ne doivent jamais être commitées.
+
+### Comptes et authentification (sprint 1)
+
+| Endpoint | Rôle |
+|---|---|
+| `POST /api/auth/login` | Email **ou téléphone** + mot de passe → `token` (JWT, profil dans l'en-tête) + `refreshToken` |
+| `POST /api/auth/refresh`, `POST /api/auth/logout` | Rotation / révocation du jeton de rafraîchissement |
+| `POST /api/auth/otp/demande`, `POST /api/auth/otp/inscription` | Inscription client par téléphone + code OTP |
+| `POST /api/auth/inscription/partenaire`, `POST /api/auth/inscription/livreur` | Dossiers soumis à validation (`EN_ATTENTE`) |
+| `POST /api/auth/mot-de-passe/oubli`, `POST /api/auth/mot-de-passe/reinitialiser` | Réinitialisation par code à 6 chiffres |
+| `GET/PUT /api/dossier` | Le candidat suit et corrige son dossier |
+| `/api/admin/dossiers/{id}/valider \| refuser \| complement` | Décision du Responsable (motif obligatoire pour refus / complément) |
+| `/api/admin/comptes/{id}/suspendre \| reactiver` | Suspension / réactivation avec motif |
+| `POST /api/admin/responsables` | Comptes Responsable `OPERATIONS` / `FINANCE` (administrateur principal uniquement) |
+| `GET /api/admin/audit` | Journal d'audit (`?acteur=&action=&cibleId=&limite=`) |
+
+Les codes OTP / réinitialisation sont **écrits dans les logs du serveur** (`JournalNotificationSender`) tant
+qu'aucune passerelle SMS / email n'est branchée. Au premier démarrage, `MigrationComptes` convertit l'ancienne
+colonne `utilisateur.actif` en `statut` (aucun script SQL à lancer).
 
 ## Lancer les applications mobiles
 

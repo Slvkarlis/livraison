@@ -15,6 +15,7 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,15 +28,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaiementService {
     private static final Logger log = LoggerFactory.getLogger(PaiementService.class);
 
-    private final LivraisonRepository livraisonRepository;
-    private final StripeService stripe;
-    private final StripeProperties props;
-
-    public PaiementService(LivraisonRepository livraisonRepository, StripeService stripe, StripeProperties props) {
-        this.livraisonRepository = livraisonRepository;
-        this.stripe = stripe;
-        this.props = props;
-    }
+    @Autowired
+    private LivraisonRepository livraisonRepository;
+    @Autowired
+    private StripeService stripe;
+    @Autowired
+    private StripeProperties props;
 
     public PaiementConfigResponse config() {
         return new PaiementConfigResponse(stripe.actif(), stripe.actif() ? props.clePublique() : null, stripe.devise());

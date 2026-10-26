@@ -4,6 +4,7 @@ import com.fleetpulse.livraison.Dto.LivraisonResponse;
 import com.fleetpulse.livraison.Dto.PaiementConfigResponse;
 import com.fleetpulse.livraison.Dto.PaiementResponse;
 import com.fleetpulse.livraison.Service.PaiementService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -16,11 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class PaiementController {
-    private final PaiementService paiementService;
-
-    public PaiementController(PaiementService paiementService) {
-        this.paiementService = paiementService;
-    }
+    @Autowired
+    private PaiementService paiementService;
 
     // Cle publique Stripe + disponibilite du paiement par carte
     @GetMapping("/api/paiements/config")

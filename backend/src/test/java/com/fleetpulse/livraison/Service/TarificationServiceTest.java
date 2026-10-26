@@ -7,15 +7,22 @@ import com.fleetpulse.livraison.Config.DepotProperties;
 import com.fleetpulse.livraison.Config.TarificationProperties;
 import com.fleetpulse.livraison.Model.enums.TypeLivraison;
 import com.fleetpulse.livraison.Service.TarificationService.Devis;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class TarificationServiceTest {
     private static final double DEPOT_LAT = 36.8065;
     private static final double DEPOT_LNG = 10.1815;
 
-    private final TarificationService service = new TarificationService(
-            new TarificationProperties(1.3, 2.525, 7.0, 1.5, 0.4, 0.30, 3.0, 0.5, 25, 60),
-            new DepotProperties("Depot", DEPOT_LAT, DEPOT_LNG));
+    private final TarificationService service = new TarificationService();
+
+    @BeforeEach
+    void configurer() {
+        ReflectionTestUtils.setField(service, "props",
+                new TarificationProperties(1.3, 2.525, 7.0, 1.5, 0.4, 0.30, 3.0, 0.5, 25, 60));
+        ReflectionTestUtils.setField(service, "depot", new DepotProperties("Depot", DEPOT_LAT, DEPOT_LNG));
+    }
 
     @Test
     void creneauAuTarifNormalCoutDeRevientPlusMarge() {

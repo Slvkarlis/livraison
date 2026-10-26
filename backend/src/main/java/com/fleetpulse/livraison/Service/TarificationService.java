@@ -3,6 +3,7 @@ package com.fleetpulse.livraison.Service;
 import com.fleetpulse.livraison.Config.DepotProperties;
 import com.fleetpulse.livraison.Config.TarificationProperties;
 import com.fleetpulse.livraison.Model.enums.TypeLivraison;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,13 +15,10 @@ import org.springframework.stereotype.Service;
 public class TarificationService {
     private static final double RAYON_TERRE_KM = 6371.0088;
 
-    private final TarificationProperties props;
-    private final DepotProperties depot;
-
-    public TarificationService(TarificationProperties props, DepotProperties depot) {
-        this.props = props;
-        this.depot = depot;
-    }
+    @Autowired
+    private TarificationProperties props;
+    @Autowired
+    private DepotProperties depot;
 
     public record Devis(double distanceKm, double fraisLivraison, double supplementImmediat, double total) {
     }

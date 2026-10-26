@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,23 +26,16 @@ public class LivraisonService {
     private static final Duration DUREE_MAX_CRENEAU = Duration.ofHours(4);
     private static final Duration TOLERANCE_CRENEAU = Duration.ofMinutes(5);
 
-    private final LivraisonRepository livraisonRepository;
-    private final UtilisateurRepository utilisateurRepository;
-    private final TarificationService tarificationService;
-    private final TarificationProperties tarification;
-    private final StripeService stripeService;
-
-    public LivraisonService(LivraisonRepository livraisonRepository,
-                            UtilisateurRepository utilisateurRepository,
-                            TarificationService tarificationService,
-                            TarificationProperties tarification,
-                            StripeService stripeService) {
-        this.livraisonRepository = livraisonRepository;
-        this.utilisateurRepository = utilisateurRepository;
-        this.tarificationService = tarificationService;
-        this.tarification = tarification;
-        this.stripeService = stripeService;
-    }
+    @Autowired
+    private LivraisonRepository livraisonRepository;
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
+    @Autowired
+    private TarificationService tarificationService;
+    @Autowired
+    private TarificationProperties tarification;
+    @Autowired
+    private StripeService stripeService;
 
     /** Prix affiche au client avant qu'il confirme sa commande. */
     public DevisResponse devis(DevisRequest request) {

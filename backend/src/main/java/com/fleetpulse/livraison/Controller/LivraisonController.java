@@ -6,6 +6,7 @@ import com.fleetpulse.livraison.Dto.DevisResponse;
 import com.fleetpulse.livraison.Dto.LivraisonResponse;
 import com.fleetpulse.livraison.Service.LivraisonService;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -20,11 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/livraisons")
 public class LivraisonController {
-    private final LivraisonService livraisonService;
-
-    public LivraisonController(LivraisonService livraisonService) {
-        this.livraisonService = livraisonService;
-    }
+    @Autowired
+    private LivraisonService livraisonService;
 
     // US-06 : frais calcules par le systeme (distance depot -> adresse + marge), affiches avant confirmation
     @PostMapping("/devis")

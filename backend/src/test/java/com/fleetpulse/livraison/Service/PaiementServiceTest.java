@@ -25,16 +25,19 @@ import com.stripe.model.PaymentIntent;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class PaiementServiceTest {
     private final LivraisonRepository repository = mock(LivraisonRepository.class);
     private final StripeService stripe = mock(StripeService.class);
-    private final PaiementService service = new PaiementService(repository, stripe,
-            new StripeProperties("sk_test_x", "pk_test_x", null, "tnd"));
+    private final PaiementService service = new PaiementService();
     private Livraison livraison;
 
     @BeforeEach
     void commandeCarte() {
+        ReflectionTestUtils.setField(service, "livraisonRepository", repository);
+        ReflectionTestUtils.setField(service, "stripe", stripe);
+        ReflectionTestUtils.setField(service, "props", new StripeProperties("sk_test_x", "pk_test_x", null, "tnd"));
         Client client = new Client();
         client.setEmail("client@test.tn");
         livraison = new Livraison();

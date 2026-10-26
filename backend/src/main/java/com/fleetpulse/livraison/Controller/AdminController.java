@@ -8,6 +8,7 @@ import com.fleetpulse.livraison.Dto.VehiculeResponse;
 import com.fleetpulse.livraison.Service.AdminService;
 import com.fleetpulse.livraison.Service.AdminService.DuplicateDataException;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,13 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasRole('RESPONSABLE')")
+@PreAuthorize("hasRole('OPERATIONS')")   // flotte : sous-role operations (ou administrateur principal)
 public class AdminController {
-    private final AdminService adminService;
-
-    public AdminController(AdminService adminService) {
-        this.adminService = adminService;
-    }
+    @Autowired
+    private AdminService adminService;
 
     @GetMapping("/livreurs")
     public List<LivreurResponse> listLivreurs() { return adminService.listLivreurs(); }

@@ -15,7 +15,17 @@ public abstract class Utilisateur {
     @Column(nullable = false) protected String prenom;
     @Column(nullable = false, unique = true) protected String email;
     protected String telephone;
+    protected boolean telephoneVerifie;                        // true apres validation par OTP (US-101)
     @Column(nullable = false) protected String motDePasseHash; // BCrypt, jamais en clair
-    @Enumerated(EnumType.STRING) @Column(nullable = false) protected Role role;
-    protected boolean actif = true;
+    // varchar et non ENUM MySQL : ddl-auto=update n'ajoute jamais de nouvelle valeur a un ENUM
+    @Enumerated(EnumType.STRING) @Column(nullable = false, columnDefinition = "varchar(20)") protected Role role;
+    // Remplace l'ancien booleen "actif" (voir MigrationComptes)
+    @Enumerated(EnumType.STRING) @Column(nullable = false, columnDefinition = "varchar(20) default 'ACTIF'")
+    protected StatutCompte statut = StatutCompte.ACTIF;
+    @Column(length = 500) protected String motifStatut;        // dernier motif de refus, complement ou suspension
+    protected Instant dateCreation = Instant.now();
+
+    public boolean isActif() {
+        return statut == StatutCompte.ACTIF;
+    }
 }

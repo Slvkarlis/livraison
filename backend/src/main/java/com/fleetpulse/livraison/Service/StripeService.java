@@ -5,8 +5,10 @@ import com.stripe.StripeClient;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
+import jakarta.annotation.PostConstruct;
 import java.util.Locale;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /** Acces a l'API Stripe (PaymentIntents), isole pour pouvoir etre remplace dans les tests. */
@@ -16,11 +18,13 @@ public class StripeService {
     private static final Set<String> DEVISES_SANS_DECIMALE = Set.of(
             "bif", "clp", "djf", "gnf", "jpy", "kmf", "krw", "mga", "pyg", "rwf", "vnd", "vuv", "xaf", "xof", "xpf");
 
-    private final StripeProperties props;
-    private final StripeClient client;
+    @Autowired
+    private StripeProperties props;
 
-    public StripeService(StripeProperties props) {
-        this.props = props;
+    private StripeClient client;
+
+    @PostConstruct
+    void init() {
         this.client = props.actif() ? new StripeClient(props.cleSecrete()) : null;
     }
 

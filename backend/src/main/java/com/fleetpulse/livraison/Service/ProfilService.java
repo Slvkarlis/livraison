@@ -3,16 +3,14 @@ package com.fleetpulse.livraison.Service;
 import com.fleetpulse.livraison.Dto.ProfilResponse;
 import com.fleetpulse.livraison.Repository.UtilisateurRepository;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProfilService {
-    private final UtilisateurRepository utilisateurRepository;
-
-    public ProfilService(UtilisateurRepository utilisateurRepository) {
-        this.utilisateurRepository = utilisateurRepository;
-    }
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
 
     @Transactional(readOnly = true)
     public Optional<ProfilResponse> findByEmail(String email) {

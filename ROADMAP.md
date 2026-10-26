@@ -6,7 +6,16 @@
 
 ---
 
-## 0. Current state (end of session 2026-09-29)
+## 0. Current state (end of session 2026-10-26)
+
+**Session 2026-10-26 — backend: cahier des charges sprint 1 completed (branch `corrections`):**
+- Java 25 in `pom.xml` (only JDK 17 installed on this machine: verified with `-Djava.version=17`). Field injection with `@Autowired` everywhere; JWT header carries the `profil`.
+- US-101 phone + OTP signup, US-102 refresh tokens (rotation, reuse detection, logout), US-103 `PARTENAIRE` role + Responsable `sousRole` (OPERATIONS / FINANCE; null = main admin with `ROLE_ADMIN`), US-104/105 partner file + validate / refuse / ask for more, US-106 driver application, US-107 password reset by code, US-108 immutable audit log, US-109 suspend / reactivate any account with a reason.
+- `Utilisateur.actif` replaced by `StatutCompte` (EN_ATTENTE, COMPLEMENT_DEMANDE, ACTIF, SUSPENDU, REFUSE); `MigrationComptes` converts old rows at startup. Suspension cuts access immediately (filter checks `isEnabled`).
+- SMS / email go through `NotificationSender`; the only implementation logs messages (codes visible in server logs).
+- Tests: 30 unit tests; 55 HTTP checks of the new flows + `scripts/e2e_mobile_api.py` pass on a scratch copy of the schema.
+- **Not done:** mobile / web screens for these flows (apps still use email signup, don't call `/refresh`), real SMS/email provider.
+
 
 **Session 2026-09-29 (4) — responsable web app (sprint 1 scope):**
 - `web-responsable/` (React 19 + Vite + TypeScript + react-router, standalone npm project, not in the `mobile/` workspaces). Blue accent, sidebar layout, French.

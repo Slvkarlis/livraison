@@ -7,12 +7,17 @@ import com.fleetpulse.livraison.Dto.LivreurResponse;
 import com.fleetpulse.livraison.Dto.VehiculeResponse;
 import com.fleetpulse.livraison.Model.Livreur;
 import com.fleetpulse.livraison.Model.Vehicule;
+import com.fleetpulse.livraison.Model.enums.ActionAudit;
 import com.fleetpulse.livraison.Model.enums.Role;
+import com.fleetpulse.livraison.Model.enums.StatutCompte;
 import com.fleetpulse.livraison.Repository.LivreurRepository;
 import com.fleetpulse.livraison.Repository.UtilisateurRepository;
 import com.fleetpulse.livraison.Repository.VehiculeRepository;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,22 +25,25 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AdminService {
-    private final LivreurRepository livreurRepository;
-    private final VehiculeRepository vehiculeRepository;
-    private final UtilisateurRepository utilisateurRepository;
-    private final PasswordEncoder passwordEncoder;
+    // Les candidats (EN_ATTENTE, COMPLEMENT_DEMANDE, REFUSE) sont geres par CompteService, pas par la flotte.
+    private static final Set<StatutCompte> FLOTTE = EnumSet.of(StatutCompte.ACTIF, StatutCompte.SUSPENDU);
 
-    public AdminService(LivreurRepository livreurRepository, VehiculeRepository vehiculeRepository,
-                        UtilisateurRepository utilisateurRepository, PasswordEncoder passwordEncoder) {
-        this.livreurRepository = livreurRepository;
-        this.vehiculeRepository = vehiculeRepository;
-        this.utilisateurRepository = utilisateurRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    @Autowired
+    private LivreurRepository livreurRepository;
+    @Autowired
+    private VehiculeRepository vehiculeRepository;
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JetonRafraichissementService jetonService;
+    @Autowired
+    private AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<LivreurResponse> listLivreurs() {
-        return livreurRepository.findAllByOrderByNomAscPrenomAsc().stream().map(LivreurResponse::from).toList();
+        return livreurRepository.findAllByStatutInOrderByNomAscPrenomAsc(FLOTTE).stream().map(LivreurResponse::from).toList();
     }
 
     @Transactional
@@ -51,12 +59,14 @@ public class AdminService {
         livreur.setTelephone(request.telephone());
         livreur.setMotDePasseHash(passwordEncoder.encode(request.motDePasse()));
         livreur.setRole(Role.LIVREUR);
-        livreur.setActif(true);
+        livreur.setStatut(StatutCompte.ACTIF);
         try {
-            return LivreurResponse.from(livreurRepository.save(livreur));
+            livreurRepository.saveAndFlush(livreur);
         } catch (DataIntegrityViolationException exception) {
             throw new DuplicateDataException();
         }
+        auditService.enregistrer(ActionAudit.LIVREUR_CREE, livreur, null);
+        return LivreurResponse.from(livreur);
     }
 
     @Transactional
@@ -68,6 +78,7 @@ public class AdminService {
             if (request.motDePasse() != null && !request.motDePasse().isBlank()) {
                 livreur.setMotDePasseHash(passwordEncoder.encode(request.motDePasse()));
             }
+            auditService.enregistrer(ActionAudit.LIVREUR_MODIFIE, livreur, null);
             return LivreurResponse.from(livreurRepository.save(livreur));
         });
     }
@@ -82,9 +93,16 @@ public class AdminService {
         return setLivreurActif(id, true);
     }
 
+    // Raccourci de la page Livreurs ; la suspension avec motif saisi passe par CompteService (US-109).
     private boolean setLivreurActif(Long id, boolean actif) {
-        return livreurRepository.findById(id).map(livreur -> {
-            livreur.setActif(actif);
+        return livreurRepository.findById(id).filter(livreur -> FLOTTE.contains(livreur.getStatut())).map(livreur -> {
+            if (livreur.isActif() != actif) {
+                livreur.setStatut(actif ? StatutCompte.ACTIF : StatutCompte.SUSPENDU);
+                livreur.setMotifStatut(actif ? null : "Désactivé depuis la liste des livreurs");
+                if (!actif) jetonService.revoquerTous(livreur);
+                auditService.enregistrer(actif ? ActionAudit.COMPTE_REACTIVE : ActionAudit.COMPTE_SUSPENDU,
+                        livreur, livreur.getMotifStatut());
+            }
             livreurRepository.save(livreur);
             return true;
         }).orElse(false);
@@ -109,10 +127,12 @@ public class AdminService {
             vehicule.setConsommationLitres100Km(request.consommationLitres100Km());
         }
         try {
-            return VehiculeResponse.from(vehiculeRepository.save(vehicule));
+            vehiculeRepository.saveAndFlush(vehicule);
         } catch (DataIntegrityViolationException exception) {
             throw new DuplicateDataException();
         }
+        auditService.enregistrer(ActionAudit.VEHICULE_CREE, "VEHICULE", vehicule.getId(), vehicule.getImmatriculation());
+        return VehiculeResponse.from(vehicule);
     }
 
     @Transactional
@@ -127,6 +147,8 @@ public class AdminService {
                 validateConsumption(request.consommationLitres100Km());
                 vehicule.setConsommationLitres100Km(request.consommationLitres100Km());
             }
+            auditService.enregistrer(ActionAudit.VEHICULE_MODIFIE, "VEHICULE", vehicule.getId(),
+                    vehicule.getImmatriculation());
             return VehiculeResponse.from(vehiculeRepository.save(vehicule));
         });
     }
@@ -145,6 +167,8 @@ public class AdminService {
         return vehiculeRepository.findById(id).map(vehicule -> {
             vehicule.setActif(actif);
             vehiculeRepository.save(vehicule);
+            auditService.enregistrer(actif ? ActionAudit.VEHICULE_ACTIVE : ActionAudit.VEHICULE_DESACTIVE,
+                    "VEHICULE", vehicule.getId(), vehicule.getImmatriculation());
             return true;
         }).orElse(false);
     }
@@ -161,6 +185,7 @@ public class AdminService {
         }
         livreur.get().setVehicule(vehicule.get());
         vehiculeRepository.save(vehicule.get());
+        auditService.enregistrer(ActionAudit.VEHICULE_AFFECTE, livreur.get(), vehicule.get().getImmatriculation());
         return Optional.of(LivreurResponse.from(livreurRepository.save(livreur.get())));
     }
 
@@ -169,6 +194,7 @@ public class AdminService {
         return livreurRepository.findById(livreurId).map(livreur -> {
             livreur.setVehicule(null);
             livreurRepository.save(livreur);
+            auditService.enregistrer(ActionAudit.VEHICULE_RETIRE, livreur, null);
             return true;
         }).orElse(false);
     }
