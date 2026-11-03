@@ -36,6 +36,7 @@ public class LivraisonService {
     private TarificationProperties tarification;
     @Autowired
     private StripeService stripeService;
+    @Autowired private ZoneService zoneService;
 
     /** Prix affiche au client avant qu'il confirme sa commande. */
     public DevisResponse devis(DevisRequest request) {
@@ -43,7 +44,8 @@ public class LivraisonService {
             throw new IllegalArgumentException("Position de livraison invalide.");
         }
         TypeLivraison type = request.typeLivraison() == null ? TypeLivraison.PLANIFIEE : request.typeLivraison();
-        Devis devis = tarificationService.devis(request.latitude(), request.longitude(), type);
+        double frais = zoneService.desservie(request.latitude(), request.longitude()).getFraisLivraison().doubleValue();
+        Devis devis = new Devis(0, frais, 0, frais);
         return DevisResponse.from(type, devis, tarification.delaiImmediatMinutes());
     }
 
@@ -58,7 +60,8 @@ public class LivraisonService {
         TypeLivraison type = request.typeLivraison();
         Instant maintenant = Instant.now();
         // Le prix est toujours recalcule ici : le client ne peut pas le fixer.
-        Devis devis = tarificationService.devis(request.latitude(), request.longitude(), type);
+        double frais = zoneService.desservie(request.latitude(), request.longitude()).getFraisLivraison().doubleValue();
+        Devis devis = new Devis(0, frais, 0, frais);
 
         Livraison livraison = new Livraison();
         livraison.setCodeSuivi("FP-" + UUID.randomUUID().toString().substring(0, 12).toUpperCase());
@@ -99,6 +102,8 @@ public class LivraisonService {
     }
 
     private void validate(CreateLivraisonRequest request) {
+        if (request != null && request.modePaiement() == ModePaiement.COD)
+            throw new IllegalArgumentException("Pour une commande COD, choisissez un partenaire et ses produits dans le catalogue.");
         if (request == null || request.adresse() == null || request.adresse().isBlank()) {
             throw new IllegalArgumentException("Indiquez l'adresse de livraison.");
         }

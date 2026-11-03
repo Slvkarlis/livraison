@@ -1,0 +1,517 @@
+{
+  "info": {
+    "_postman_id": "a8c94fd1-bd1f-4f3a-98e9-3db7f9a10e51",
+    "name": "FleetPulse - API de livraison",
+    "description": "Collection de démonstration pour tester les endpoints du backend Spring Boot. Démarrer le backend sur http://localhost:8083 avant utilisation. Commencer par les connexions pour enregistrer les jetons adminToken et clientToken. Les codes OTP et de réinitialisation sont visibles dans les logs du backend en mode développement. Un dossier partenaire/livreur créé publiquement reste EN_ATTENTE jusqu'à sa validation par un responsable. Les routes Stripe nécessitent une configuration Stripe; le webhook requiert une signature valide.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8083" },
+    { "key": "adminToken", "value": "" },
+    { "key": "clientToken", "value": "" },
+    { "key": "candidatToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "refreshedToken", "value": "" },
+    { "key": "livreurId", "value": "1" },
+    { "key": "vehiculeId", "value": "1" },
+    { "key": "compteId", "value": "1" },
+    { "key": "livraisonId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "1 - Authentification et inscriptions",
+      "item": [
+        {
+          "name": "Lire la configuration d'authentification",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/config",
+            "description": "Vérifie si le mode démonstration est actif et le délai d'attente avant de redemander un code."
+          }
+        },
+        {
+          "name": "Connexion administrateur",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@fleetpulse.tn\",\n  \"motDePasse\": \"admin12345\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Connexion avec le compte responsable principal. Enregistre automatiquement le token dans adminToken et le refresh token dans refreshToken."
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) {", "  const data = pm.response.json();", "  pm.collectionVariables.set('adminToken', data.token);", "  pm.collectionVariables.set('refreshToken', data.refreshToken);", "}"] } }]
+        },
+        {
+          "name": "Connexion client",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"client@test.tn\",\n  \"motDePasse\": \"Motdepasse123\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Connecte un client déjà inscrit. Modifie l'email et le mot de passe selon le compte créé. Enregistre clientToken et refreshToken."
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) {", "  const data = pm.response.json();", "  pm.collectionVariables.set('clientToken', data.token);", "  pm.collectionVariables.set('refreshToken', data.refreshToken);", "}"] } }]
+        },
+        {
+          "name": "Connexion candidat partenaire/livreur (après inscription)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"ali.candidat@example.tn\",\n  \"motDePasse\": \"Motdepasse123\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Connecte un candidat déjà créé, même si son dossier est encore en attente. Utilise le compte partenaire/livreur créé dans les exemples et enregistre le token dans candidatToken."
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) {", "  const data = pm.response.json();", "  pm.collectionVariables.set('candidatToken', data.token);", "  pm.collectionVariables.set('refreshToken', data.refreshToken);", "}"] } }]
+        },
+        {
+          "name": "Renouveler le token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/refresh",
+            "description": "Échange un refresh token valide contre un nouveau token d'accès et un nouveau refresh token. Le nouveau token d'accès est enregistré dans refreshedToken; copie-le dans le token correspondant (adminToken, clientToken ou candidatToken)."
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) {", "  const data = pm.response.json();", "  pm.collectionVariables.set('refreshedToken', data.token);", "  pm.collectionVariables.set('refreshToken', data.refreshToken);", "}"] } }]
+        },
+        {
+          "name": "Déconnexion",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/logout",
+            "description": "Révoque le refresh token. Cette route ne demande pas de token d'accès."
+          }
+        },
+        {
+          "name": "Créer un compte client par email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Ben Ali\",\n  \"prenom\": \"Amel\",\n  \"email\": \"amel.client@example.tn\",\n  \"motDePasse\": \"Motdepasse123\",\n  \"telephone\": \"+21620123456\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/signup",
+            "description": "Crée un compte CLIENT actif. Remplace l'email et le téléphone par des valeurs jamais utilisées. Réponse attendue : 201."
+          }
+        },
+        {
+          "name": "Demander un code OTP d'inscription client",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"telephone\": \"+21620123457\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/otp/demande",
+            "description": "Demande un code d'inscription pour un nouveau numéro. En développement, lis le code dans les logs du backend."
+          }
+        },
+        {
+          "name": "Inscrire un client avec OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"telephone\": \"+21620123457\",\n  \"code\": \"123456\",\n  \"nom\": \"Ben Ali\",\n  \"prenom\": \"Amel\",\n  \"email\": \"amel.otp@example.tn\",\n  \"motDePasse\": \"Motdepasse123\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/otp/inscription",
+            "description": "Remplace code par celui des logs serveur. Crée le compte client puis ouvre directement une session."
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 201) {", "  const data = pm.response.json();", "  pm.collectionVariables.set('clientToken', data.token);", "  pm.collectionVariables.set('refreshToken', data.refreshToken);", "}"] } }]
+        },
+        {
+          "name": "Inscrire un partenaire (dossier à valider)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Ben Ali\",\n  \"prenom\": \"Sami\",\n  \"email\": \"sami.partenaire@example.tn\",\n  \"telephone\": \"+21622123456\",\n  \"motDePasse\": \"Motdepasse123\",\n  \"nomCommerce\": \"Épicerie Sami\",\n  \"categorie\": \"Alimentation\",\n  \"adresse\": \"Tunis\",\n  \"latitude\": 36.8065,\n  \"longitude\": 10.1815,\n  \"matriculeFiscal\": \"MF12345\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/inscription/partenaire",
+            "description": "Le partenaire crée son compte et soumet les informations de son commerce. Son compte est EN_ATTENTE : il ne peut pas encore se connecter comme partenaire. Le responsable doit ensuite valider son dossier dans la section Admin. Change les coordonnées uniques avant chaque nouvel essai."
+          }
+        },
+        {
+          "name": "Déposer une candidature livreur",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Trabelsi\",\n  \"prenom\": \"Ali\",\n  \"email\": \"ali.candidat@example.tn\",\n  \"telephone\": \"+21623123456\",\n  \"motDePasse\": \"Motdepasse123\",\n  \"numeroIdentite\": \"ID12345\",\n  \"vehiculeDeclare\": \"Moto\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/inscription/livreur",
+            "description": "Crée un dossier de candidature livreur en attente de validation par un responsable. Utilise des coordonnées jamais utilisées."
+          }
+        },
+        {
+          "name": "Demander la réinitialisation du mot de passe",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifiant\": \"client@test.tn\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/mot-de-passe/oubli",
+            "description": "Demande un code envoyé par email (en développement, visible dans les logs serveur). L'identifiant peut être l'email ou le téléphone."
+          }
+        },
+        {
+          "name": "Réinitialiser le mot de passe",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identifiant\": \"client@test.tn\",\n  \"code\": \"123456\",\n  \"nouveauMotDePasse\": \"NouveauMotdepasse123\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/auth/mot-de-passe/reinitialiser",
+            "description": "Remplace le code par celui reçu. Le nouveau mot de passe doit contenir au moins 8 caractères."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 - Profil et dossier candidat",
+      "item": [
+        {
+          "name": "Afficher mon profil",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/me",
+            "description": "Affiche le compte connecté. Remplace clientToken par adminToken ou candidatToken pour un autre profil."
+          }
+        },
+        {
+          "name": "Consulter mon dossier",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{candidatToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/dossier",
+            "description": "Consulte le dossier du partenaire ou du candidat connecté. Requiert un compte authentifié."
+          }
+        },
+        {
+          "name": "Corriger et renvoyer mon dossier",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{candidatToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Ben Ali\",\n  \"prenom\": \"Sami\",\n  \"telephone\": \"+21622123457\",\n  \"nomCommerce\": \"Épicerie Sami\",\n  \"categorie\": \"Alimentation\",\n  \"adresse\": \"La Marsa\",\n  \"latitude\": 36.8782,\n  \"longitude\": 10.3247,\n  \"matriculeFiscal\": \"MF12345\",\n  \"numeroIdentite\": \"ID12345\",\n  \"vehiculeDeclare\": \"Moto\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/dossier",
+            "description": "Corrige les champs fournis puis renvoie le dossier en attente. Seul un dossier candidat avec les droits requis peut utiliser cette route; les champs non concernés peuvent être omis."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 - Livraisons et paiement",
+      "item": [
+        {
+          "name": "Calculer un devis",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"latitude\": 36.8065,\n  \"longitude\": 10.1815,\n  \"typeLivraison\": \"IMMEDIATE\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/livraisons/devis",
+            "description": "Calcule une estimation du prix pour le lieu et le type de livraison. Valeurs possibles : IMMEDIATE ou PLANIFIEE."
+          }
+        },
+        {
+          "name": "Créer une livraison immédiate (paiement à la livraison)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"adresse\": \"Avenue Habib Bourguiba, Tunis\",\n  \"latitude\": 36.8065,\n  \"longitude\": 10.1815,\n  \"typeLivraison\": \"IMMEDIATE\",\n  \"modePaiement\": \"COD\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/livraisons",
+            "description": "Crée une livraison. Le serveur calcule le prix; ne pas envoyer de montant. COD signifie paiement en espèces à la livraison. Enregistre l'identifiant retourné dans livraisonId."
+          }
+        },
+        {
+          "name": "Créer une livraison planifiée",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"adresse\": \"La Marsa, Tunis\",\n  \"latitude\": 36.8782,\n  \"longitude\": 10.3247,\n  \"typeLivraison\": \"PLANIFIEE\",\n  \"creneauDebut\": \"2030-05-01T10:00:00Z\",\n  \"creneauFin\": \"2030-05-01T12:00:00Z\",\n  \"modePaiement\": \"COD\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/livraisons",
+            "description": "Exemple d'une livraison planifiée avec un créneau futur de 2 heures. Ajuste les dates pour qu'elles soient futures au moment du test; un créneau ne peut dépasser 4 heures."
+          }
+        },
+        {
+          "name": "Lister mes livraisons (client)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/livraisons/mes",
+            "description": "Liste uniquement les commandes du client connecté."
+          }
+        },
+        {
+          "name": "Lister toutes les livraisons (responsable)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/livraisons",
+            "description": "Liste toutes les commandes. Requiert un responsable."
+          }
+        },
+        {
+          "name": "Lire la configuration de paiement",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/paiements/config",
+            "description": "Indique si le paiement par carte est activé. Requiert un client connecté."
+          }
+        },
+        {
+          "name": "Démarrer un paiement Stripe",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/livraisons/{{livraisonId}}/paiement",
+            "description": "Démarre le paiement par carte de la livraison indiquée. Nécessite Stripe configuré et une livraison appartenant au client connecté, payée par CARTE."
+          }
+        },
+        {
+          "name": "Vérifier un paiement Stripe",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "url": "{{baseUrl}}/api/livraisons/{{livraisonId}}/paiement/verifier",
+            "description": "Demande au backend de vérifier l'état du paiement Stripe d'une livraison appartenant au client connecté."
+          }
+        },
+        {
+          "name": "Webhook Stripe (test réel uniquement)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Stripe-Signature", "value": "REMPLACER_PAR_SIGNATURE_STRIPE" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": { \"object\": { \"id\": \"pi_test\" } }\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/stripe/webhook",
+            "description": "Stripe appelle normalement cette route. Un test Postman manuel avec une signature fictive échouera; utiliser Stripe CLI et une vraie signature de webhook."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 - Gestion des livreurs et véhicules (OPERATIONS)",
+      "item": [
+        {
+          "name": "Lister les livreurs",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/livreurs"
+          }
+        },
+        {
+          "name": "Créer un livreur",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Trabelsi\",\n  \"prenom\": \"Ali\",\n  \"email\": \"ali.livreur@example.tn\",\n  \"motDePasse\": \"Motdepasse123\",\n  \"telephone\": \"+21624123456\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/livreurs",
+            "description": "Crée directement un livreur actif dans la flotte. Chaque email doit être unique."
+          }
+        },
+        {
+          "name": "Modifier un livreur",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Trabelsi\",\n  \"prenom\": \"Ali\",\n  \"telephone\": \"+21624123457\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/livreurs/{{livreurId}}",
+            "description": "Modifie les champs renseignés du livreur. L'identifiant se trouve dans la réponse de création ou la liste."
+          }
+        },
+        {
+          "name": "Désactiver un livreur",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/admin/livreurs/{{livreurId}}",
+            "description": "Désactive le livreur sans effacer ses données."
+          }
+        },
+        {
+          "name": "Réactiver un livreur",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/admin/livreurs/{{livreurId}}/activer"
+          }
+        },
+        {
+          "name": "Lister les véhicules",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/vehicules"
+          }
+        },
+        {
+          "name": "Créer un véhicule",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"immatriculation\": \"123 TU 4567\",\n  \"type\": \"Moto\",\n  \"capaciteKg\": 20,\n  \"consommationLitres100Km\": 3.5\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/vehicules",
+            "description": "Ajoute un véhicule. L'immatriculation doit être unique."
+          }
+        },
+        {
+          "name": "Modifier un véhicule",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"immatriculation\": \"123 TU 4568\",\n  \"type\": \"Scooter\",\n  \"capaciteKg\": 25,\n  \"consommationLitres100Km\": 3.2\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/vehicules/{{vehiculeId}}"
+          }
+        },
+        {
+          "name": "Désactiver un véhicule",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/admin/vehicules/{{vehiculeId}}"
+          }
+        },
+        {
+          "name": "Réactiver un véhicule",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/admin/vehicules/{{vehiculeId}}/activer"
+          }
+        },
+        {
+          "name": "Affecter un véhicule à un livreur",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"vehiculeId\": 1\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/livreurs/{{livreurId}}/vehicule",
+            "description": "Associe le véhicule correspondant à vehiculeId au livreur indiqué. Remplace 1 par l'identifiant obtenu dans la réponse de création du véhicule."
+          }
+        },
+        {
+          "name": "Retirer le véhicule d'un livreur",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/admin/livreurs/{{livreurId}}/vehicule"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5 - Gestion des comptes, dossiers et audit",
+      "item": [
+        {
+          "name": "Lister les comptes",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/comptes?role=CLIENT&statut=ACTIF",
+            "description": "Liste les comptes. Les paramètres role et statut sont facultatifs. Exemples de rôle : CLIENT, PARTENAIRE, LIVREUR, RESPONSABLE; statut : EN_ATTENTE, COMPLEMENT_DEMANDE, ACTIF, SUSPENDU, REFUSE."
+          }
+        },
+        {
+          "name": "Détail d'un compte",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/comptes/{{compteId}}"
+          }
+        },
+        {
+          "name": "Lister les dossiers en attente",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/dossiers",
+            "description": "Affiche les dossiers partenaires et livreurs au statut EN_ATTENTE ou COMPLEMENT_DEMANDE. Prends leur id pour les actions suivantes."
+          }
+        },
+        {
+          "name": "Valider un dossier",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/admin/dossiers/{{compteId}}/valider",
+            "description": "Accepte le dossier; le compte devient ACTIF. Pas de corps JSON."
+          }
+        },
+        {
+          "name": "Refuser un dossier",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"motif\": \"Documents non conformes\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/dossiers/{{compteId}}/refuser"
+          }
+        },
+        {
+          "name": "Demander un complément pour un dossier",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"motif\": \"Merci d'ajouter une copie de votre pièce d'identité\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/dossiers/{{compteId}}/complement",
+            "description": "Demande une correction; le candidat pourra ensuite modifier et renvoyer son dossier. Le motif est obligatoire."
+          }
+        },
+        {
+          "name": "Suspendre un compte",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"motif\": \"Compte suspendu pour vérification\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/comptes/{{compteId}}/suspendre",
+            "description": "Suspend un compte actif. Le motif est obligatoire; impossible de suspendre son propre compte."
+          }
+        },
+        {
+          "name": "Réactiver un compte",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"motif\": \"Vérification terminée\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/comptes/{{compteId}}/reactiver"
+          }
+        },
+        {
+          "name": "Créer un responsable OPERATIONS ou FINANCE",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nom\": \"Mansour\",\n  \"prenom\": \"Nadia\",\n  \"email\": \"nadia.responsable@example.tn\",\n  \"telephone\": \"+21625123456\",\n  \"motDePasse\": \"Motdepasse123\",\n  \"sousRole\": \"OPERATIONS\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/admin/responsables",
+            "description": "Seul l'administrateur principal peut créer un responsable. sousRole accepte OPERATIONS ou FINANCE."
+          }
+        },
+        {
+          "name": "Consulter l'audit (liste)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/audit?limite=20",
+            "description": "Affiche les événements d'audit. Filtres facultatifs : acteur, action, cibleId, limite. Accessible aux responsables."
+          }
+        },
+        {
+          "name": "Consulter l'audit (paginé)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/audit/page?page=0&taille=20&debut=2025-01-01T00:00:00Z&fin=2030-12-31T23:59:59Z",
+            "description": "Version paginée de l'audit. Les dates ISO debut et fin sont facultatives."
+          }
+        }
+      ]
+    }
+  ]
+}

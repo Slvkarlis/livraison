@@ -7,3 +7,4 @@ export * from './ui';
 export * from './connexion';
 export * from './sprint1';
 export * from './parcours';
+export * from './sprint2';

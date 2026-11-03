@@ -4,6 +4,7 @@ import type { SousRole, StatutCompte } from './sprint1';
 export type Role = 'CLIENT' | 'PARTENAIRE' | 'LIVREUR' | 'RESPONSABLE';
 
 export type StatutLivraison =
+  | 'PENDING_PARTNER'
   | 'EN_PREPARATION'
   | 'AFFECTEE'
   | 'EN_COURS'
@@ -43,6 +44,12 @@ export interface Profil {
 }
 
 export interface Livraison {
+  partenaireId: number | null;
+  nomPartenaire: string | null;
+  zoneNom: string | null;
+  montantArticles: number | null;
+  lignes: import('./sprint2').LigneCommande[];
+  notes: string | null;
   id: number;
   codeSuivi: string;
   clientEmail: string;
@@ -57,7 +64,7 @@ export interface Livraison {
   distanceKm: number;
   fraisLivraison: number;
   supplementImmediat: number;
-  /** Prix de la livraison (frais + supplement). */
+  /** Total figé articles + frais ; frais seuls pour les anciennes commandes. */
   montantTotal: number;
   /** A remettre au livreur : 0 si deja paye par carte. */
   montantACollecter: number;

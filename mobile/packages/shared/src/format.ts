@@ -1,6 +1,7 @@
 import type { StatutLivraison } from './types';
 
 export const STATUTS: Record<StatutLivraison, { libelle: string; couleur: string; fond: string }> = {
+  PENDING_PARTNER: { libelle: 'En attente du partenaire', couleur: '#B45309', fond: '#FEF3C7' },
   EN_PREPARATION: { libelle: 'En préparation', couleur: '#B45309', fond: '#FEF3C7' },
   AFFECTEE: { libelle: 'Livreur assigné', couleur: '#1D4ED8', fond: '#DBEAFE' },
   EN_COURS: { libelle: 'En route', couleur: '#6D28D9', fond: '#EDE9FE' },
@@ -27,7 +28,7 @@ export function formatDistance(km: number): string {
 }
 
 export function formatMontant(montant: number): string {
-  return `${montant.toFixed(1).replace('.', ',')} DT`;
+  return `${montant.toFixed(3).replace('.', ',')} DT`;
 }
 
 function deuxChiffres(n: number) {

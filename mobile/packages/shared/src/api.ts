@@ -12,12 +12,14 @@ import type {
 } from './types';
 
 import { creerClientHttp } from './http';
+import { creerApiMarche } from './sprint2';
 import type { Compte } from './sprint1';
 export { ApiError } from './http';
 export const http = creerClientHttp(apiBaseUrl, () => `Serveur injoignable (${apiBaseUrl()}). Vérifiez votre connexion et le backend.`);
 const request = http.request;
 
 export const api = {
+  ...creerApiMarche(request),
   demo: () => request<{ demonstration: boolean; delaiRenvoiSecondes: number }>('GET', '/api/auth/config'),
   logout: () => http.logout(),
   demanderOtp: (telephone: string) => request<void>('POST', '/api/auth/otp/demande', { telephone }),

@@ -2,18 +2,23 @@ import { AuthProvider, ConfigurationProvider, peutRole, Chargement, EcranServeur
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { theme } from '../theme';
+import { MarcheSession } from '../marche-session';
+import { useEffect } from 'react';
+import { definirAdresse } from '../brouillon';
 
 function Navigation() {
   const { profil, chargement, serveurInjoignable, reessayer, logout } = useAuth();
+  useEffect(() => { definirAdresse(null); }, [profil?.id]);
   if (chargement) return <Chargement />;
   if (serveurInjoignable) {
     return <EcranServeurInjoignable message={serveurInjoignable} onReessayer={reessayer} onDeconnexion={logout} />;
   }
   const connecte = profil !== null;
   const actif = peutRole(profil, 'CLIENT');
+  const partenaire = peutRole(profil, 'PARTENAIRE');
 
   return (
-    <Stack
+    <MarcheSession key={profil?.id ?? 'anonyme'}><Stack
       screenOptions={{
         headerShadowVisible: false,
         headerTintColor: theme.accent,
@@ -36,19 +41,23 @@ function Navigation() {
           }}
         />
       </Stack.Protected>
-      <Stack.Protected guard={connecte && !actif}>
+      <Stack.Protected guard={connecte && !actif && !partenaire}>
         <Stack.Screen name="dossier" options={{ title: 'Suivi du dossier', headerShown: true }} />
+      </Stack.Protected>
+      <Stack.Protected guard={partenaire}>
+        <Stack.Screen name="catalogue-partenaire" options={{ title: 'Mon catalogue', headerShown: true }} />
       </Stack.Protected>
       <Stack.Protected guard={actif}>
         <Stack.Screen name="(onglets)" options={{ headerShown: false }} />
         <Stack.Screen name="nouvelle-commande" options={{ title: 'Nouvelle commande' }} />
+        <Stack.Screen name="livraison-carte" options={{ title: 'Livraison par carte (ancien parcours)' }} />
         <Stack.Screen
           name="choisir-adresse"
           options={{ title: 'Adresse de livraison', headerStyle: { backgroundColor: theme.surface } }}
         />
         <Stack.Screen name="commande/[id]" options={{ title: '', headerTransparent: true }} />
       </Stack.Protected>
-    </Stack>
+    </Stack></MarcheSession>
   );
 }
 

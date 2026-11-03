@@ -14,7 +14,8 @@ public class Livraison {
     @Column(nullable = false) private Double longitude;
     @Column(nullable = false) private Instant creneauDebut;
     @Column(nullable = false) private Instant creneauFin;
-    @Enumerated(EnumType.STRING) private StatutLivraison statut = StatutLivraison.EN_PREPARATION;
+    @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(30)")
+    private StatutLivraison statut = StatutLivraison.EN_PREPARATION;
     // varchar et non ENUM MySQL : ddl-auto=update n'ajoute jamais de nouvelle valeur a un ENUM
     @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(20)")
     private ModePaiement modePaiement = ModePaiement.COD;
@@ -30,4 +31,21 @@ public class Livraison {
     private Instant dateCreation = Instant.now();
 
     @ManyToOne(optional = false) private Client client;
+    @ManyToOne private Partenaire partenaire;
+    private String nomPartenaire;
+    private String nomZone;
+    @Column(precision = 14, scale = 3) private java.math.BigDecimal montantArticles;
+    @Column(precision = 14, scale = 3) private java.math.BigDecimal total;
+    @Column(length = 500) private String notes;
+    @Column(unique = true, length = 180) private String cleIdempotence;
+    private String empreinteRequete;
+    @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<LigneCommande> lignes = new java.util.ArrayList<>();
+
+    public java.math.BigDecimal calculerTotal() {
+        montantArticles = lignes.stream().map(LigneCommande::getSousTotal)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        total = montantArticles.add(java.math.BigDecimal.valueOf(fraisLivraison)).setScale(3);
+        return total;
+    }
 }

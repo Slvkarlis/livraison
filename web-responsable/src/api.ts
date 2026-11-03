@@ -3,12 +3,14 @@ import type {
 } from './types';
 
 import { creerClientHttp } from '../../mobile/packages/shared/src/http';
+import { creerApiMarche } from '../../mobile/packages/shared/src/sprint2';
 export { ApiError } from '../../mobile/packages/shared/src/http';
 import type { Compte } from './sprint1';
 export const http = creerClientHttp(() => '', () => 'Serveur injoignable. Vérifiez le backend sur le port 8083.');
 const request = http.request;
 
 export const api = {
+  ...creerApiMarche(request),
   comptes: () => request<Compte[]>('GET', '/api/admin/comptes'),
   decision: (id: number, action: string, motif: string) => request<Compte>('PUT', '/api/admin/dossiers/' + id + '/' + action, { motif }),
   statutCompte: (id: number, action: string, motif: string) => request<Compte>('PUT', '/api/admin/comptes/' + id + '/' + action, { motif }),

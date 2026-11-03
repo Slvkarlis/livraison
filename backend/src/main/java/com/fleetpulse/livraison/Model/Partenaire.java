@@ -12,4 +12,6 @@ public class Partenaire extends Utilisateur {
     private Double latitude;
     private Double longitude;
     private String matriculeFiscal;
+    @ManyToOne private Zone zone;
+    private Boolean ouvert = false;
 }

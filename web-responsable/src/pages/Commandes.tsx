@@ -75,7 +75,7 @@ export default function Commandes() {
                   <td>{l.clientEmail}</td>
                   <td className="tronque" title={l.adresse}>{l.adresse}</td>
                   <td className="sans-retour">
-                    {l.typeLivraison === 'IMMEDIATE' ? 'Immédiate' : formatCreneau(l.creneauDebut, l.creneauFin)}
+                    {l.nomPartenaire ?? (l.typeLivraison === 'IMMEDIATE' ? 'Immédiate' : formatCreneau(l.creneauDebut, l.creneauFin))}
                   </td>
                   <td>{MODES_PAIEMENT[l.modePaiement]}</td>
                   <td className="nombre">{formatMontant(l.montantTotal)}</td>
@@ -102,6 +102,7 @@ function DetailCommande({ livraison: l, onFermer }: { livraison: Livraison; onFe
         <span className="discret">Créée le {formatDate(l.dateCreation)}</span>
       </div>
       <dl className="details">
+        {l.nomPartenaire && <><dt>Partenaire</dt><dd>{l.nomPartenaire}</dd><dt>Articles</dt><dd>{l.lignes.map(ligne => <div key={ligne.produitId}>{ligne.quantite} × {ligne.nomProduit} · {formatMontant(ligne.prixUnitaire)} = {formatMontant(ligne.sousTotal)}</div>)}</dd><dt>Notes</dt><dd>{l.notes || '—'}</dd></>}
         <dt>Client</dt><dd>{l.clientEmail}</dd>
         <dt>Adresse</dt>
         <dd>

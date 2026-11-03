@@ -30,6 +30,12 @@
 		<java.version>25</java.version>
 	</properties>
 	<dependencies>
+        <!-- Géométrie robuste commune à MySQL et H2 ; persistance WKT portable. -->
+        <dependency>
+            <groupId>org.locationtech.jts</groupId>
+            <artifactId>jts-core</artifactId>
+            <version>1.20.0</version>
+        </dependency>
 
         <!-- Base isolée pour les tests HTTP Sprint 1, sans dépendre du MySQL de développement. -->
         <dependency>

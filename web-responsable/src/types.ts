@@ -4,6 +4,7 @@ import type { SousRole, StatutCompte } from './sprint1';
 export type Role = 'CLIENT' | 'PARTENAIRE' | 'LIVREUR' | 'RESPONSABLE';
 
 export type StatutLivraison =
+  | 'PENDING_PARTNER'
   | 'EN_PREPARATION'
   | 'AFFECTEE'
   | 'EN_COURS'
@@ -66,6 +67,12 @@ export interface VehiculeRequest {
 }
 
 export interface Livraison {
+  partenaireId: number | null;
+  nomPartenaire: string | null;
+  zoneNom: string | null;
+  montantArticles: number | null;
+  lignes: import('../../mobile/packages/shared/src/sprint2').LigneCommande[];
+  notes: string | null;
   id: number;
   codeSuivi: string;
   clientEmail: string;

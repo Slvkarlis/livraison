@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import Zones from './pages/Zones';
 import { Link, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './composants/Layout';
 import Commandes from './pages/Commandes';
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/comptes" element={<Guard operations><Comptes /></Guard>} />
         <Route path="/audit" element={<Guard><Audit /></Guard>} />
         <Route path="/commandes" element={<Guard operations><Commandes /></Guard>} />
+        <Route path="/zones" element={<Guard operations><Zones /></Guard>} />
         <Route path="/livreurs" element={<Guard operations><Livreurs /></Guard>} />
         <Route path="/vehicules" element={<Guard operations><Vehicules /></Guard>} />
         <Route path="/acces-refuse" element={refuse} />

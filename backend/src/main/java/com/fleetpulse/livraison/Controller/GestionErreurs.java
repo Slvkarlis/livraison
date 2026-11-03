@@ -20,6 +20,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GestionErreurs {
     private static final Logger log = LoggerFactory.getLogger(GestionErreurs.class);
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    ResponseEntity<ErreurResponse> parametreManquant(Exception e) {
+        return ResponseEntity.badRequest().body(new ErreurResponse("DONNEES_INVALIDES", "Paramètre obligatoire manquant."));
+    }
+    @ExceptionHandler(org.springframework.dao.ConcurrencyFailureException.class)
+    ResponseEntity<ErreurResponse> concurrence(Exception e) {
+        return ResponseEntity.status(409).body(new ErreurResponse("ETAT_INVALIDE", "Modification concurrente. Réessayez la même opération."));
+    }
+    @ExceptionHandler(com.fleetpulse.livraison.Service.MarketplaceException.class)
+    ResponseEntity<ErreurResponse> marketplace(com.fleetpulse.livraison.Service.MarketplaceException e) {
+        return ResponseEntity.status(e.getStatut()).body(new ErreurResponse(e.getCode(), e.getMessage()));
+    }
 
     @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
     ResponseEntity<ErreurResponse> serviceIndisponible(org.springframework.web.server.ResponseStatusException exception) {

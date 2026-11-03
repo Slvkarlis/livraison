@@ -69,8 +69,14 @@ export default function DetailCommande() {
         <PastilleStatut statut={livraison.statut} />
         <Text style={styles.adresse}>{livraison.adresse}</Text>
         <Text style={styles.code}>Commande {livraison.codeSuivi}</Text>
+        {livraison.nomPartenaire ? <View style={styles.bloc}>
+          <Text style={styles.section}>{livraison.nomPartenaire}</Text>
+          {livraison.lignes.map(l => <Ligne key={l.produitId} libelle={l.quantite + ' × ' + l.nomProduit + ' · ' + formatMontant(l.prixUnitaire)} valeur={formatMontant(l.sousTotal)} />)}
+          <Ligne libelle="Articles" valeur={formatMontant(livraison.montantArticles ?? 0)} />
+          {livraison.notes ? <Text style={styles.momentTexte}>{livraison.notes}</Text> : null}
+        </View> : null}
 
-        <View style={styles.moment}>
+        {!livraison.partenaireId ? <View style={styles.moment}>
           <View style={[styles.icone, immediate && { backgroundColor: '#FEF3C7' }]}>
             <Ionicons name={immediate ? 'flash' : 'calendar'} size={20} color={immediate ? '#B45309' : theme.accent} />
           </View>
@@ -78,13 +84,13 @@ export default function DetailCommande() {
             <Text style={styles.momentTitre}>{immediate ? 'Livraison immédiate' : 'Créneau planifié'}</Text>
             <Text style={styles.momentTexte}>{formatCreneau(livraison.creneauDebut, livraison.creneauFin)}</Text>
           </View>
-        </View>
+        </View> : <Text style={styles.momentTexte}>La commande attend la décision du partenaire. Aucun délai de livraison annoncé.</Text>}
 
         <Text style={styles.section}>Paiement</Text>
         <View style={styles.bloc}>
           <Ligne
             libelle={`Livraison${livraison.distanceKm ? ` (${formatDistance(livraison.distanceKm)})` : ''}`}
-            valeur={formatMontant(livraison.fraisLivraison || livraison.montantTotal)}
+            valeur={formatMontant(livraison.partenaireId ? livraison.fraisLivraison : livraison.fraisLivraison || livraison.montantTotal)}
           />
           {livraison.supplementImmediat > 0 ? (
             <Ligne libelle="Supplément immédiat" valeur={`+${formatMontant(livraison.supplementImmediat)}`} />

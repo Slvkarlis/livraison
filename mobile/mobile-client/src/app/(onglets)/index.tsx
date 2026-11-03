@@ -100,7 +100,7 @@ function CarteCommande({ livraison }: { livraison: Livraison }) {
           <Text style={styles.montant}>{formatMontant(livraison.montantTotal)}</Text>
         </View>
         <Text style={styles.creneau}>
-          {immediate ? 'Immédiate · ' : ''}{formatCreneau(livraison.creneauDebut, livraison.creneauFin)}
+          {livraison.nomPartenaire ? livraison.nomPartenaire + ' · ' + livraison.lignes.length + ' article(s)' : (immediate ? 'Immédiate · ' : '') + formatCreneau(livraison.creneauDebut, livraison.creneauFin)}
         </Text>
         <View style={styles.cartePied}>
           <PastilleStatut statut={livraison.statut} />

@@ -21,7 +21,7 @@ async function attendre(condition, message, timeout = 12000) {
   throw new Error(message);
 }
 async function api(method, route, body, token) {
-  const r = await fetch(apiBase + route, { method, headers: { 'Content-Type': 'application/json',
+  const r = await fetch(apiBase + route, { method, signal: AbortSignal.timeout(10000), headers: { 'Content-Type': 'application/json',
     ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
   const text = await r.text(); return { status: r.status, data: text ? JSON.parse(text) : null };
 }
@@ -31,8 +31,10 @@ async function main() {
   const classpath = [path.join(root, 'backend/target/test-classes'), path.join(root, 'backend/target/classes'),
     fs.readFileSync(path.join(temp, 'backend-classpath.txt'), 'utf8').trim()].join(path.delimiter);
   const log = path.join(temp, 'browser-backend.log');
+  const javaTemp = path.join(temp, 'browser-java-' + suffix);
+  fs.mkdirSync(javaTemp, { recursive: true });
   const fd = fs.openSync(log, 'w');
-  const backend = spawn(path.join(javaHome, 'bin/java.exe'), ['-cp', classpath, 'com.fleetpulse.livraison.LivraisonApplication',
+  const backend = spawn(path.join(javaHome, 'bin/java.exe'), ['-Djava.io.tmpdir=' + javaTemp, '-Dspring.devtools.restart.enabled=false', '-cp', classpath, 'com.fleetpulse.livraison.LivraisonApplication',
     '--server.port=18083', '--spring.profiles.active=demo', '--app.demo.enabled=true', '--debug=false',
     '--logging.level.org.springframework=WARN', '--logging.level.org.hibernate=WARN', '--logging.level.com.fleetpulse=INFO',
     '--spring.jpa.show-sql=false'], { windowsHide: true, stdio: ['ignore', fd, fd] });
@@ -51,7 +53,7 @@ async function main() {
   });
   let chrome, ws;
   try {
-    await attendre(async () => { try { return (await fetch(apiBase + '/api/auth/config')).ok; } catch { return false; } }, 'Backend de test indisponible', 45000);
+    await attendre(async () => { try { return (await fetch(apiBase + '/api/auth/config', { signal: AbortSignal.timeout(2000) })).ok; } catch { return false; } }, 'Backend de test indisponible', 45000);
     await new Promise(r => serveur.listen(15173, '127.0.0.1', r));
     const admin = (await api('POST', '/api/auth/login', { email: 'admin@sprint1.test', motDePasse: 'test-admin-password' })).data.token;
     const identite = role => ({ nom: 'Navigateur', prenom: role, email: role.toLowerCase() + suffix + '@sprint1.test',
@@ -65,13 +67,14 @@ async function main() {
     assert.equal((await api('POST', '/api/admin/responsables', finance, admin)).status, 201);
     const executable = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(fs.existsSync);
     if (!executable) throw new Error('Chrome ou Edge requis.');
+    const chromeProfil = path.join(temp, 'chrome-sprint1-' + suffix);
     chrome = spawn(executable, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
-      '--remote-debugging-port=19222', '--user-data-dir=' + path.join(temp, 'chrome-sprint1-' + suffix), 'about:blank'],
+      '--remote-debugging-port=0', '--user-data-dir=' + chromeProfil, 'about:blank'],
       { windowsHide: true, stdio: 'ignore' });
     let cible;
-    await attendre(async () => { try { cible = (await (await fetch('http://127.0.0.1:19222/json/list')).json()).find(p => p.type === 'page'); return !!cible; } catch { return false; } }, 'Chrome indisponible');
+    await attendre(async () => { try { const portChrome = fs.readFileSync(path.join(chromeProfil, 'DevToolsActivePort'), 'utf8').split('\n')[0]; cible = (await (await fetch('http://127.0.0.1:' + portChrome + '/json/list', { signal: AbortSignal.timeout(2000) })).json()).find(p => p.type === 'page'); return !!cible; } catch { return false; } }, 'Chrome indisponible');
     ws = new WebSocket(cible.webSocketDebuggerUrl);
-    await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
+    await new Promise((resolve, reject) => { const timer = setTimeout(() => reject(new Error('Connexion Chrome expirée')), 10000); ws.onopen = () => { clearTimeout(timer); resolve(); }; ws.onerror = reject; ws.onclose = () => reject(new Error('Connexion Chrome fermée')); });
     let sequence = 0; const attentes = new Map(); const erreurs = [];
     ws.onmessage = e => { const m = JSON.parse(e.data); if (m.id) {
       const a = attentes.get(m.id); if (!a) return; attentes.delete(m.id); m.error ? a.reject(new Error(m.error.message)) : a.resolve(m.result);
@@ -131,6 +134,9 @@ async function main() {
     assert.equal(await evaluer("[...document.querySelectorAll('nav a')].some(a => a.textContent === 'Comptes')"), false);
     await evaluer("history.pushState({}, '', '/comptes'); window.dispatchEvent(new PopStateEvent('popstate'))"); await contient('Accès refusé');
     ok('Menu FINANCE limité et accès direct interdit aux comptes');
+    if (process.env.SPRINT2_BROWSER === 'true') await require('./verify-sprint2-browser.cjs')({
+      api, admin, cdp, evaluer, remplir, cliquer, contient, connexion, attendre, ok, temp, suffix,
+    });
     assert.deepEqual(erreurs, []); ok('Aucune exception JavaScript non gérée');
     fs.writeFileSync(path.join(temp, 'sprint1-browser-results.json'), JSON.stringify(sorties, null, 2));
     await cdp('Browser.close').catch(() => {});

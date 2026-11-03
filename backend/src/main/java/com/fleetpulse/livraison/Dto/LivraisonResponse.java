@@ -22,10 +22,16 @@ public record LivraisonResponse(
         double distanceKm,
         double fraisLivraison,
         double supplementImmediat,
-        double montantTotal,          // prix de la livraison (frais + supplement)
+        double montantTotal,          // articles + frais ; ancien repli pour les commandes historiques
         double montantACollecter,     // a encaisser par le livreur : 0 si deja paye par carte
         StatutLivraison statut,
-        Instant dateCreation) {
+        Instant dateCreation,
+        Long partenaireId,
+        String nomPartenaire,
+        String zoneNom,
+        java.math.BigDecimal montantArticles,
+        java.util.List<MarketplaceDto.LigneVue> lignes,
+        String notes) {
 
     public static LivraisonResponse from(Livraison livraison) {
         return new LivraisonResponse(
@@ -46,11 +52,15 @@ public record LivraisonResponse(
                 total(livraison),
                 livraison.getMontantACollecter(),
                 livraison.getStatut(),
-                livraison.getDateCreation());
+                livraison.getDateCreation(),
+                livraison.getPartenaire() == null ? null : livraison.getPartenaire().getId(),
+                livraison.getNomPartenaire(), livraison.getNomZone(), livraison.getMontantArticles(),
+                livraison.getLignes().stream().map(MarketplaceDto.LigneVue::from).toList(), livraison.getNotes());
     }
 
     /** Commandes creees avant la tarification automatique : seul montantACollecter etait renseigne. */
     public static double total(Livraison livraison) {
+        if (livraison.getTotal() != null) return livraison.getTotal().doubleValue();
         double total = livraison.getFraisLivraison() + livraison.getSupplementImmediat();
         return total > 0 ? Math.round(total * 10) / 10.0 : livraison.getMontantACollecter();
     }
