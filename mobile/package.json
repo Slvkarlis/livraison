@@ -7,5 +7,10 @@
     "livreur": "npm run start -w mobile-livreur",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint -w mobile-client -w mobile-livreur && eslint packages/shared/src --config mobile-client/eslint.config.js"
+  },
+  "overrides": {
+    "@expo/cli": {
+      "expo-router": "~58.0.29"
+    }
   }
 }

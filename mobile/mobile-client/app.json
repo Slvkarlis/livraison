@@ -36,7 +36,8 @@
           "merchantIdentifier": "merchant.tn.fleetpulse",
           "enableGooglePay": false
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "scheme": "fleetpulse-client",
     "backgroundColor": "#F4F3FA"

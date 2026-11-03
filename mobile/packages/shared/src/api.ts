@@ -11,16 +11,32 @@ import type {
   SignupRequest,
 } from './types';
 
-import { creerClientHttp } from './http';
+import { ApiError, creerClientHttp } from './http';
 import { creerApiMarche } from './sprint2';
 import type { Compte } from './sprint1';
 export { ApiError } from './http';
 export const http = creerClientHttp(apiBaseUrl, () => `Serveur injoignable (${apiBaseUrl()}). Vérifiez votre connexion et le backend.`);
 const request = http.request;
 
+type ConfigurationAuth = { demonstration: boolean; delaiRenvoiSecondes: number };
+
+function estConfigurationAuth(value: unknown): value is ConfigurationAuth {
+  if (typeof value !== 'object' || value === null) return false;
+  const config = value as Record<string, unknown>;
+  return typeof config.demonstration === 'boolean'
+    && typeof config.delaiRenvoiSecondes === 'number'
+    && Number.isFinite(config.delaiRenvoiSecondes);
+}
+
 export const api = {
   ...creerApiMarche(request),
-  demo: () => request<{ demonstration: boolean; delaiRenvoiSecondes: number }>('GET', '/api/auth/config'),
+  demo: async () => {
+    const config = await request<unknown>('GET', '/api/auth/config');
+    if (!estConfigurationAuth(config)) {
+      throw new ApiError(502, 'Configuration reçue du serveur invalide.');
+    }
+    return config;
+  },
   logout: () => http.logout(),
   demanderOtp: (telephone: string) => request<void>('POST', '/api/auth/otp/demande', { telephone }),
   inscrireOtp: (data: unknown) => request<LoginResponse>('POST', '/api/auth/otp/inscription', data),

@@ -62,7 +62,7 @@ export function useTheme(): Theme {
 }
 
 /** Styles recalcules uniquement quand le theme change. */
-export function useStyles<T extends StyleSheet.NamedStyles<T>>(fabrique: (theme: Theme) => T): T {
+export function useStyles<T extends Record<string, object>>(fabrique: (theme: Theme) => T): T {
   const theme = useTheme();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => StyleSheet.create(fabrique(theme)), [theme]);
