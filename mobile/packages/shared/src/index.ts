@@ -5,3 +5,5 @@ export * from './config';
 export * from './format';
 export * from './ui';
 export * from './connexion';
+export * from './sprint1';
+export * from './parcours';

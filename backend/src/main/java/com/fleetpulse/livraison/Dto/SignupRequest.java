@@ -7,4 +7,6 @@ public record SignupRequest(
         String email,
         String motDePasse,
         String telephone) {
+    @Override
+    public String toString() { return "SignupRequest[confidentiel]"; }
 }

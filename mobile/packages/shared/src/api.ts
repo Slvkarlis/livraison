@@ -11,76 +11,25 @@ import type {
   SignupRequest,
 } from './types';
 
-/** Erreur API avec un message affichable tel quel a l'utilisateur. */
-export class ApiError extends Error {
-  constructor(public readonly status: number, message: string) {
-    super(message);
-  }
-}
-
-type Messages = Partial<Record<number, string>>;
-
-const MESSAGES_PAR_DEFAUT: Record<number, string> = {
-  400: 'Certaines informations sont invalides.',
-  401: 'Session expirée, reconnectez-vous.',
-  403: "Vous n'avez pas accès à cette action.",
-  404: 'Élément introuvable.',
-  409: 'Cet élément existe déjà.',
-};
-
-/** Sans delai maximal, un pare-feu qui ignore la connexion laisse l'application charger indefiniment. */
-const DELAI_MAX_MS = 10_000;
-
-function messageServeurInjoignable() {
-  return `Serveur injoignable (${apiBaseUrl()}). Vérifiez que le backend tourne, que le port 8083 est autorisé `
-    + 'dans le pare-feu et que le téléphone est sur le même Wi-Fi.';
-}
-
-let token: string | null = null;
-let onUnauthorized: (() => void) | null = null;
-
-export function setToken(value: string | null) {
-  token = value;
-}
-
-export function setUnauthorizedHandler(handler: (() => void) | null) {
-  onUnauthorized = handler;
-}
-
-async function request<T>(method: string, path: string, body?: unknown, messages: Messages = {}): Promise<T> {
-  let response: Response;
-  const annulation = new AbortController();
-  const minuteur = setTimeout(() => annulation.abort(), DELAI_MAX_MS);
-  try {
-    response = await fetch(apiBaseUrl() + path, {
-      method,
-      signal: annulation.signal,
-      headers: {
-        Accept: 'application/json',
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-  } catch {
-    throw new ApiError(0, messageServeurInjoignable());
-  } finally {
-    clearTimeout(minuteur);
-  }
-
-  if (!response.ok) {
-    if (response.status === 401 && token) onUnauthorized?.();
-    // Les erreurs metier arrivent en JSON {code, message} ; sinon message deduit du code HTTP.
-    const corps = await response.json().catch(() => null) as { message?: string } | null;
-    const message = messages[response.status] ?? corps?.message ?? MESSAGES_PAR_DEFAUT[response.status]
-      ?? `Erreur inattendue (${response.status}).`;
-    throw new ApiError(response.status, message);
-  }
-  const text = await response.text();
-  return (text ? JSON.parse(text) : undefined) as T;
-}
+import { creerClientHttp } from './http';
+import type { Compte } from './sprint1';
+export { ApiError } from './http';
+export const http = creerClientHttp(apiBaseUrl, () => `Serveur injoignable (${apiBaseUrl()}). Vérifiez votre connexion et le backend.`);
+const request = http.request;
 
 export const api = {
+  demo: () => request<{ demonstration: boolean; delaiRenvoiSecondes: number }>('GET', '/api/auth/config'),
+  logout: () => http.logout(),
+  demanderOtp: (telephone: string) => request<void>('POST', '/api/auth/otp/demande', { telephone }),
+  inscrireOtp: (data: unknown) => request<LoginResponse>('POST', '/api/auth/otp/inscription', data),
+  oubli: (identifiant: string) => request<void>('POST', '/api/auth/mot-de-passe/oubli', { identifiant }),
+  reinitialiser: (identifiant: string, code: string, nouveauMotDePasse: string) =>
+    request<void>('POST', '/api/auth/mot-de-passe/reinitialiser', { identifiant, code, nouveauMotDePasse }),
+  candidater: (partenaire: boolean, data: unknown) => request<Compte>('POST',
+    '/api/auth/inscription/' + (partenaire ? 'partenaire' : 'livreur'), data),
+  dossier: () => request<Compte>('GET', '/api/dossier'),
+  corrigerDossier: (data: unknown) => request<Compte>('PUT', '/api/dossier', data),
+
   login: (email: string, motDePasse: string) =>
     request<LoginResponse>('POST', '/api/auth/login', { email, motDePasse }, {
       401: 'Email ou mot de passe incorrect.',

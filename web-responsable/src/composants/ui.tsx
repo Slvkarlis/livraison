@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 
 /** Charge une ressource API ; recharger() relance l'appel apres une modification. */
 export function useDonnees<T>(charger: () => Promise<T>) {
@@ -75,6 +75,29 @@ export function EtatTableau({ chargement, erreur, vide, messageVide, onReessayer
 }
 
 export function Modale({ titre, onFermer, children }: { titre: string; onFermer: () => void; children: ReactNode }) {
+  const boite = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = boite.current;
+    if (element && !element.contains(document.activeElement)) {
+      (element.querySelector<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled)') ?? element).focus();
+    }
+  });
+  useEffect(() => {
+    const precedent = document.activeElement as HTMLElement | null;
+    const element = boite.current;
+    const focusables = () => Array.from(element?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') ?? []);
+    (focusables()[0] ?? element)?.focus();
+    const retenirFocus = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const elements = focusables();
+      const premier = elements[0]; const dernier = elements[elements.length - 1];
+      if (!premier) { e.preventDefault(); element?.focus(); }
+      else if (e.shiftKey && (document.activeElement === premier || document.activeElement === element)) { e.preventDefault(); dernier.focus(); }
+      else if (!e.shiftKey && document.activeElement === dernier) { e.preventDefault(); premier.focus(); }
+    };
+    document.addEventListener('keydown', retenirFocus);
+    return () => { document.removeEventListener('keydown', retenirFocus); precedent?.focus(); };
+  }, []);
   useEffect(() => {
     const echap = (e: KeyboardEvent) => { if (e.key === 'Escape') onFermer(); };
     window.addEventListener('keydown', echap);
@@ -83,7 +106,7 @@ export function Modale({ titre, onFermer, children }: { titre: string; onFermer:
 
   return (
     <div className="voile" onMouseDown={(e) => { if (e.target === e.currentTarget) onFermer(); }}>
-      <div className="modale" role="dialog" aria-modal="true" aria-label={titre}>
+      <div ref={boite} tabIndex={-1} className="modale" role="dialog" aria-modal="true" aria-label={titre}>
         <div className="modale-tete">
           <h2>{titre}</h2>
           <button className="bouton-icone" onClick={onFermer} aria-label="Fermer">

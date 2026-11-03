@@ -9,4 +9,6 @@ public record CandidatureLivreurRequest(
         String motDePasse,
         String numeroIdentite,
         String vehiculeDeclare) {
+    @Override
+    public String toString() { return "CandidatureLivreurRequest[confidentiel]"; }
 }

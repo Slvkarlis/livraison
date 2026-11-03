@@ -11,7 +11,7 @@ export function useConnexion() {
 
   async function seConnecter() {
     if (!email.trim() || !motDePasse) {
-      setErreur('Saisissez votre email et votre mot de passe.');
+      setErreur('Saisissez votre email ou téléphone et votre mot de passe.');
       return;
     }
     setErreur(null);

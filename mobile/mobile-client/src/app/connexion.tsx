@@ -28,7 +28,7 @@ export default function Connexion() {
           <Text style={styles.sousTitre}>Connectez-vous pour commander et suivre vos livraisons.</Text>
           <MessageErreur message={erreur} />
           <Champ
-            libelle="Email"
+            libelle="Email ou téléphone"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -45,6 +45,8 @@ export default function Connexion() {
             onSubmitEditing={seConnecter}
           />
           <Bouton titre="Se connecter" onPress={seConnecter} chargement={envoi} style={styles.bouton} />
+          <Bouton titre="Mot de passe oublié" variante="discret" onPress={() => router.push('/mot-de-passe-oublie')} />
+          <Bouton titre="Devenir partenaire" variante="discret" onPress={() => router.push('/candidature')} />
           <View style={styles.inscription}>
             <Text style={styles.inscriptionTexte}>Pas encore de compte ?</Text>
             <Bouton titre="Créer un compte" variante="discret" onPress={() => router.push('/inscription')} />

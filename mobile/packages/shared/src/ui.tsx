@@ -151,6 +151,7 @@ export function Champ({ libelle, erreur, ...props }: TextInputProps & { libelle:
     <View style={s.champBloc}>
       <Text style={s.champLibelle}>{libelle}</Text>
       <TextInput
+        accessibilityLabel={libelle}
         placeholderTextColor={theme.secondaire}
         selectionColor={theme.accent}
         keyboardAppearance={theme.sombre ? 'dark' : 'light'}

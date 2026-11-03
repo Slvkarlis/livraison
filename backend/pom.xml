@@ -31,6 +31,13 @@
 	</properties>
 	<dependencies>
 
+        <!-- Base isolée pour les tests HTTP Sprint 1, sans dépendre du MySQL de développement. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
 <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools -->
 <dependency>
     <groupId>org.springframework.boot</groupId>

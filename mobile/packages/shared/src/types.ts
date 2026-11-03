@@ -1,6 +1,7 @@
 // Miroir des DTO du backend (package com.fleetpulse.livraison.Dto).
 
-export type Role = 'CLIENT' | 'LIVREUR' | 'RESPONSABLE';
+import type { SousRole, StatutCompte } from './sprint1';
+export type Role = 'CLIENT' | 'PARTENAIRE' | 'LIVREUR' | 'RESPONSABLE';
 
 export type StatutLivraison =
   | 'EN_PREPARATION'
@@ -35,6 +36,9 @@ export interface Profil {
   email: string;
   telephone: string | null;
   role: Role;
+  statut: StatutCompte;
+  sousRole: SousRole;
+  motifStatut: string | null;
   vehicule: Vehicule | null;
 }
 
@@ -63,6 +67,8 @@ export interface Livraison {
 
 export interface LoginResponse {
   token: string;
+  refreshToken: string;
+  refreshExpiresInMs: number;
   type: string;
   expiresInMs: number;
 }

@@ -96,7 +96,7 @@ public class AdminController {
 
     @PutMapping("/livreurs/{livreurId}/vehicule")
     public ResponseEntity<LivreurResponse> assignVehicule(@PathVariable Long livreurId,
-                                                           @RequestBody AssignVehiculeRequest request) {
+        @RequestBody AssignVehiculeRequest request) {
         try {
             return adminService.assignVehicule(livreurId, request).map(ResponseEntity::ok)
                     .orElseGet(() -> ResponseEntity.notFound().build());

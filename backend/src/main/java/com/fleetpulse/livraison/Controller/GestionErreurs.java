@@ -21,6 +21,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GestionErreurs {
     private static final Logger log = LoggerFactory.getLogger(GestionErreurs.class);
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    ResponseEntity<ErreurResponse> serviceIndisponible(org.springframework.web.server.ResponseStatusException exception) {
+        return ResponseEntity.status(exception.getStatusCode())
+                .body(new ErreurResponse("SERVICE_INDISPONIBLE", exception.getReason()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     ResponseEntity<ErreurResponse> donneesInvalides(IllegalArgumentException exception) {
         return ResponseEntity.badRequest().body(new ErreurResponse("DONNEES_INVALIDES", exception.getMessage()));
@@ -30,6 +36,11 @@ public class GestionErreurs {
     ResponseEntity<ErreurResponse> corpsIllisible(HttpMessageNotReadableException exception) {
         return ResponseEntity.badRequest()
                 .body(new ErreurResponse("DONNEES_INVALIDES", "Requête mal formée."));
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ErreurResponse> parametreInvalide(Exception exception) {
+        return ResponseEntity.badRequest().body(new ErreurResponse("DONNEES_INVALIDES", "Filtre ou date invalide."));
     }
 
     // Laisse Spring Security repondre 403 pour un role insuffisant
@@ -43,7 +54,7 @@ public class GestionErreurs {
     @ExceptionHandler(DisabledException.class)
     ResponseEntity<ErreurResponse> compteInactif(DisabledException exception) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ErreurResponse("COMPTE_INACTIF", "Votre compte est suspendu ou votre dossier a été refusé."));
+                .body(new ErreurResponse("COMPTE_INACTIF", "Votre compte est suspendu. Contactez le responsable pour sa réactivation."));
     }
 
     @ExceptionHandler(AuthenticationException.class)

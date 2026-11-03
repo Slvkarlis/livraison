@@ -13,4 +13,6 @@ public record InscriptionPartenaireRequest(
         Double latitude,
         Double longitude,
         String matriculeFiscal) {
+    @Override
+    public String toString() { return "InscriptionPartenaireRequest[confidentiel]"; }
 }

@@ -10,6 +10,8 @@ import com.fleetpulse.livraison.Model.enums.StatutCompte;
 import com.fleetpulse.livraison.Service.AuditService;
 import com.fleetpulse.livraison.Service.CompteService;
 import java.util.List;
+import java.time.Instant;
+import com.fleetpulse.livraison.Dto.PageAuditResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -89,10 +91,21 @@ public class CompteController {
     // US-108 : consultable par tous les Responsables, finance comprise
     @GetMapping("/audit")
     @PreAuthorize("hasRole('RESPONSABLE')")
-    public List<JournalAuditResponse> audit(@RequestParam(required = false) String acteur,
+    public List<JournalAuditResponse> auditLegacy(@RequestParam(required = false) String acteur,
                                             @RequestParam(required = false) ActionAudit action,
                                             @RequestParam(required = false) Long cibleId,
                                             @RequestParam(required = false) Integer limite) {
         return auditService.rechercher(acteur, action, cibleId, limite);
+    }
+
+    @GetMapping("/audit/page")
+    @PreAuthorize("hasRole('RESPONSABLE')")
+    public PageAuditResponse audit(@RequestParam(required = false) String acteur,
+                                            @RequestParam(required = false) ActionAudit action,
+                                            @RequestParam(required = false) Instant debut,
+                                            @RequestParam(required = false) Instant fin,
+                                            @RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "20") int taille) {
+        return PageAuditResponse.from(auditService.page(acteur, action, debut, fin, page, taille));
     }
 }

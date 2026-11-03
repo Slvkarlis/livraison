@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Bouton, Champ, MessageErreur, useConnexion } from '@fleetpulse/shared';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -21,11 +22,11 @@ export default function Connexion() {
           </View>
 
           <Text style={styles.titre}>Prêt pour{'\n'}la route ?</Text>
-          <Text style={styles.sousTitre}>Connectez-vous avec le compte créé par votre responsable.</Text>
+          <Text style={styles.sousTitre}>Connectez-vous ou déposez votre candidature.</Text>
 
           <MessageErreur message={erreur} />
           <Champ
-            libelle="EMAIL"
+            libelle="EMAIL OU TÉLÉPHONE"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -48,7 +49,8 @@ export default function Connexion() {
             icone={<Ionicons name="arrow-forward" size={20} color={theme.surAccent} />}
             style={styles.bouton}
           />
-          <Text style={styles.pied}>Mot de passe oublié ? Contactez votre responsable.</Text>
+          <Bouton titre="Mot de passe oublié" variante="discret" onPress={() => router.push('/mot-de-passe-oublie')} />
+          <Bouton titre="Devenir coursier" variante="discret" onPress={() => router.push('/candidature')} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -8,4 +8,6 @@ public record InscriptionTelephoneRequest(
         String prenom,
         String email,
         String motDePasse) {
+    @Override
+    public String toString() { return "InscriptionTelephoneRequest[confidentiel]"; }
 }

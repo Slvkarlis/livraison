@@ -34,3 +34,4 @@ build/
 
 ### Node / Expo ###
 node_modules/
+.tmp/

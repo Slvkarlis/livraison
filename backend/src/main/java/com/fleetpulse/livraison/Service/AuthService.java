@@ -40,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
-    private static final String CODE_INVALIDE = "Code invalide ou expiré.";
+    private static final String CODE_INVALIDE = "Code invalide, expiré ou nombre d'essais dépassé. Demandez un nouveau code.";
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -76,7 +76,7 @@ public class AuthService {
     // US-102 : nouveau jeton d'acces sans ressaisir le mot de passe (rotation du jeton de rafraichissement)
     public LoginResponse rafraichir(RefreshRequest request) {
         Utilisateur utilisateur = jetonService.consommer(request == null ? null : request.refreshToken());
-        if (utilisateur.getStatut() == StatutCompte.SUSPENDU || utilisateur.getStatut() == StatutCompte.REFUSE) {
+        if (utilisateur.getStatut() == StatutCompte.SUSPENDU) {
             throw new DisabledException("Compte inactif");
         }
         return ouvrirSession(utilisateur.getEmail());
@@ -123,6 +123,7 @@ public class AuthService {
         if (utilisateurRepository.existsByTelephone(telephone)) {
             throw new DonneeDejaUtiliseeException("Ce numéro est déjà associé à un compte.");
         }
+        notificationSender.verifierDisponible();
         String code = codeService.generer(telephone, TypeCode.INSCRIPTION);
         notificationSender.envoyerSms(telephone, "Votre code FleetPulse : " + code + " (valable 10 minutes).");
     }
@@ -197,6 +198,7 @@ public class AuthService {
 
     // US-107 : envoi d'un code ; meme reponse que le compte existe ou non
     public void demanderReinitialisation(DemandeReinitialisationRequest request) {
+        notificationSender.verifierDisponible();
         utilisateurRepository.findByIdentifiant(request == null ? null : request.identifiant())
                 .filter(utilisateur -> utilisateur.getStatut() != StatutCompte.REFUSE)
                 .ifPresent(this::envoyerCodeReinitialisation);

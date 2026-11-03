@@ -6,6 +6,13 @@ import com.fleetpulse.livraison.Model.Utilisateur;
 import com.fleetpulse.livraison.Model.enums.ActionAudit;
 import com.fleetpulse.livraison.Repository.JournalAuditRepository;
 import java.util.List;
+import java.time.Instant;
+import java.util.ArrayList;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Limit;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -48,5 +55,22 @@ public class AuditService {
         String filtreActeur = acteur == null || acteur.isBlank() ? null : acteur.trim().toLowerCase();
         return repository.rechercher(filtreActeur, action, cibleId, Limit.of(taille)).stream()
                 .map(JournalAuditResponse::from).toList();
+    }
+    @Transactional(readOnly = true)
+    public Page<JournalAuditResponse> page(String acteur, ActionAudit action, Instant debut, Instant fin,
+                                           int page, int taille) {
+        if (page < 0 || taille < 1 || taille > 100 || (debut != null && fin != null && debut.isAfter(fin))) {
+            throw new IllegalArgumentException("Pagination ou intervalle de dates invalide.");
+        }
+        Specification<JournalAudit> filtre = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (acteur != null && !acteur.isBlank()) predicates.add(cb.equal(cb.lower(root.get("acteur")), acteur.trim().toLowerCase()));
+            if (action != null) predicates.add(cb.equal(root.get("action"), action));
+            if (debut != null) predicates.add(cb.greaterThanOrEqualTo(root.get("date"), debut));
+            if (fin != null) predicates.add(cb.lessThan(root.get("date"), fin));
+            return cb.and(predicates.toArray(Predicate[]::new));
+        };
+        return repository.findAll(filtre, PageRequest.of(page, taille, Sort.by(Sort.Direction.DESC, "date", "id")))
+                .map(JournalAuditResponse::from);
     }
 }

@@ -9,4 +9,6 @@ public record CreateResponsableRequest(
         String telephone,
         String motDePasse,
         SousRole sousRole) {
+    @Override
+    public String toString() { return "CreateResponsableRequest[confidentiel]"; }
 }

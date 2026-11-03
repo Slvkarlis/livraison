@@ -2,72 +2,34 @@ import type {
   Livraison, Livreur, LivreurRequest, LoginResponse, Profil, Vehicule, VehiculeRequest,
 } from './types';
 
-/** Erreur API avec un message affichable tel quel. */
-export class ApiError extends Error {
-  constructor(public readonly status: number, message: string) {
-    super(message);
-  }
-}
-
-type Messages = Partial<Record<number, string>>;
-
-const MESSAGES_PAR_DEFAUT: Record<number, string> = {
-  400: 'Certaines informations sont invalides.',
-  401: 'Session expirée, reconnectez-vous.',
-  403: "Vous n'avez pas accès à cette action.",
-  404: 'Élément introuvable.',
-  409: 'Cet élément existe déjà.',
-};
-
-const SERVEUR_INJOIGNABLE = 'Serveur injoignable. Vérifiez que le backend tourne sur le port 8083.';
-const DELAI_MAX_MS = 10_000;
-
-let token: string | null = null;
-let onUnauthorized: (() => void) | null = null;
-
-export function setToken(value: string | null) {
-  token = value;
-}
-
-export function setUnauthorizedHandler(handler: (() => void) | null) {
-  onUnauthorized = handler;
-}
-
-async function request<T>(method: string, path: string, body?: unknown, messages: Messages = {}): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(path, {
-      method,
-      signal: AbortSignal.timeout(DELAI_MAX_MS),
-      headers: {
-        Accept: 'application/json',
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-  } catch {
-    throw new ApiError(0, SERVEUR_INJOIGNABLE);
-  }
-
-  if (!response.ok) {
-    if (response.status === 401 && token) onUnauthorized?.();
-    const corps = await response.json().catch(() => null) as { message?: string } | null;
-    // Le proxy Vite repond sans corps JSON quand le backend est arrete.
-    if (response.status >= 500 && !corps) throw new ApiError(0, SERVEUR_INJOIGNABLE);
-    const message = messages[response.status] ?? corps?.message ?? MESSAGES_PAR_DEFAUT[response.status]
-      ?? `Erreur inattendue (${response.status}).`;
-    throw new ApiError(response.status, message);
-  }
-  const texte = await response.text();
-  return (texte ? JSON.parse(texte) : undefined) as T;
-}
+import { creerClientHttp } from '../../mobile/packages/shared/src/http';
+export { ApiError } from '../../mobile/packages/shared/src/http';
+import type { Compte } from './sprint1';
+export const http = creerClientHttp(() => '', () => 'Serveur injoignable. Vérifiez le backend sur le port 8083.');
+const request = http.request;
 
 export const api = {
+  comptes: () => request<Compte[]>('GET', '/api/admin/comptes'),
+  decision: (id: number, action: string, motif: string) => request<Compte>('PUT', '/api/admin/dossiers/' + id + '/' + action, { motif }),
+  statutCompte: (id: number, action: string, motif: string) => request<Compte>('PUT', '/api/admin/comptes/' + id + '/' + action, { motif }),
+  audit: (query: string) => request<PageAudit>('GET', '/api/admin/audit/page?' + query),
+
+  demo: () => request<{ demonstration: boolean; delaiRenvoiSecondes: number }>('GET', '/api/auth/config'),
+  logout: () => http.logout(),
+  demanderOtp: (telephone: string) => request<void>('POST', '/api/auth/otp/demande', { telephone }),
+  inscrireOtp: (data: unknown) => request<LoginResponse>('POST', '/api/auth/otp/inscription', data),
+  oubli: (identifiant: string) => request<void>('POST', '/api/auth/mot-de-passe/oubli', { identifiant }),
+  reinitialiser: (identifiant: string, code: string, nouveauMotDePasse: string) =>
+    request<void>('POST', '/api/auth/mot-de-passe/reinitialiser', { identifiant, code, nouveauMotDePasse }),
+  candidater: (partenaire: boolean, data: unknown) => request<Compte>('POST',
+    '/api/auth/inscription/' + (partenaire ? 'partenaire' : 'livreur'), data),
+  dossier: () => request<Compte>('GET', '/api/dossier'),
+  corrigerDossier: (data: unknown) => request<Compte>('PUT', '/api/dossier', data),
+
   // US-01
   login: (email: string, motDePasse: string) =>
     request<LoginResponse>('POST', '/api/auth/login', { email, motDePasse },
-      { 401: 'Email ou mot de passe incorrect.' }),
+      { 401: 'Email, téléphone ou mot de passe incorrect.' }),
   me: () => request<Profil>('GET', '/api/me'),
 
   // US-02
@@ -103,3 +65,6 @@ export const api = {
   // US-07
   livraisons: () => request<Livraison[]>('GET', '/api/livraisons'),
 };
+
+export interface Audit { id: number; date: string; acteur: string; action: string; cibleType: string; cibleId: number | null; details: string | null }
+export interface PageAudit { content: Audit[]; number: number; totalPages: number; totalElements: number }

@@ -6,4 +6,6 @@ public record CreateLivreurRequest(
         String email,
         String motDePasse,
         String telephone) {
+    @Override
+    public String toString() { return "CreateLivreurRequest[confidentiel]"; }
 }

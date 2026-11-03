@@ -173,6 +173,35 @@ input:disabled { background: var(--fond); color: var(--discret); }
 }
 @keyframes tourne { to { transform: rotate(360deg); } }
 
+/* Sprint 1 : comptes et audit, réutilisation du thème existant. */
+.bandeau { padding: 12px 20px; background: #FEF3C7; color: #78350F; text-align: center; }
+.succes { padding: 12px; border-radius: 8px; color: #166534; background: #DCFCE7; }
+.detail-dossier { margin: 0 0 24px; display: grid; gap: 12px; overflow-wrap: anywhere; }
+.detail-dossier > div { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(0, 2fr); gap: 12px; }
+.detail-dossier dt { color: #4B5563; font-weight: 600; }
+.detail-dossier dd { margin: 0; white-space: pre-wrap; }
+.confirmation { border-top: 1px solid var(--bordure); padding-top: 12px; }
+.confirmation .champ { margin-bottom: 16px; }
+textarea { width: 100%; padding: 12px; resize: vertical; border: 1px solid #D1D5DB; border-radius: 8px; font: inherit; color: inherit; }
+textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.statut { border-radius: 8px; padding: 4px 8px; display: inline-block; font-size: 12px; font-weight: 600; }
+.statut-ACTIF { color: #166534; background: #DCFCE7; }
+.statut-EN_ATTENTE { color: #1E40AF; background: #DBEAFE; }
+.statut-COMPLEMENT_DEMANDE { color: #92400E; background: #FEF3C7; }
+.statut-REFUSE, .statut-SUSPENDU { color: #991B1B; background: #FEE2E2; }
+.filtres > .champ { min-width: 140px; flex: 1; }
+.filtres { align-items: end; }
+.tableau { overflow-x: auto; }
+@media (max-width: 600px) {
+  .sidebar { flex-wrap: wrap; }
+  .sidebar nav { order: 3; flex-basis: 100%; }
+  .sidebar .utilisateur { margin-left: auto; }
+  .actions { flex-wrap: wrap; }
+  .detail-dossier > div { grid-template-columns: 1fr; gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
 /* ---- Petits ecrans ---- */
 @media (max-width: 800px) {
   .app { flex-direction: column; }

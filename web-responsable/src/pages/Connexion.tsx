@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { Alerte } from '../composants/ui';
 import { useSession } from '../session';
 
@@ -38,8 +39,8 @@ export default function Connexion() {
         {erreur && <Alerte message={erreur} />}
 
         <label className="champ">
-          <span>Email</span>
-          <input type="email" autoComplete="username" required autoFocus value={email}
+          <span>Email ou téléphone</span>
+          <input type="text" autoComplete="username" required autoFocus value={email}
             onChange={(e) => setEmail(e.target.value)} placeholder="admin@fleetpulse.tn" />
         </label>
         <label className="champ">
@@ -50,6 +51,7 @@ export default function Connexion() {
         <button className="bouton plein" type="submit" disabled={envoi}>
           {envoi ? 'Connexion…' : 'Se connecter'}
         </button>
+        <p><Link to="/mot-de-passe-oublie">Mot de passe oublié ?</Link></p>
       </form>
     </div>
   );

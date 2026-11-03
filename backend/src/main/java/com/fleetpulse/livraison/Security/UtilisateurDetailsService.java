@@ -20,7 +20,8 @@ import org.springframework.stereotype.Service;
  * - compte ACTIF : ROLE_&lt;role&gt;, plus ROLE_OPERATIONS / ROLE_FINANCE selon le sous-role d'un Responsable
  *   (l'administrateur principal, sans sous-role, a ROLE_ADMIN et les deux sous-roles) ;
  * - dossier en cours (EN_ATTENTE, COMPLEMENT_DEMANDE) : seulement ROLE_CANDIDAT, pour suivre et corriger son dossier ;
- * - SUSPENDU ou REFUSE : compte desactive.
+ * - REFUSE : ROLE_CANDIDAT uniquement, pour lire le motif sans accès aux fonctions du rôle ;
+ * - SUSPENDU : compte désactivé.
  */
 @Service
 public class UtilisateurDetailsService implements UserDetailsService {
@@ -35,8 +36,7 @@ public class UtilisateurDetailsService implements UserDetailsService {
         return User.withUsername(utilisateur.getEmail())
                 .password(utilisateur.getMotDePasseHash())
                 .authorities(autorites(utilisateur))
-                .disabled(utilisateur.getStatut() == StatutCompte.SUSPENDU
-                        || utilisateur.getStatut() == StatutCompte.REFUSE)
+                .disabled(utilisateur.getStatut() == StatutCompte.SUSPENDU)
                 .build();
     }
 
