@@ -13,5 +13,4 @@ public interface LivraisonRepository extends JpaRepository<Livraison, Long> {
 
     List<Livraison> findAllByClientEmailOrderByDateCreationDesc(String email);
 
-    Optional<Livraison> findByStripePaymentIntentId(String stripePaymentIntentId);
 }

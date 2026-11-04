@@ -50,7 +50,6 @@ function Navigation() {
       <Stack.Protected guard={actif}>
         <Stack.Screen name="(onglets)" options={{ headerShown: false }} />
         <Stack.Screen name="nouvelle-commande" options={{ title: 'Nouvelle commande' }} />
-        <Stack.Screen name="livraison-carte" options={{ title: 'Livraison par carte (ancien parcours)' }} />
         <Stack.Screen
           name="choisir-adresse"
           options={{ title: 'Adresse de livraison', headerStyle: { backgroundColor: theme.surface } }}

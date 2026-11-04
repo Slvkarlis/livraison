@@ -152,8 +152,7 @@ class Sprint2ParcoursTest {
         assertEquals("Rue de test",succes(200,appel("GET","/livraisons/mes",null,client)).get(0).get("adresse").asText());
         assertNotNull(c.get("id"));
     }
-    @Test void ancienCodSansArticlesRefuseEtAncienneCommandeLisible() throws Exception {
-        succes(400,appel("POST","/livraisons",Map.of("modePaiement","COD"),client));
+    @Test void ancienneCommandeLisible() throws Exception {
         Client c=(Client)utilisateurs.findById(succes(200,appel("GET","/me",null,client)).get("id").asLong()).orElseThrow();
         Livraison ancienne=new Livraison();ancienne.setClient(c);ancienne.setCodeSuivi(UUID.randomUUID().toString());ancienne.setAdresse("Ancienne adresse");ancienne.setLatitude(0.);ancienne.setLongitude(0.);ancienne.setCreneauDebut(Instant.now());ancienne.setCreneauFin(Instant.now());ancienne.setMontantACollecter(4);commandes.save(ancienne);
         var h=succes(200,appel("GET","/livraisons/mes",null,client)).get(0);assertTrue(h.get("partenaireId").isNull());assertEquals(0,h.get("lignes").size());assertEquals(4,h.get("montantTotal").asDouble());

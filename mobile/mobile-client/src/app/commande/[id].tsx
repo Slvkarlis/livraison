@@ -1,6 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {
-  Bouton,
   Chargement,
   Ligne,
   MessageErreur,
@@ -18,15 +17,13 @@ import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CarteLeaflet } from '../../composants/CarteLeaflet';
-import { payerCommande } from '../../paiement';
 import { theme } from '../../theme';
 
 export default function DetailCommande() {
   const { id, message } = useLocalSearchParams<{ id: string; message?: string }>();
   const [livraison, setLivraison] = useState<Livraison | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [avis, setAvis] = useState<string | null>(message ?? null);
-  const [paiement, setPaiement] = useState(false);
+  const avis = message ?? null;
 
   useEffect(() => {
     api.mesLivraisons()
@@ -44,19 +41,7 @@ export default function DetailCommande() {
   const position = { latitude: livraison.latitude, longitude: livraison.longitude };
   const creee = new Date(livraison.dateCreation);
   const immediate = livraison.typeLivraison === 'IMMEDIATE';
-  const carte = livraison.modePaiement === 'CARTE';
   const statutPaiement = STATUTS_PAIEMENT[livraison.statutPaiement ?? 'A_LA_LIVRAISON'];
-  const aPayer = carte && livraison.statutPaiement !== 'PAYE';
-
-  async function payer() {
-    if (!livraison) return;
-    setPaiement(true);
-    setAvis(null);
-    const resultat = await payerCommande(livraison);
-    if (resultat.etat === 'paye') setLivraison(resultat.livraison);
-    else if (resultat.etat === 'erreur') setAvis(resultat.message);
-    setPaiement(false);
-  }
 
   return (
     <ScrollView style={styles.page} bounces={false}>
@@ -99,7 +84,7 @@ export default function DetailCommande() {
           <Ligne libelle="Total" valeur={formatMontant(livraison.montantTotal)} fort />
           <View style={styles.statutPaiement}>
             <Ionicons
-              name={carte ? 'card' : 'cash'}
+              name="cash"
               size={16}
               color={statutPaiement.couleur}
             />
@@ -110,15 +95,6 @@ export default function DetailCommande() {
         </View>
 
         {avis ? <View style={styles.avis}><MessageErreur message={avis} /></View> : null}
-        {aPayer ? (
-          <Bouton
-            titre={`Payer maintenant · ${formatMontant(livraison.montantTotal)}`}
-            onPress={payer}
-            chargement={paiement}
-            icone={<Ionicons name="card" size={18} color={theme.surAccent} />}
-            style={styles.payer}
-          />
-        ) : null}
 
         <Text style={styles.creee}>Commandée {formatJour(creee).toLowerCase()} à {formatHeure(creee)}</Text>
       </View>
@@ -166,6 +142,5 @@ const styles = StyleSheet.create({
   statutPaiement: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   statutPaiementTexte: { fontSize: 14, fontWeight: '600' },
   avis: { marginTop: 14 },
-  payer: { marginTop: 14 },
   creee: { fontSize: 13, color: theme.secondaire, textAlign: 'center', marginTop: 20 },
 });

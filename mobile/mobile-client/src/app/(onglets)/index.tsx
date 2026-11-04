@@ -104,11 +104,7 @@ function CarteCommande({ livraison }: { livraison: Livraison }) {
         </Text>
         <View style={styles.cartePied}>
           <PastilleStatut statut={livraison.statut} />
-          {livraison.modePaiement === 'CARTE' && livraison.statutPaiement !== 'PAYE' ? (
-            <Text style={styles.aPayer}>À payer</Text>
-          ) : (
-            <Text style={styles.code}>{livraison.codeSuivi}</Text>
-          )}
+          <Text style={styles.code}>{livraison.codeSuivi}</Text>
         </View>
       </View>
     </Pressable>
@@ -176,5 +172,4 @@ const styles = StyleSheet.create({
   creneau: { fontSize: 14, color: theme.secondaire },
   cartePied: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   code: { fontSize: 12, color: theme.secondaire, letterSpacing: 0.3 },
-  aPayer: { fontSize: 13, fontWeight: '700', color: '#B45309' },
 });

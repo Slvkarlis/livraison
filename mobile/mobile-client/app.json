@@ -30,13 +30,6 @@
           "locationWhenInUsePermission": "FleetPulse utilise votre position pour renseigner l'adresse de livraison."
         }
       ],
-      [
-        "@stripe/stripe-react-native",
-        {
-          "merchantIdentifier": "merchant.tn.fleetpulse",
-          "enableGooglePay": false
-        }
-      ],
       "expo-status-bar"
     ],
     "scheme": "fleetpulse-client",

@@ -3,7 +3,7 @@
 | Dossier | Contenu |
 |---|---|
 | `backend/` | Backend Spring Boot 4 / Java 25 / MySQL (port `8083`) |
-| `mobile/mobile-client/` | Application client (Expo / React Native) : inscription OTP, candidature partenaire, commandes, carte OpenStreetMap, paiement Stripe |
+| `mobile/mobile-client/` | Application client (Expo / React Native) : inscription OTP, candidature partenaire, espace partenaire, commandes COD, carte OpenStreetMap |
 | `mobile/mobile-livreur/` | Application livreur (Expo / React Native) : candidature, connexion, véhicule affecté |
 | `web-responsable/` | Application web du responsable (React + Vite) : connexion, commandes, livreurs, véhicules |
 | `mobile/packages/shared/` | Code partagé : types API, client HTTP avec refresh, session JWT, formulaires, libellés, composants UI |
@@ -11,10 +11,23 @@
 
 ## Lancer le backend
 
-Prérequis : **Java 25** dans `JAVA_HOME`. Le rapport [Sprint 1](docs/SPRINT1.md) décrit les écrans,
+Prérequis : **Java 25** dans `JAVA_HOME` et **MySQL 8+** (MySQL 5.7 n'est pas supporté : les verrous du Sprint 2
+utilisent `SELECT … FOR UPDATE OF`). Le rapport [Sprint 1](docs/SPRINT1.md) décrit les écrans,
 les contrats API, les vérifications et les limites.
 
+MySQL 8 avec Docker (port `3307` pour ne pas gêner un MySQL local sur `3306`) :
+
 ```bash
+docker run -d --name livraison-mysql -p 3307:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=livraison -v livraison-mysql-data:/var/lib/mysql --restart unless-stopped mysql:8.4
+```
+
+Puis, dans PowerShell (démo : données Sprint 2, codes OTP dans les logs, apercu web autorisé) :
+
+```powershell
+$env:SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3307/livraison?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+$env:SPRING_DATASOURCE_USERNAME="root"; $env:SPRING_DATASOURCE_PASSWORD="root"
+$env:SPRING_PROFILES_ACTIVE="demo"; $env:APP_DEMO_ENABLED="true"; $env:SPRINT2_DONNEES_DEMO="true"
+$env:CORS_ORIGINES="http://localhost:8081,http://localhost:8082"
 cd backend
 ./mvnw spring-boot:run
 ```
@@ -22,25 +35,8 @@ cd backend
 Compte responsable créé au démarrage : `admin@fleetpulse.tn` / `admin12345`.
 
 Le [rapport Sprint 2](docs/SPRINT2.md) décrit le catalogue, les zones, les adresses, le panier et les commandes COD,
-les endpoints, la migration et les vérifications. Les frais viennent désormais de la zone de l’adresse ; une adresse
-sans couverture est refusée. L’ancienne formule dépôt/distance reste conservée dans le code et ses tests.
-
-### Paiement par carte (Stripe, mode test)
-
-Sans clés, le paiement par carte est désactivé (l'app propose seulement les espèces). Clés de test sur
-https://dashboard.stripe.com/test/apikeys, puis dans PowerShell :
-
-```powershell
-$env:STRIPE_SECRET_KEY="sk_test_..."
-$env:STRIPE_PUBLISHABLE_KEY="pk_test_..."
-./mvnw spring-boot:run
-```
-
-- Carte de test : `4242 4242 4242 4242`, date future, CVC quelconque (`4000 0027 6000 3184` pour tester 3-D Secure).
-- Devise : `tnd` par défaut (millimes). Si Stripe refuse la devise sur votre compte : `$env:STRIPE_CURRENCY="eur"`.
-- Webhook (facultatif, l'app vérifie déjà le paiement) : `stripe listen --forward-to localhost:8083/api/stripe/webhook`,
-  puis `$env:STRIPE_WEBHOOK_SECRET="whsec_..."`.
-- Les clés ne doivent jamais être commitées.
+les endpoints, la migration et les vérifications. Les frais viennent de la zone de l’adresse ; une adresse
+sans couverture est refusée. Le paiement se fait **uniquement à la livraison (COD)**.
 
 ### Comptes et authentification (sprint 1)
 
@@ -83,6 +79,15 @@ EXPO_PUBLIC_API_URL=http://192.168.1.20:8083 npm run client
 ```
 
 Si le téléphone n'arrive pas à joindre le backend, autorisez le port 8083 dans le pare-feu Windows.
+
+**Aperçu dans le navigateur** (Expo web, backend lancé avec `CORS_ORIGINES`) :
+
+```bash
+npm run web --prefix mobile/mobile-client -- --port 8081
+```
+
+En web, la session reste en mémoire : recharger la page déconnecte. La carte utilise une iframe
+(`CarteLeaflet.web.tsx`) à la place de la WebView.
 
 Les coursiers peuvent déposer une candidature depuis leur app et suivre sa validation. Le responsable peut
 toujours créer un livreur avec le CRUD existant. Les clients s'inscrivent par OTP depuis leur app ;
