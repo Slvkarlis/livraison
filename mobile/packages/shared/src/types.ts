@@ -83,6 +83,10 @@ export interface Livraison {
   accepteeLe: string | null;
   motifRefus: MotifRefus | null;
   commentaireRefus: string | null;
+  /** Fin de preparation annoncee (ajustable) et etapes de preparation. */
+  pretePrevueLe: string | null;
+  preparationDebutLe: string | null;
+  preteLe: string | null;
 }
 
 export interface LoginResponse {

@@ -84,6 +84,12 @@ export default function MesCommandes() {
   );
 }
 
+/** Nombre d'articles (somme des quantites, pas des lignes) : 3 × Brik = 3 articles. */
+function libelleArticles(livraison: Livraison): string {
+  const n = livraison.lignes.reduce((total, l) => total + l.quantite, 0);
+  return `${n} article${n > 1 ? 's' : ''}`;
+}
+
 function CarteCommande({ livraison }: { livraison: Livraison }) {
   const immediate = livraison.typeLivraison === 'IMMEDIATE';
   return (
@@ -100,7 +106,7 @@ function CarteCommande({ livraison }: { livraison: Livraison }) {
           <Text style={styles.montant}>{formatMontant(livraison.montantTotal)}</Text>
         </View>
         <Text style={styles.creneau}>
-          {livraison.nomPartenaire ? livraison.nomPartenaire + ' · ' + livraison.lignes.length + ' article(s)' : (immediate ? 'Immédiate · ' : '') + formatCreneau(livraison.creneauDebut, livraison.creneauFin)}
+          {livraison.nomPartenaire ? livraison.nomPartenaire + ' · ' + libelleArticles(livraison) : (immediate ? 'Immédiate · ' : '') + formatCreneau(livraison.creneauDebut, livraison.creneauFin)}
         </Text>
         <View style={styles.cartePied}>
           <PastilleStatut statut={livraison.statut} />

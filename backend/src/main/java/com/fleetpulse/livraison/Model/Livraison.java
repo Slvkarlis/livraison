@@ -44,6 +44,18 @@ public class Livraison {
     private Instant accepteeLe;
     @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(30)") private MotifRefus motifRefus;
     @Column(length = 300) private String commentaireRefus;
+    // Sprint 2 bis : preparation (US-2B4, US-2B5)
+    private Instant pretePrevueLe;               // fin de preparation annoncee au client
+    private Integer nbAjustementsPreparation;    // null = 0 (commandes anterieures)
+    private Instant preparationDebutLe;
+    private Instant preteLe;
+
+    /** Heure de fin annoncee ; repli acceptation + temps pour les commandes acceptees avant ce champ. */
+    public Instant heurePretePrevue() {
+        if (pretePrevueLe != null) return pretePrevueLe;
+        return accepteeLe == null || tempsPreparationMinutes == null ? null : accepteeLe.plusSeconds(tempsPreparationMinutes * 60L);
+    }
+    public int ajustementsPreparation() { return nbAjustementsPreparation == null ? 0 : nbAjustementsPreparation; }
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<LigneCommande> lignes = new java.util.ArrayList<>();
 

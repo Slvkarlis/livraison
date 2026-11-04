@@ -24,7 +24,7 @@ public class CommandePartenaireController {
 
     // US-2B2 : decision du partenaire sur une commande PENDING_PARTNER
     @PutMapping("/{id}/accepter")
-    public CommandeDetail accepter(Authentication a, @PathVariable Long id, @RequestBody AcceptationRequest r) {
+    public CommandeDetail accepter(Authentication a, @PathVariable Long id, @RequestBody TempsPreparationRequest r) {
         return service.accepter(a.getName(), id, r);
     }
 
@@ -32,4 +32,19 @@ public class CommandePartenaireController {
     public CommandeDetail refuser(Authentication a, @PathVariable Long id, @RequestBody RefusRequest r) {
         return service.refuser(a.getName(), id, r);
     }
+
+    // US-2B4 : preparation (debut, nouveau delai restant au plus 2 fois)
+    @PutMapping("/{id}/preparation/debut")
+    public CommandeDetail commencerPreparation(Authentication a, @PathVariable Long id) {
+        return service.commencerPreparation(a.getName(), id);
+    }
+
+    @PutMapping("/{id}/preparation/temps")
+    public CommandeDetail ajusterPreparation(Authentication a, @PathVariable Long id, @RequestBody TempsPreparationRequest r) {
+        return service.ajusterPreparation(a.getName(), id, r);
+    }
+
+    // US-2B5 : commande prete pour la collecte
+    @PutMapping("/{id}/prete")
+    public CommandeDetail marquerPrete(Authentication a, @PathVariable Long id) { return service.marquerPrete(a.getName(), id); }
 }

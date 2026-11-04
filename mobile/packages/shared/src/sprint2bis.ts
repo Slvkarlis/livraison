@@ -12,9 +12,23 @@ const LIBELLES_PARTENAIRE: Partial<Record<StatutLivraison, string>> = {
 export function libelleStatutPartenaire(statut: StatutLivraison): string {
   return LIBELLES_PARTENAIRE[statut] ?? STATUTS[statut].libelle;
 }
-/** Entree d'historique vue par le partenaire : la creation s'affiche « Commande passée ». */
-export function libelleEtapePartenaire(entree: { ancien: StatutLivraison | null; nouveau: StatutLivraison }): string {
-  return entree.ancien === null ? 'Commande passée' : libelleStatutPartenaire(entree.nouveau);
+type Etape = { ancien: StatutLivraison | null; nouveau: StatutLivraison };
+/** Entree d'historique vue par le partenaire : creation « Commande passée », ancien = nouveau « Délai ajusté ». */
+export function libelleEtapePartenaire(entree: Etape): string {
+  if (entree.ancien === null) return 'Commande passée';
+  if (entree.ancien === entree.nouveau) return 'Délai ajusté';
+  return libelleStatutPartenaire(entree.nouveau);
+}
+/** Libelles du point de vue du client pour sa frise de suivi. */
+const ETAPES_CLIENT: Partial<Record<StatutLivraison, string>> = {
+  ACCEPTEE: 'Acceptée par le commerce',
+  REFUSEE: 'Refusée par le commerce',
+  PRETE: 'Prête, en attente du livreur',
+};
+export function libelleEtapeClient(entree: Etape): string {
+  if (entree.ancien === null) return 'Commande passée';
+  if (entree.ancien === entree.nouveau) return 'Délai ajusté';
+  return ETAPES_CLIENT[entree.nouveau] ?? STATUTS[entree.nouveau].libelle;
 }
 
 export interface CommandeResume {
@@ -26,6 +40,7 @@ export interface CommandeDetail extends CommandeResume {
   zoneNom: string | null; lignes: LigneCommande[]; notes: string | null;
   montantArticles: number; fraisLivraison: number;
   tempsPreparationMinutes: number | null; accepteeLe: string | null; motifRefus: MotifRefus | null; commentaireRefus: string | null;
+  pretePrevueLe: string | null; nbAjustementsPreparation: number; preparationDebutLe: string | null; preteLe: string | null;
   historique: HistoriqueEntree[];
 }
 
@@ -39,6 +54,8 @@ export const MOTIFS_REFUS: { id: MotifRefus; libelle: string }[] = [
 export const TEMPS_PREPARATION_PROPOSES = [5, 10, 15, 20, 30];
 export const PREPARATION_MAX_MINUTES = 180;
 export const COMMENTAIRE_REFUS_MAX = 300;
+/** US-2B4 : le delai annonce peut etre ajuste au plus 2 fois. */
+export const AJUSTEMENTS_PREPARATION_MAX = 2;
 
 export function verifierTempsPreparation(saisie: string): string | null {
   const minutes = Number(saisie.trim());
@@ -55,23 +72,17 @@ export function verifierRefus(motif: MotifRefus | null, commentaire: string): st
 export function libelleMotifRefus(motif: MotifRefus): string {
   return MOTIFS_REFUS.find(m => m.id === motif)?.libelle ?? motif;
 }
-/** Heure de fin de preparation annoncee : acceptation + temps annonce. */
-export function heurePretePrevue(accepteeLe: string | null, minutes: number | null): Date | null {
-  if (!accepteeLe || !minutes) return null;
-  return new Date(new Date(accepteeLe).getTime() + minutes * 60_000);
-}
-
-/** Phrase affichee au client sous le statut de sa commande, selon la decision du commerce. */
+/** Phrase affichee au client sous le statut de sa commande, selon la decision et la preparation du commerce. */
 export function messageDecisionClient(c: {
-  statut: StatutLivraison; nomPartenaire: string | null; tempsPreparationMinutes: number | null;
-  accepteeLe: string | null; motifRefus: MotifRefus | null; commentaireRefus: string | null;
+  statut: StatutLivraison; nomPartenaire: string | null; pretePrevueLe: string | null;
+  motifRefus: MotifRefus | null; commentaireRefus: string | null;
 }): string | null {
   const commerce = c.nomPartenaire ?? 'Le commerce';
+  const prete = c.pretePrevueLe ? formatHeure(new Date(c.pretePrevueLe)) : null;
   if (c.statut === 'PENDING_PARTNER') return `${commerce} n'a pas encore répondu. Vous pouvez suivre la commande ici.`;
-  if (c.statut === 'ACCEPTEE') {
-    const prete = heurePretePrevue(c.accepteeLe, c.tempsPreparationMinutes);
-    return prete ? `${commerce} a accepté : prête vers ${formatHeure(prete)} (environ ${c.tempsPreparationMinutes} min).` : `${commerce} a accepté votre commande.`;
-  }
+  if (c.statut === 'ACCEPTEE') return prete ? `${commerce} a accepté : prête vers ${prete}.` : `${commerce} a accepté votre commande.`;
+  if (c.statut === 'EN_PREPARATION') return prete ? `${commerce} prépare votre commande : prête vers ${prete}.` : `${commerce} prépare votre commande.`;
+  if (c.statut === 'PRETE') return `${commerce} : votre commande est prête. Un livreur va la récupérer.`;
   if (c.statut === 'REFUSEE') {
     const motif = c.motifRefus ? libelleMotifRefus(c.motifRefus) : 'sans motif';
     return `${commerce} a refusé : ${motif}${c.commentaireRefus ? ` — ${c.commentaireRefus}` : ''}. Aucun montant ne vous sera demandé.`;
@@ -105,5 +116,16 @@ export function creerApiPartenaire(request: <T>(method: string, path: string, bo
       request<CommandeDetail>('PUT', '/api/partenaire/commandes/' + id + '/accepter', { tempsPreparationMinutes }),
     refuserCommande: (id: number, motif: MotifRefus, commentaire: string) =>
       request<CommandeDetail>('PUT', '/api/partenaire/commandes/' + id + '/refuser', { motif, commentaire: commentaire.trim() || null }),
+    commencerPreparation: (id: number) => request<CommandeDetail>('PUT', '/api/partenaire/commandes/' + id + '/preparation/debut'),
+    ajusterPreparation: (id: number, tempsPreparationMinutes: number) =>
+      request<CommandeDetail>('PUT', '/api/partenaire/commandes/' + id + '/preparation/temps', { tempsPreparationMinutes }),
+    marquerPrete: (id: number) => request<CommandeDetail>('PUT', '/api/partenaire/commandes/' + id + '/prete'),
+  };
+}
+
+/** Suivi par le client de sa propre commande. */
+export function creerApiSuiviClient(request: <T>(method: string, path: string, body?: unknown) => Promise<T>) {
+  return {
+    historiqueCommande: (id: number) => request<HistoriqueEntree[]>('GET', '/api/commandes/' + id + '/historique'),
   };
 }

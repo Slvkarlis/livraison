@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 /** Commandes recues par le partenaire connecte (US-2B1) et sa decision (US-2B2). */
 @Service @RequiredArgsConstructor @Transactional(readOnly = true)
 public class CommandePartenaireService {
-    static final int PREPARATION_MIN = 1, PREPARATION_MAX = 180, COMMENTAIRE_MAX = 300;
+    static final int PREPARATION_MIN = 1, PREPARATION_MAX = 180, COMMENTAIRE_MAX = 300, AJUSTEMENTS_MAX = 2;
     private final PartenaireRepository partenaires;
     private final LivraisonRepository commandes;
     private final HistoriqueStatutRepository historique;
@@ -42,17 +42,67 @@ public class CommandePartenaireService {
 
     /** US-2B2 : acceptation avec temps de preparation annonce. Rejouer la meme decision ne change rien. */
     @Transactional
-    public CommandeDetail accepter(String email, Long id, AcceptationRequest r) {
-        Integer minutes = r == null ? null : r.tempsPreparationMinutes();
-        if (minutes == null || minutes < PREPARATION_MIN || minutes > PREPARATION_MAX)
-            throw new IllegalArgumentException("Temps de préparation : de " + PREPARATION_MIN + " à " + PREPARATION_MAX + " minutes.");
+    public CommandeDetail accepter(String email, Long id, TempsPreparationRequest r) {
+        int minutes = minutes(r);
         Partenaire p = partenaireActif(email);
         Livraison c = commande(p, id, true);
         if (c.getStatut() == StatutLivraison.ACCEPTEE) return vue(c);
         workflow.transition(c, StatutLivraison.ACCEPTEE, p, "Préparation annoncée : " + minutes + " min");
+        Instant maintenant = maintenant();
         c.setTempsPreparationMinutes(minutes);
-        c.setAccepteeLe(Instant.now());
+        c.setAccepteeLe(maintenant);
+        c.setPretePrevueLe(maintenant.plusSeconds(minutes * 60L));
+        c.setNbAjustementsPreparation(0);
         return vue(c);
+    }
+
+    /** US-2B4 : debut de la preparation (ACCEPTEE -> EN_PREPARATION). Rejouer ne change rien. */
+    @Transactional
+    public CommandeDetail commencerPreparation(String email, Long id) {
+        Partenaire p = partenaireActif(email);
+        Livraison c = commande(p, id, true);
+        if (c.getStatut() == StatutLivraison.EN_PREPARATION) return vue(c);
+        workflow.transition(c, StatutLivraison.EN_PREPARATION, p, null);
+        c.setPreparationDebutLe(maintenant());
+        return vue(c);
+    }
+
+    /** US-2B4 : nouveau delai restant, au plus AJUSTEMENTS_MAX fois, tant que la commande n'est pas prete. */
+    @Transactional
+    public CommandeDetail ajusterPreparation(String email, Long id, TempsPreparationRequest r) {
+        int minutes = minutes(r);
+        Partenaire p = partenaireActif(email);
+        Livraison c = commande(p, id, true);
+        if (c.getStatut() != StatutLivraison.ACCEPTEE && c.getStatut() != StatutLivraison.EN_PREPARATION)
+            throw MarketplaceException.conflit("Le délai ne peut être ajusté qu'avant que la commande soit prête.");
+        if (c.ajustementsPreparation() >= AJUSTEMENTS_MAX)
+            throw MarketplaceException.conflit("Délai déjà ajusté " + AJUSTEMENTS_MAX + " fois : il ne peut plus être modifié.");
+        c.setTempsPreparationMinutes(minutes);
+        c.setPretePrevueLe(maintenant().plusSeconds(minutes * 60L));
+        c.setNbAjustementsPreparation(c.ajustementsPreparation() + 1);
+        workflow.noter(c, p, "Délai ajusté : encore " + minutes + " min");
+        return vue(c);
+    }
+
+    /** US-2B5 : commande prete pour la collecte (depuis ACCEPTEE ou EN_PREPARATION). Rejouer ne change rien. */
+    @Transactional
+    public CommandeDetail marquerPrete(String email, Long id) {
+        Partenaire p = partenaireActif(email);
+        Livraison c = commande(p, id, true);
+        if (c.getStatut() == StatutLivraison.PRETE) return vue(c);
+        workflow.transition(c, StatutLivraison.PRETE, p, null);
+        c.setPreteLe(maintenant());
+        return vue(c);
+    }
+
+    /** Precision de la base (microsecondes) : la reponse renvoie la meme valeur que les lectures suivantes. */
+    private static Instant maintenant() { return Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS); }
+
+    private static int minutes(TempsPreparationRequest r) {
+        Integer minutes = r == null ? null : r.tempsPreparationMinutes();
+        if (minutes == null || minutes < PREPARATION_MIN || minutes > PREPARATION_MAX)
+            throw new IllegalArgumentException("Temps de préparation : de " + PREPARATION_MIN + " à " + PREPARATION_MAX + " minutes.");
+        return minutes;
     }
 
     /** US-2B2 : refus motive (AUTRE exige un commentaire). Rejouer le meme refus ne change rien. */

@@ -11,30 +11,45 @@ import {
   formatHeure,
   formatJour,
   formatMontant,
+  libelleEtapeClient,
   messageDecisionClient,
+  type HistoriqueEntree,
   type Livraison,
 } from '@fleetpulse/shared';
-import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { CarteLeaflet } from '../../composants/CarteLeaflet';
+import { FriseHistorique } from '../../composants/FriseHistorique';
 import { theme } from '../../theme';
 
 export default function DetailCommande() {
   const { id, message } = useLocalSearchParams<{ id: string; message?: string }>();
   const [livraison, setLivraison] = useState<Livraison | null>(null);
+  const [etapes, setEtapes] = useState<HistoriqueEntree[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [rafraichissement, setRafraichissement] = useState(false);
   const avis = message ?? null;
 
-  useEffect(() => {
-    api.mesLivraisons()
-      .then((liste) => {
-        const trouvee = liste.find((l) => String(l.id) === id);
-        if (trouvee) setLivraison(trouvee);
-        else setErreur('Commande introuvable.');
-      })
-      .catch((e) => setErreur(e instanceof Error ? e.message : 'Chargement impossible.'));
+  // Rechargee a chaque retour sur l'ecran et en tirant vers le bas (le temps reel arrive a l'etape 5)
+  const charger = useCallback(async () => {
+    try {
+      const trouvee = (await api.mesLivraisons()).find((l) => String(l.id) === id);
+      if (!trouvee) { setErreur('Commande introuvable.'); return; }
+      setLivraison(trouvee);
+      setEtapes(trouvee.partenaireId ? await api.historiqueCommande(trouvee.id) : []);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : 'Chargement impossible.');
+    }
   }, [id]);
+
+  useFocusEffect(useCallback(() => { void charger(); }, [charger]));
+
+  async function rafraichir() {
+    setRafraichissement(true);
+    await charger();
+    setRafraichissement(false);
+  }
 
   if (erreur) return <View style={styles.erreur}><MessageErreur message={erreur} /></View>;
   if (!livraison) return <Chargement />;
@@ -45,7 +60,10 @@ export default function DetailCommande() {
   const statutPaiement = STATUTS_PAIEMENT[livraison.statutPaiement ?? 'A_LA_LIVRAISON'];
 
   return (
-    <ScrollView style={styles.page} bounces={false}>
+    <ScrollView
+      style={styles.page}
+      refreshControl={<RefreshControl refreshing={rafraichissement} onRefresh={rafraichir} tintColor={theme.accent} />}
+    >
       {/* Apercu fige : les gestes vont au defilement de la page, pas a la carte. */}
       <View pointerEvents="none">
         <CarteLeaflet style={styles.carteGeo} centre={position} zoom={16} interactive={false} marqueur />
@@ -71,6 +89,13 @@ export default function DetailCommande() {
             <Text style={styles.momentTexte}>{formatCreneau(livraison.creneauDebut, livraison.creneauFin)}</Text>
           </View>
         </View> : messageDecisionClient(livraison) ? <Text style={styles.momentTexte}>{messageDecisionClient(livraison)}</Text> : null}
+
+        {etapes.length ? (
+          <>
+            <Text style={styles.section}>Suivi</Text>
+            <FriseHistorique etapes={etapes} libelle={libelleEtapeClient} auteurs={false} />
+          </>
+        ) : null}
 
         <Text style={styles.section}>Paiement</Text>
         <View style={styles.bloc}>

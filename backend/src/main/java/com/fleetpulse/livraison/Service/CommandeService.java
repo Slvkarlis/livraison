@@ -24,6 +24,7 @@ public class CommandeService {
     private final CatalogueService catalogue;
     private final ZoneService zones;
     private final CommandeWorkflow workflow;
+    private final HistoriqueStatutRepository historique;
     @Value("${app.commandes.minimum:1}") private BigDecimal minimum;
     @Value("${app.commandes.maximum:1000}") private BigDecimal maximum;
     @Value("${app.commandes.actives-max:3}") private int activesMax;
@@ -112,6 +113,13 @@ public class CommandeService {
         Livraison creee = commandes.saveAndFlush(l);
         workflow.creer(creee, c);
         return LivraisonResponse.from(creee);
+    }
+    /** Suivi client : etapes de sa commande. Commande d'un autre client : 404. */
+    @Transactional(readOnly = true)
+    public List<com.fleetpulse.livraison.Dto.CommandePartenaireDto.HistoriqueVue> historique(String email, Long id) {
+        Livraison c = commandes.findById(id).filter(l -> l.getClient().getEmail().equals(email)).orElseThrow(MarketplaceException::absent);
+        return historique.findAllByCommandeIdOrderByDateAscIdAsc(c.getId()).stream()
+                .map(com.fleetpulse.livraison.Dto.CommandePartenaireDto.HistoriqueVue::from).toList();
     }
     private static String hash(String s) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8))); }

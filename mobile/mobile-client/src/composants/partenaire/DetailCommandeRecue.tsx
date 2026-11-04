@@ -4,13 +4,10 @@ import {
   Ligne,
   MessageErreur,
   PastilleStatut,
-  ROLES_ACTEUR,
-  STATUTS,
   api,
   formatHeure,
   formatJour,
   formatMontant,
-  heurePretePrevue,
   libelleEtapePartenaire,
   libelleMotifRefus,
   libelleStatutPartenaire,
@@ -20,9 +17,11 @@ import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
+import { FriseHistorique } from '../FriseHistorique';
 import { DecisionCommande } from './DecisionCommande';
+import { SuiviPreparation } from './SuiviPreparation';
 
-// US-2B1 / US-2B2 : detail d'une commande recue (articles, montants, decision, historique des statuts)
+// US-2B1 a US-2B5 : detail d'une commande recue (articles, montants, decision, preparation, historique)
 export default function DetailCommandeRecue() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [commande, setCommande] = useState<CommandeDetail | null>(null);
@@ -50,7 +49,9 @@ export default function DetailCommandeRecue() {
   if (!commande) return erreur ? <View style={styles.erreur}><MessageErreur message={erreur} /></View> : <Chargement />;
 
   const recue = new Date(commande.dateCreation);
-  const prete = heurePretePrevue(commande.accepteeLe, commande.tempsPreparationMinutes);
+  const prevue = commande.pretePrevueLe ? new Date(commande.pretePrevueLe) : null;
+  const enCours = commande.statut === 'ACCEPTEE' || commande.statut === 'EN_PREPARATION';
+  const majAction = (maj: CommandeDetail, message: string) => { setCommande(maj); setSucces(message); };
   return (
     <ScrollView
       style={styles.page}
@@ -65,10 +66,18 @@ export default function DetailCommandeRecue() {
       </Text>
       {commande.zoneNom ? <Text style={styles.meta}>Zone : {commande.zoneNom}</Text> : null}
       {succes ? <Text accessibilityLiveRegion="polite" style={styles.succes}>{succes}</Text> : null}
-      {commande.statut === 'ACCEPTEE' && prete ? (
+      {enCours && prevue ? (
         <View style={[styles.bandeau, styles.bandeauAccepte]}>
-          <Text style={styles.bandeauTitre}>À préparer pour {formatHeure(prete)}</Text>
-          <Text style={styles.bandeauTexte}>{commande.tempsPreparationMinutes} min annoncées au client</Text>
+          <Text style={styles.bandeauTitre}>À préparer pour {formatHeure(prevue)}</Text>
+          <Text style={styles.bandeauTexte}>
+            Heure annoncée au client{commande.nbAjustementsPreparation > 0 ? ` · délai ajusté ${commande.nbAjustementsPreparation} fois` : ''}
+          </Text>
+        </View>
+      ) : null}
+      {commande.statut === 'PRETE' && commande.preteLe ? (
+        <View style={[styles.bandeau, styles.bandeauPrete]}>
+          <Text style={styles.bandeauTitre}>Prête depuis {formatHeure(new Date(commande.preteLe))}</Text>
+          <Text style={styles.bandeauTexte}>En attente du livreur</Text>
         </View>
       ) : null}
       {commande.statut === 'REFUSEE' && commande.motifRefus ? (
@@ -101,32 +110,17 @@ export default function DetailCommandeRecue() {
 
       {commande.statut === 'PENDING_PARTNER' ? (
         <View style={styles.decision}>
-          <DecisionCommande commande={commande} onDecision={(maj, message) => { setCommande(maj); setSucces(message); }} />
+          <DecisionCommande commande={commande} onDecision={majAction} />
+        </View>
+      ) : null}
+      {enCours ? (
+        <View style={styles.decision}>
+          <SuiviPreparation commande={commande} onMaj={majAction} />
         </View>
       ) : null}
 
       <Text style={styles.section}>Historique</Text>
-      <Carte>
-        {commande.historique.map((h, index) => {
-          const date = new Date(h.date);
-          const dernier = index === commande.historique.length - 1;
-          return (
-            <View key={`${h.date}-${index}`} style={styles.etape}>
-              <View style={styles.repere}>
-                <View style={[styles.point, { backgroundColor: STATUTS[h.nouveau].couleur }]} />
-                {!dernier ? <View style={styles.trait} /> : null}
-              </View>
-              <View style={styles.etapeCorps}>
-                <Text style={styles.etapeTitre}>{libelleEtapePartenaire(h)}</Text>
-                <Text style={styles.etapeMeta}>
-                  {formatJour(date)} à {formatHeure(date)} · {ROLES_ACTEUR[h.acteurRole]}
-                </Text>
-                {h.motif ? <Text style={styles.etapeMotif}>{h.motif}</Text> : null}
-              </View>
-            </View>
-          );
-        })}
-      </Carte>
+      <FriseHistorique etapes={commande.historique} libelle={libelleEtapePartenaire} />
     </ScrollView>
   );
 }
@@ -142,6 +136,7 @@ const styles = StyleSheet.create({
   bandeau: { marginTop: 14, padding: 14, borderRadius: 16 },
   bandeauAccepte: { backgroundColor: '#E0F2FE' },
   bandeauRefuse: { backgroundColor: '#FEE2E2' },
+  bandeauPrete: { backgroundColor: '#D1FAE5' },
   bandeauTitre: { fontSize: 16, fontWeight: '700', color: theme.texte },
   bandeauTexte: { fontSize: 14, color: theme.secondaire, marginTop: 2 },
   decision: { marginTop: 24 },
@@ -149,12 +144,4 @@ const styles = StyleSheet.create({
   notesTitre: { fontSize: 13, fontWeight: '700', color: theme.secondaire },
   notesTexte: { fontSize: 15, color: theme.texte, marginTop: 4 },
   separateur: { height: 1, backgroundColor: theme.bordure, marginVertical: 6 },
-  etape: { flexDirection: 'row', gap: 12 },
-  repere: { alignItems: 'center', width: 14 },
-  point: { width: 12, height: 12, borderRadius: 6, marginTop: 4 },
-  trait: { flex: 1, width: 2, backgroundColor: theme.bordure, marginVertical: 2 },
-  etapeCorps: { flex: 1, paddingBottom: 14 },
-  etapeTitre: { fontSize: 15, fontWeight: '600', color: theme.texte },
-  etapeMeta: { fontSize: 13, color: theme.secondaire, marginTop: 2 },
-  etapeMotif: { fontSize: 14, color: theme.texte, marginTop: 4 },
 });

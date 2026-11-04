@@ -189,4 +189,66 @@ class Sprint2bisParcoursTest {
         assertEquals(403, appel("PUT", route, Map.of("tempsPreparationMinutes", 10), candidat).status());
         assertEquals("PENDING_PARTNER", commandeClient(id).get("statut").asText(), "aucun appel refusé n'a modifié la commande");
     }
+
+    @Test void preparationAjustementsLimitesPuisCommandePrete() throws Exception {
+        long id = commander(1, "");
+        String base = "/partenaire/commandes/" + id;
+        succes(409, appel("PUT", base + "/preparation/debut", null, partenaire));
+        succes(409, appel("PUT", base + "/prete", null, partenaire));
+        succes(409, appel("PUT", base + "/preparation/temps", Map.of("tempsPreparationMinutes", 10), partenaire));
+        var acceptee = succes(200, appel("PUT", base + "/accepter", Map.of("tempsPreparationMinutes", 15), partenaire));
+        assertFalse(acceptee.get("pretePrevueLe").isNull());
+        assertEquals(0, acceptee.get("nbAjustementsPreparation").asInt());
+
+        var enCours = succes(200, appel("PUT", base + "/preparation/debut", null, partenaire));
+        assertEquals("EN_PREPARATION", enCours.get("statut").asText());
+        assertFalse(enCours.get("preparationDebutLe").isNull());
+        assertEquals(enCours.get("preparationDebutLe").asText(),
+                succes(200, appel("PUT", base + "/preparation/debut", null, partenaire)).get("preparationDebutLe").asText(), "rejeu sans effet");
+
+        succes(400, appel("PUT", base + "/preparation/temps", Map.of("tempsPreparationMinutes", 0), partenaire));
+        var ajuste = succes(200, appel("PUT", base + "/preparation/temps", Map.of("tempsPreparationMinutes", 25), partenaire));
+        assertEquals(1, ajuste.get("nbAjustementsPreparation").asInt());
+        assertEquals(25, ajuste.get("tempsPreparationMinutes").asInt());
+        long restant = java.time.Duration.between(java.time.Instant.now(), java.time.Instant.parse(ajuste.get("pretePrevueLe").asText())).toMinutes();
+        assertTrue(restant >= 24 && restant <= 25, "nouveau délai compté depuis maintenant : " + restant);
+        assertEquals(2, succes(200, appel("PUT", base + "/preparation/temps", Map.of("tempsPreparationMinutes", 10), partenaire))
+                .get("nbAjustementsPreparation").asInt());
+        assertTrue(succes(409, appel("PUT", base + "/preparation/temps", Map.of("tempsPreparationMinutes", 5), partenaire))
+                .get("message").asText().contains("2 fois"));
+
+        var prete = succes(200, appel("PUT", base + "/prete", null, partenaire));
+        assertEquals("PRETE", prete.get("statut").asText());
+        assertFalse(prete.get("preteLe").isNull());
+        assertEquals(prete.get("preteLe").asText(), succes(200, appel("PUT", base + "/prete", null, partenaire)).get("preteLe").asText());
+        succes(409, appel("PUT", base + "/preparation/debut", null, partenaire));
+
+        var etapes = prete.get("historique");
+        assertEquals(List.of("PENDING_PARTNER", "ACCEPTEE", "EN_PREPARATION", "EN_PREPARATION", "EN_PREPARATION", "PRETE"),
+                java.util.stream.StreamSupport.stream(etapes.spliterator(), false).map(h -> h.get("nouveau").asText()).toList());
+        assertEquals("EN_PREPARATION", etapes.get(3).get("ancien").asText(), "un ajustement garde le statut");
+        assertEquals("Délai ajusté : encore 25 min", etapes.get(3).get("motif").asText());
+        assertEquals(1, succes(200, appel("GET", "/partenaire/commandes?statut=PRETE", null, partenaire)).size());
+        assertEquals("PRETE", commandeClient(id).get("statut").asText());
+        assertFalse(commandeClient(id).get("pretePrevueLe").isNull());
+    }
+
+    @Test void pretDirectementApresAcceptation() throws Exception {
+        long id = commander(1, "");
+        succes(200, appel("PUT", "/partenaire/commandes/" + id + "/accepter", Map.of("tempsPreparationMinutes", 5), partenaire));
+        assertEquals("PRETE", succes(200, appel("PUT", "/partenaire/commandes/" + id + "/prete", null, partenaire)).get("statut").asText());
+        succes(404, appel("PUT", "/partenaire/commandes/" + id + "/prete", null, autrePartenaire));
+    }
+
+    @Test void leClientSuitLesEtapesDeSaCommandeUniquement() throws Exception {
+        long id = commander(1, "");
+        succes(200, appel("PUT", "/partenaire/commandes/" + id + "/accepter", Map.of("tempsPreparationMinutes", 20), partenaire));
+        var etapes = succes(200, appel("GET", "/commandes/" + id + "/historique", null, client));
+        assertEquals(2, etapes.size());
+        assertEquals("ACCEPTEE", etapes.get(1).get("nouveau").asText());
+        assertFalse(etapes.get(1).has("acteur"), "l'email de l'auteur n'est pas exposé");
+        String autreClient = login(utilisateurs.save(compte(new Client(), Role.CLIENT, "Autre")).getEmail());
+        succes(404, appel("GET", "/commandes/" + id + "/historique", null, autreClient));
+        assertEquals(403, appel("GET", "/commandes/" + id + "/historique", null, partenaire).status());
+    }
 }

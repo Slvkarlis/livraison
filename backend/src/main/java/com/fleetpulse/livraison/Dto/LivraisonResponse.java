@@ -35,7 +35,10 @@ public record LivraisonResponse(
         Integer tempsPreparationMinutes,   // US-2B2 : annonce a l'acceptation
         Instant accepteeLe,
         com.fleetpulse.livraison.Model.enums.MotifRefus motifRefus,
-        String commentaireRefus) {
+        String commentaireRefus,
+        Instant pretePrevueLe,             // US-2B4 : fin de preparation annoncee (ajustable)
+        Instant preparationDebutLe,
+        Instant preteLe) {
 
     public static LivraisonResponse from(Livraison livraison) {
         return new LivraisonResponse(
@@ -60,7 +63,8 @@ public record LivraisonResponse(
                 livraison.getPartenaire() == null ? null : livraison.getPartenaire().getId(),
                 livraison.getNomPartenaire(), livraison.getNomZone(), livraison.getMontantArticles(),
                 livraison.getLignes().stream().map(MarketplaceDto.LigneVue::from).toList(), livraison.getNotes(),
-                livraison.getTempsPreparationMinutes(), livraison.getAccepteeLe(), livraison.getMotifRefus(), livraison.getCommentaireRefus());
+                livraison.getTempsPreparationMinutes(), livraison.getAccepteeLe(), livraison.getMotifRefus(), livraison.getCommentaireRefus(),
+                livraison.heurePretePrevue(), livraison.getPreparationDebutLe(), livraison.getPreteLe());
     }
 
     /** Commandes creees avant la tarification automatique : seul montantACollecter etait renseigne. */

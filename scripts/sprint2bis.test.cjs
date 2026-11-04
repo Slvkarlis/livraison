@@ -41,17 +41,31 @@ test('Le partenaire voit sa propre formulation, pas celle du client', () => {
   for (const s of STATUTS) assert.ok(r.libelleStatutPartenaire(s).length > 0, s);
   assert.equal(r.libelleEtapePartenaire({ ancien: null, nouveau: 'PENDING_PARTNER' }), 'Commande passée');
   assert.equal(r.libelleEtapePartenaire({ ancien: 'PENDING_PARTNER', nouveau: 'ACCEPTEE' }), 'Acceptée');
+  assert.equal(r.libelleEtapePartenaire({ ancien: 'EN_PREPARATION', nouveau: 'EN_PREPARATION' }), 'Délai ajusté');
+});
+test('Frise client : formulation du client, ajustement et création reconnus', () => {
+  assert.equal(r.libelleEtapeClient({ ancien: null, nouveau: 'PENDING_PARTNER' }), 'Commande passée');
+  assert.equal(r.libelleEtapeClient({ ancien: 'PENDING_PARTNER', nouveau: 'ACCEPTEE' }), 'Acceptée par le commerce');
+  assert.equal(r.libelleEtapeClient({ ancien: 'ACCEPTEE', nouveau: 'ACCEPTEE' }), 'Délai ajusté');
+  assert.equal(r.libelleEtapeClient({ ancien: 'EN_PREPARATION', nouveau: 'PRETE' }), 'Prête, en attente du livreur');
+  assert.equal(r.libelleEtapeClient({ ancien: 'ACCEPTEE', nouveau: 'EN_PREPARATION' }), 'En préparation');
 });
 test('Les appels API visent les routes partenaire', async () => {
   const appels = [];
   const api = r.creerApiPartenaire(async (method, path, body) => { appels.push([method + ' ' + path, body]); return null; });
   await api.commandesRecues(); await api.commandeRecue(42);
   await api.accepterCommande(42, 15); await api.refuserCommande(42, 'RUPTURE', '  '); await api.refuserCommande(42, 'AUTRE', ' Four en panne ');
+  await api.commencerPreparation(42); await api.ajusterPreparation(42, 25); await api.marquerPrete(42);
+  await r.creerApiSuiviClient(async (method, path, body) => { appels.push([method + ' ' + path, body]); return null; }).historiqueCommande(42);
   assert.deepEqual(appels, [
     ['GET /api/partenaire/commandes', undefined], ['GET /api/partenaire/commandes/42', undefined],
     ['PUT /api/partenaire/commandes/42/accepter', { tempsPreparationMinutes: 15 }],
     ['PUT /api/partenaire/commandes/42/refuser', { motif: 'RUPTURE', commentaire: null }],
     ['PUT /api/partenaire/commandes/42/refuser', { motif: 'AUTRE', commentaire: 'Four en panne' }],
+    ['PUT /api/partenaire/commandes/42/preparation/debut', undefined],
+    ['PUT /api/partenaire/commandes/42/preparation/temps', { tempsPreparationMinutes: 25 }],
+    ['PUT /api/partenaire/commandes/42/prete', undefined],
+    ['GET /api/commandes/42/historique', undefined],
   ]);
 });
 test('Temps de préparation : entier de 1 à 180 minutes', () => {
@@ -66,12 +80,13 @@ test('Refus : motif obligatoire, commentaire obligatoire pour Autre et limité �
   assert.ok(r.verifierRefus('RUPTURE', 'x'.repeat(301)));
   assert.deepEqual(r.MOTIFS_REFUS.map(m => m.id), ['RUPTURE', 'FERMETURE', 'TROP_DE_COMMANDES', 'AUTRE'], 'miroir de MotifRefus.java');
 });
-test('Message client selon la décision du commerce', () => {
-  const base = { nomPartenaire: 'Chez Amira', tempsPreparationMinutes: null, accepteeLe: null, motifRefus: null, commentaireRefus: null };
+test('Message client selon la décision et la préparation du commerce', () => {
+  const base = { nomPartenaire: 'Chez Amira', pretePrevueLe: null, motifRefus: null, commentaireRefus: null };
   assert.match(r.messageDecisionClient({ ...base, statut: 'PENDING_PARTNER' }), /pas encore répondu/);
-  const accepteeLe = new Date(2026, 10, 4, 20, 50).toISOString();
-  assert.equal(r.messageDecisionClient({ ...base, statut: 'ACCEPTEE', accepteeLe, tempsPreparationMinutes: 15 }),
-    'Chez Amira a accepté : prête vers 21:05 (environ 15 min).');
+  const pretePrevueLe = new Date(2026, 10, 4, 21, 5).toISOString();
+  assert.equal(r.messageDecisionClient({ ...base, statut: 'ACCEPTEE', pretePrevueLe }), 'Chez Amira a accepté : prête vers 21:05.');
+  assert.equal(r.messageDecisionClient({ ...base, statut: 'EN_PREPARATION', pretePrevueLe }), 'Chez Amira prépare votre commande : prête vers 21:05.');
+  assert.equal(r.messageDecisionClient({ ...base, statut: 'PRETE', pretePrevueLe }), 'Chez Amira : votre commande est prête. Un livreur va la récupérer.');
   assert.equal(r.messageDecisionClient({ ...base, statut: 'REFUSEE', motifRefus: 'RUPTURE', commentaireRefus: 'Plus de brik' }),
     'Chez Amira a refusé : Rupture de stock — Plus de brik. Aucun montant ne vous sera demandé.');
   assert.equal(r.messageDecisionClient({ ...base, statut: 'LIVREE' }), null);

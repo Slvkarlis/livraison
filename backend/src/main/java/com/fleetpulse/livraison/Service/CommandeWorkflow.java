@@ -49,6 +49,12 @@ public class CommandeWorkflow {
         publier(commande, ancien);
     }
 
+    /** Evenement sans changement de statut (ex. delai ajuste) : trace dans l'historique avec ancien = nouveau. */
+    public void noter(Livraison commande, Utilisateur acteur, String motif) {
+        historique.save(new HistoriqueStatut(commande, commande.getStatut(), commande.getStatut(), acteur, motif));
+        publier(commande, commande.getStatut());
+    }
+
     private void publier(Livraison commande, StatutLivraison ancien) {
         evenements.publishEvent(new CommandeStatutChange(commande.getId(),
                 commande.getPartenaire() == null ? null : commande.getPartenaire().getId(),
