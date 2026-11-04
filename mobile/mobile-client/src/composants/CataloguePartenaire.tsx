@@ -1,10 +1,12 @@
 import { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
-import { api, Bouton, Carte, Champ, MessageErreur, Titre, useAuth, useTheme, verifierProduit, nombreSaisi, formatMontant, type Commerce, type Produit } from '@fleetpulse/shared';
+import { api, Bouton, Carte, Champ, MessageErreur, Titre, useTheme, verifierProduit, nombreSaisi, formatMontant, type Commerce, type Produit } from '@fleetpulse/shared';
 
+// US-203 : onglet Catalogue de l'espace partenaire (ouverture du commerce et deconnexion : onglet Commerce)
 export default function CataloguePartenaire() {
-  const t = useTheme(), { logout } = useAuth();
+  const t = useTheme();
   const [commerce, setCommerce] = useState<Commerce | null>(null), [produits, setProduits] = useState<Produit[]>([]);
   const [id, setId] = useState<number | null>(null), [nom, setNom] = useState(''), [prix, setPrix] = useState(''), [disponible, setDisponible] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null), [succes, setSucces] = useState(''), [envoi, setEnvoi] = useState(false), [chargement, setChargement] = useState(true);
@@ -21,14 +23,10 @@ export default function CataloguePartenaire() {
     try { await api.sauverProduit(id, { nom, prix: nombreSaisi(prix), disponible }); nouveau(); await charger(); setSucces('Produit enregistré.'); }
     catch (e) { setErreur((e as Error).message); } finally { setEnvoi(false); }
   }
-  return <ScrollView style={{ backgroundColor: t.fond }} contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 50 }} keyboardShouldPersistTaps="handled">
-    <Titre sousTitre="Gérez votre commerce et vos produits.">{commerce?.nomCommerce ?? 'Mon catalogue'}</Titre><MessageErreur message={erreur} />
+  return <SafeAreaView style={{ flex: 1, backgroundColor: t.fond }} edges={['top']}><ScrollView style={{ backgroundColor: t.fond }} contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 50 }} keyboardShouldPersistTaps="handled">
+    <Titre sousTitre={commerce ? (commerce.nomCommerce + (commerce.ouvert ? ' · ouvert' : ' · fermé')) : 'Gérez vos produits.'}>Mon catalogue</Titre><MessageErreur message={erreur} />
     {succes ? <Text accessibilityLiveRegion="polite" style={{ color: t.succes }}>{succes}</Text> : null}
     <Bouton titre="Actualiser" chargement={chargement} desactive={envoi} variante="secondaire" onPress={() => void charger()} />
-    {commerce ? <Carte><Text style={{ color: t.texte }}>{commerce.zoneNom ? 'Zone : ' + commerce.zoneNom : 'Aucune zone : contactez le responsable.'}</Text>
-      <Bouton titre={commerce.ouvert ? 'Commerce ouvert — fermer' : 'Commerce fermé — ouvrir'} desactive={envoi || (!commerce.zoneId && !commerce.ouvert)} onPress={() => {
-        setEnvoi(true); api.ouverture(!commerce.ouvert).then(c => { setCommerce(c); setSucces(c.ouvert ? 'Commerce ouvert.' : 'Commerce fermé.'); }).catch(e => setErreur(e.message)).finally(() => setEnvoi(false));
-      }} /></Carte> : null}
     <Carte><Titre>{id ? 'Modifier le produit' : 'Publier un produit'}</Titre>
       <Champ libelle="Nom du produit" value={nom} maxLength={120} onChangeText={setNom} editable={!envoi} /><Champ libelle="Prix en DT (3 décimales maximum)" value={prix} keyboardType="decimal-pad" onChangeText={setPrix} editable={!envoi} />
       <Bouton titre={disponible ? 'Disponible — rendre indisponible' : 'Indisponible — rendre disponible'} variante="secondaire" desactive={envoi} onPress={() => setDisponible(!disponible)} />
@@ -39,6 +37,5 @@ export default function CataloguePartenaire() {
       <Bouton titre={'Modifier ' + p.nom} variante="secondaire" desactive={envoi} onPress={() => { setId(p.id); setNom(p.nom); setPrix(String(p.prix)); setDisponible(p.disponible); }} />
       <Bouton titre={p.disponible ? 'Rendre indisponible' : 'Rendre disponible'} variante="discret" desactive={envoi} onPress={() => { setEnvoi(true); api.sauverProduit(p.id, { ...p, disponible: !p.disponible }).then(async () => { await charger(); setSucces('Disponibilité mise à jour.'); }).catch(e => setErreur(e.message)).finally(() => setEnvoi(false)); }} />
     </View></Carte>)}
-    <Bouton titre="Se déconnecter" variante="discret" onPress={() => void logout()} />
-  </ScrollView>;
+  </ScrollView></SafeAreaView>;
 }

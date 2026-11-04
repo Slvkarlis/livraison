@@ -13,4 +13,7 @@ public interface LivraisonRepository extends JpaRepository<Livraison, Long> {
 
     List<Livraison> findAllByClientEmailOrderByDateCreationDesc(String email);
 
+    List<Livraison> findAllByPartenaireIdOrderByDateCreationDesc(Long partenaireId);
+    List<Livraison> findAllByPartenaireIdAndStatutInOrderByDateCreationDesc(Long partenaireId,
+            java.util.Collection<com.fleetpulse.livraison.Model.enums.StatutLivraison> statuts);
 }

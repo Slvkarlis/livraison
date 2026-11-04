@@ -8,4 +8,5 @@ public interface PartenaireRepository extends JpaRepository<Partenaire, Long> {
     Optional<Partenaire> verrouillerEmail(String email);
     @Lock(LockModeType.PESSIMISTIC_WRITE) @Query("select p from Partenaire p where p.id = :id")
     Optional<Partenaire> verrouiller(Long id);
+    Optional<Partenaire> findByEmail(String email);
 }

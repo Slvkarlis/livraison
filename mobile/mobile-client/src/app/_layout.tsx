@@ -45,7 +45,7 @@ function Navigation() {
         <Stack.Screen name="dossier" options={{ title: 'Suivi du dossier', headerShown: true }} />
       </Stack.Protected>
       <Stack.Protected guard={partenaire}>
-        <Stack.Screen name="catalogue-partenaire" options={{ title: 'Mon catalogue', headerShown: true }} />
+        <Stack.Screen name="partenaire" options={{ headerShown: false }} />
       </Stack.Protected>
       <Stack.Protected guard={actif}>
         <Stack.Screen name="(onglets)" options={{ headerShown: false }} />

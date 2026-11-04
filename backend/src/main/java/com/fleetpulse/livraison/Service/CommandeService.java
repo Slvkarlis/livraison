@@ -23,12 +23,14 @@ public class CommandeService {
     private final LivraisonRepository commandes;
     private final CatalogueService catalogue;
     private final ZoneService zones;
+    private final CommandeWorkflow workflow;
     @Value("${app.commandes.minimum:1}") private BigDecimal minimum;
     @Value("${app.commandes.maximum:1000}") private BigDecimal maximum;
     @Value("${app.commandes.actives-max:3}") private int activesMax;
     @Value("${app.commandes.intervalle-secondes:30}") private int intervalle;
-    private static final Set<StatutLivraison> ACTIVES = EnumSet.of(StatutLivraison.PENDING_PARTNER, StatutLivraison.EN_PREPARATION,
-            StatutLivraison.AFFECTEE, StatutLivraison.EN_COURS, StatutLivraison.A_PROXIMITE, StatutLivraison.ARRIVEE);
+    private static final Set<StatutLivraison> ACTIVES = EnumSet.of(StatutLivraison.PENDING_PARTNER, StatutLivraison.ACCEPTEE,
+            StatutLivraison.EN_PREPARATION, StatutLivraison.PRETE, StatutLivraison.AFFECTEE, StatutLivraison.RECUPEREE,
+            StatutLivraison.EN_COURS, StatutLivraison.A_PROXIMITE, StatutLivraison.ARRIVEE);
 
     private void verifier(PanierRequest r) {
         if (r == null || r.partenaireId() == null || r.adresseId() == null || r.lignes() == null || r.lignes().isEmpty() || r.lignes().size() > 50)
@@ -107,7 +109,9 @@ public class CommandeService {
             ligne.setNomProduit(article.nomProduit()); ligne.setQuantite(article.quantite()); ligne.setPrixUnitaire(article.prixUnitaire()); ligne.setSousTotal(article.sousTotal()); l.getLignes().add(ligne);
         }
         l.calculerTotal(); l.setMontantACollecter(l.getTotal().doubleValue());
-        return LivraisonResponse.from(commandes.saveAndFlush(l));
+        Livraison creee = commandes.saveAndFlush(l);
+        workflow.creer(creee, c);
+        return LivraisonResponse.from(creee);
     }
     private static String hash(String s) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8))); }

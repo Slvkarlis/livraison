@@ -8,6 +8,7 @@ import type {
 
 import { ApiError, creerClientHttp } from './http';
 import { creerApiMarche } from './sprint2';
+import { creerApiPartenaire } from './sprint2bis';
 import type { Compte } from './sprint1';
 export { ApiError } from './http';
 export const http = creerClientHttp(apiBaseUrl, () => `Serveur injoignable (${apiBaseUrl()}). Vérifiez votre connexion et le backend.`);
@@ -25,6 +26,7 @@ function estConfigurationAuth(value: unknown): value is ConfigurationAuth {
 
 export const api = {
   ...creerApiMarche(request),
+  ...creerApiPartenaire(request),
   demo: async () => {
     const config = await request<unknown>('GET', '/api/auth/config');
     if (!estConfigurationAuth(config)) {

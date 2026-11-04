@@ -2,8 +2,13 @@ import type { ModePaiement, StatutLivraison, StatutPaiement, TypeLivraison } fro
 
 export const STATUTS: Record<StatutLivraison, { libelle: string; couleur: string; fond: string }> = {
   PENDING_PARTNER: { libelle: 'En attente du partenaire', couleur: '#B45309', fond: '#FEF3C7' },
+  ACCEPTEE: { libelle: 'Acceptée', couleur: '#0369A1', fond: '#E0F2FE' },
+  REFUSEE: { libelle: 'Refusée', couleur: '#B91C1C', fond: '#FEE2E2' },
   EN_PREPARATION: { libelle: 'En préparation', couleur: '#B45309', fond: '#FEF3C7' },
+  PRETE: { libelle: 'Prête', couleur: '#047857', fond: '#D1FAE5' },
   AFFECTEE: { libelle: 'Livreur assigné', couleur: '#1D4ED8', fond: '#DBEAFE' },
+  RECUPEREE: { libelle: 'Récupérée', couleur: '#6D28D9', fond: '#EDE9FE' },
+  ANNULEE: { libelle: 'Annulée', couleur: '#4B5563', fond: '#F3F4F6' },
   EN_COURS: { libelle: 'En route', couleur: '#6D28D9', fond: '#EDE9FE' },
   A_PROXIMITE: { libelle: 'À proximité', couleur: '#6D28D9', fond: '#EDE9FE' },
   ARRIVEE: { libelle: 'Livreur arrivé', couleur: '#0F766E', fond: '#CCFBF1' },

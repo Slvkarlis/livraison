@@ -5,8 +5,13 @@ export type Role = 'CLIENT' | 'PARTENAIRE' | 'LIVREUR' | 'RESPONSABLE';
 
 export type StatutLivraison =
   | 'PENDING_PARTNER'
+  | 'ACCEPTEE'
+  | 'REFUSEE'
   | 'EN_PREPARATION'
+  | 'PRETE'
   | 'AFFECTEE'
+  | 'RECUPEREE'
+  | 'ANNULEE'
   | 'EN_COURS'
   | 'A_PROXIMITE'
   | 'ARRIVEE'

@@ -179,9 +179,11 @@ export function MessageErreur({ message }: { message: string | null }) {
   );
 }
 
-export function PastilleStatut({ statut }: { statut: StatutLivraison }) {
+/** libelle : remplace le libelle client (ex. vue partenaire, voir libelleStatutPartenaire). */
+export function PastilleStatut({ statut, libelle: remplacement }: { statut: StatutLivraison; libelle?: string }) {
   const s = useStyles(fabriqueStyles);
-  const { libelle, couleur } = STATUTS[statut];
+  const { couleur } = STATUTS[statut];
+  const libelle = remplacement ?? STATUTS[statut].libelle;
   return (
     <View style={[s.pastille, { backgroundColor: couleur + '1F' }]}>
       <View style={[s.pastillePoint, { backgroundColor: couleur }]} />

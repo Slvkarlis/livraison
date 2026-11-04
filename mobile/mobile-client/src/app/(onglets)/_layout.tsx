@@ -1,13 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
+import { couleurIcone } from '../../composants/couleurIcone';
 import { theme } from '../../theme';
-
-/** Ionicons n'accepte qu'une string : conversion securisee de la couleur fournie par la barre d'onglets. */
-function couleurIcone(color: unknown): string | undefined {
-  if (typeof color === 'string') return color;
-  if (typeof color === 'number') return `#${color.toString(16).padStart(8, '0')}`;
-  return undefined;
-}
 
 export default function OngletsLayout() {
   return (
