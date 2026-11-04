@@ -1,5 +1,5 @@
 // Sprint 2 bis : commandes recues par le partenaire (miroir de CommandePartenaireDto).
-import type { MotifRefus, Role, StatutLivraison } from './types';
+import type { Livraison, MotifRefus, Role, StatutLivraison } from './types';
 import type { LigneCommande } from './sprint2';
 import { STATUTS, formatHeure } from './format';
 
@@ -24,6 +24,7 @@ const ETAPES_CLIENT: Partial<Record<StatutLivraison, string>> = {
   ACCEPTEE: 'Acceptée par le commerce',
   REFUSEE: 'Refusée par le commerce',
   PRETE: 'Prête, en attente du livreur',
+  ANNULEE: 'Annulée',
 };
 export function libelleEtapeClient(entree: Etape): string {
   if (entree.ancien === null) return 'Commande passée';
@@ -41,7 +42,14 @@ export interface CommandeDetail extends CommandeResume {
   montantArticles: number; fraisLivraison: number;
   tempsPreparationMinutes: number | null; accepteeLe: string | null; motifRefus: MotifRefus | null; commentaireRefus: string | null;
   pretePrevueLe: string | null; nbAjustementsPreparation: number; preparationDebutLe: string | null; preteLe: string | null;
+  annuleeLe: string | null; motifAnnulation: string | null;
   historique: HistoriqueEntree[];
+}
+
+// US-2B12 : annulation par le client, sans frais, tant que la preparation n'a pas commence (miroir de CommandeService)
+export const MOTIF_ANNULATION_MAX = 300;
+export function peutAnnuler(statut: StatutLivraison): boolean {
+  return statut === 'PENDING_PARTNER' || statut === 'ACCEPTEE';
 }
 
 // US-2B2 : decision du partenaire (bornes identiques a CommandePartenaireService)
@@ -83,6 +91,7 @@ export function messageDecisionClient(c: {
   if (c.statut === 'ACCEPTEE') return prete ? `${commerce} a accepté : prête vers ${prete}.` : `${commerce} a accepté votre commande.`;
   if (c.statut === 'EN_PREPARATION') return prete ? `${commerce} prépare votre commande : prête vers ${prete}.` : `${commerce} prépare votre commande.`;
   if (c.statut === 'PRETE') return `${commerce} : votre commande est prête. Un livreur va la récupérer.`;
+  if (c.statut === 'ANNULEE') return 'Vous avez annulé cette commande. Aucun montant ne vous sera demandé.';
   if (c.statut === 'REFUSEE') {
     const motif = c.motifRefus ? libelleMotifRefus(c.motifRefus) : 'sans motif';
     return `${commerce} a refusé : ${motif}${c.commentaireRefus ? ` — ${c.commentaireRefus}` : ''}. Aucun montant ne vous sera demandé.`;
@@ -127,5 +136,7 @@ export function creerApiPartenaire(request: <T>(method: string, path: string, bo
 export function creerApiSuiviClient(request: <T>(method: string, path: string, body?: unknown) => Promise<T>) {
   return {
     historiqueCommande: (id: number) => request<HistoriqueEntree[]>('GET', '/api/commandes/' + id + '/historique'),
+    annulerCommande: (id: number, motif: string) =>
+      request<Livraison>('PUT', '/api/commandes/' + id + '/annuler', { motif: motif.trim() || null }),
   };
 }

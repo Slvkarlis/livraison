@@ -13,12 +13,14 @@ import {
   formatMontant,
   libelleEtapeClient,
   messageDecisionClient,
+  peutAnnuler,
   type HistoriqueEntree,
   type Livraison,
 } from '@fleetpulse/shared';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AnnulationCommande } from '../../composants/AnnulationCommande';
 import { CarteLeaflet } from '../../composants/CarteLeaflet';
 import { FriseHistorique } from '../../composants/FriseHistorique';
 import { theme } from '../../theme';
@@ -89,6 +91,12 @@ export default function DetailCommande() {
             <Text style={styles.momentTexte}>{formatCreneau(livraison.creneauDebut, livraison.creneauFin)}</Text>
           </View>
         </View> : messageDecisionClient(livraison) ? <Text style={styles.momentTexte}>{messageDecisionClient(livraison)}</Text> : null}
+        {livraison.statut === 'ANNULEE' && livraison.motifAnnulation ? (
+          <Text style={styles.momentTexte}>Motif : {livraison.motifAnnulation}</Text>
+        ) : null}
+        {livraison.partenaireId && peutAnnuler(livraison.statut) ? (
+          <AnnulationCommande key={livraison.statut} commandeId={livraison.id} onAnnulee={() => void charger()} />
+        ) : null}
 
         {etapes.length ? (
           <>

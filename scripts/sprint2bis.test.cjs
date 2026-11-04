@@ -56,7 +56,8 @@ test('Les appels API visent les routes partenaire', async () => {
   await api.commandesRecues(); await api.commandeRecue(42);
   await api.accepterCommande(42, 15); await api.refuserCommande(42, 'RUPTURE', '  '); await api.refuserCommande(42, 'AUTRE', ' Four en panne ');
   await api.commencerPreparation(42); await api.ajusterPreparation(42, 25); await api.marquerPrete(42);
-  await r.creerApiSuiviClient(async (method, path, body) => { appels.push([method + ' ' + path, body]); return null; }).historiqueCommande(42);
+  const suivi = r.creerApiSuiviClient(async (method, path, body) => { appels.push([method + ' ' + path, body]); return null; });
+  await suivi.historiqueCommande(42); await suivi.annulerCommande(42, '  '); await suivi.annulerCommande(42, ' Erreur ');
   assert.deepEqual(appels, [
     ['GET /api/partenaire/commandes', undefined], ['GET /api/partenaire/commandes/42', undefined],
     ['PUT /api/partenaire/commandes/42/accepter', { tempsPreparationMinutes: 15 }],
@@ -66,7 +67,15 @@ test('Les appels API visent les routes partenaire', async () => {
     ['PUT /api/partenaire/commandes/42/preparation/temps', { tempsPreparationMinutes: 25 }],
     ['PUT /api/partenaire/commandes/42/prete', undefined],
     ['GET /api/commandes/42/historique', undefined],
+    ['PUT /api/commandes/42/annuler', { motif: null }],
+    ['PUT /api/commandes/42/annuler', { motif: 'Erreur' }],
   ]);
+});
+test('Annulation possible seulement en attente ou acceptée (miroir du backend)', () => {
+  assert.deepEqual(STATUTS.filter(s => r.peutAnnuler(s)), ['PENDING_PARTNER', 'ACCEPTEE']);
+  assert.equal(r.messageDecisionClient({ statut: 'ANNULEE', nomPartenaire: 'Chez Amira', pretePrevueLe: null, motifRefus: null, commentaireRefus: null }),
+    'Vous avez annulé cette commande. Aucun montant ne vous sera demandé.');
+  assert.equal(r.libelleEtapeClient({ ancien: 'ACCEPTEE', nouveau: 'ANNULEE' }), 'Annulée');
 });
 test('Temps de préparation : entier de 1 à 180 minutes', () => {
   for (const ok of ['1', '15', ' 30 ', '180']) assert.equal(r.verifierTempsPreparation(ok), null, ok);

@@ -38,7 +38,9 @@ public record LivraisonResponse(
         String commentaireRefus,
         Instant pretePrevueLe,             // US-2B4 : fin de preparation annoncee (ajustable)
         Instant preparationDebutLe,
-        Instant preteLe) {
+        Instant preteLe,
+        Instant annuleeLe,                 // US-2B12
+        String motifAnnulation) {
 
     public static LivraisonResponse from(Livraison livraison) {
         return new LivraisonResponse(
@@ -64,7 +66,8 @@ public record LivraisonResponse(
                 livraison.getNomPartenaire(), livraison.getNomZone(), livraison.getMontantArticles(),
                 livraison.getLignes().stream().map(MarketplaceDto.LigneVue::from).toList(), livraison.getNotes(),
                 livraison.getTempsPreparationMinutes(), livraison.getAccepteeLe(), livraison.getMotifRefus(), livraison.getCommentaireRefus(),
-                livraison.heurePretePrevue(), livraison.getPreparationDebutLe(), livraison.getPreteLe());
+                livraison.heurePretePrevue(), livraison.getPreparationDebutLe(), livraison.getPreteLe(),
+                livraison.getAnnuleeLe(), livraison.getMotifAnnulation());
     }
 
     /** Commandes creees avant la tarification automatique : seul montantACollecter etait renseigne. */

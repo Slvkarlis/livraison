@@ -251,4 +251,59 @@ class Sprint2bisParcoursTest {
         succes(404, appel("GET", "/commandes/" + id + "/historique", null, autreClient));
         assertEquals(403, appel("GET", "/commandes/" + id + "/historique", null, partenaire).status());
     }
+
+    @Test void annulationEnAttenteVisibleParLePartenaire() throws Exception {
+        long id = commander(1, "");
+        var annulee = succes(200, appel("PUT", "/commandes/" + id + "/annuler", Map.of("motif", " Erreur d'adresse "), client));
+        assertEquals("ANNULEE", annulee.get("statut").asText());
+        assertEquals("Erreur d'adresse", annulee.get("motifAnnulation").asText());
+        assertFalse(annulee.get("annuleeLe").isNull());
+        assertEquals(annulee.get("annuleeLe").asText(),
+                succes(200, appel("PUT", "/commandes/" + id + "/annuler", Map.of("motif", "Autre"), client)).get("annuleeLe").asText(), "rejeu sans effet");
+
+        var vuePartenaire = succes(200, appel("GET", "/partenaire/commandes/" + id, null, partenaire));
+        assertEquals("ANNULEE", vuePartenaire.get("statut").asText());
+        assertEquals("Erreur d'adresse", vuePartenaire.get("motifAnnulation").asText());
+        var derniere = vuePartenaire.get("historique").get(vuePartenaire.get("historique").size() - 1);
+        assertEquals("CLIENT", derniere.get("acteurRole").asText());
+        assertEquals("Annulée par le client : Erreur d'adresse", derniere.get("motif").asText());
+        succes(409, appel("PUT", "/partenaire/commandes/" + id + "/accepter", Map.of("tempsPreparationMinutes", 10), partenaire));
+    }
+
+    @Test void annulableAccepteeMaisPlusEnPreparationNiPrete() throws Exception {
+        long acceptee = commander(1, "");
+        succes(200, appel("PUT", "/partenaire/commandes/" + acceptee + "/accepter", Map.of("tempsPreparationMinutes", 10), partenaire));
+        var sansMotif = succes(200, appel("PUT", "/commandes/" + acceptee + "/annuler", null, client));
+        assertEquals("ANNULEE", sansMotif.get("statut").asText());
+        assertTrue(sansMotif.get("motifAnnulation").isNull());
+
+        long enPreparation = commander(1, "");
+        succes(200, appel("PUT", "/partenaire/commandes/" + enPreparation + "/accepter", Map.of("tempsPreparationMinutes", 10), partenaire));
+        succes(200, appel("PUT", "/partenaire/commandes/" + enPreparation + "/preparation/debut", null, partenaire));
+        assertTrue(succes(409, appel("PUT", "/commandes/" + enPreparation + "/annuler", null, client)).get("message").asText().contains("préparation"));
+
+        long prete = commander(1, "");
+        succes(200, appel("PUT", "/partenaire/commandes/" + prete + "/accepter", Map.of("tempsPreparationMinutes", 10), partenaire));
+        succes(200, appel("PUT", "/partenaire/commandes/" + prete + "/prete", null, partenaire));
+        succes(409, appel("PUT", "/commandes/" + prete + "/annuler", null, client));
+        assertEquals("PRETE", commandeClient(prete).get("statut").asText());
+    }
+
+    @Test void annulationReserveeAuClientEtLibereUneCommandeActive() throws Exception {
+        long id = commander(1, "");
+        String autreClient = login(utilisateurs.save(compte(new Client(), Role.CLIENT, "Autre")).getEmail());
+        succes(404, appel("PUT", "/commandes/" + id + "/annuler", null, autreClient));
+        assertEquals(403, appel("PUT", "/commandes/" + id + "/annuler", null, partenaire).status());
+        succes(400, appel("PUT", "/commandes/" + id + "/annuler", Map.of("motif", "x".repeat(301)), client));
+        assertEquals("PENDING_PARTNER", commandeClient(id).get("statut").asText());
+
+        commander(1, ""); commander(1, "");
+        Map<String, Object> quatrieme = new HashMap<>(Map.of("partenaireId", partenaireId, "adresseId", adresseId,
+                "lignes", List.of(Map.of("produitId", produitId, "quantite", 1)), "notes", ""));
+        quatrieme.put("devisEmpreinte", succes(200, appel("POST", "/commandes/devis", quatrieme, client)).get("empreinte").asText());
+        quatrieme.put("cleIdempotence", UUID.randomUUID().toString());
+        succes(409, appel("POST", "/commandes", quatrieme, client));
+        succes(200, appel("PUT", "/commandes/" + id + "/annuler", null, client));
+        succes(201, appel("POST", "/commandes", quatrieme, client));
+    }
 }

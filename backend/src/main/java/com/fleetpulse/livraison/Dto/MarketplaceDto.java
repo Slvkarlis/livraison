@@ -36,6 +36,8 @@ public final class MarketplaceDto {
     public record LigneVue(Long produitId, String nomProduit, int quantite, BigDecimal prixUnitaire, BigDecimal sousTotal) {
         public static LigneVue from(LigneCommande l) { return new LigneVue(l.getProduit().getId(), l.getNomProduit(), l.getQuantite(), l.getPrixUnitaire(), l.getSousTotal()); }
     }
+    /** US-2B12 : motif facultatif de l'annulation par le client. */
+    public record AnnulationRequest(String motif) { }
     public record DevisVue(Long partenaireId, String nomPartenaire, String zoneNom, List<LigneVue> lignes,
                            BigDecimal montantArticles, BigDecimal fraisLivraison, BigDecimal total, String empreinte) { }
 }

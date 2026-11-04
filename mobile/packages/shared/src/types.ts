@@ -87,6 +87,9 @@ export interface Livraison {
   pretePrevueLe: string | null;
   preparationDebutLe: string | null;
   preteLe: string | null;
+  /** US-2B12 : annulation par le client. */
+  annuleeLe: string | null;
+  motifAnnulation: string | null;
 }
 
 export interface LoginResponse {

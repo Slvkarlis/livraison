@@ -121,6 +121,26 @@ public class CommandeService {
         return historique.findAllByCommandeIdOrderByDateAscIdAsc(c.getId()).stream()
                 .map(com.fleetpulse.livraison.Dto.CommandePartenaireDto.HistoriqueVue::from).toList();
     }
+
+    private static final Set<StatutLivraison> ANNULABLES = EnumSet.of(StatutLivraison.PENDING_PARTNER, StatutLivraison.ACCEPTEE);
+    static final int MOTIF_ANNULATION_MAX = 300;
+
+    /** US-2B12 : annulation sans frais tant que la commande est en attente ou acceptee. Rejouer ne change rien. */
+    public LivraisonResponse annuler(String email, Long id, AnnulationRequest r) {
+        String motif = r == null || r.motif() == null || r.motif().isBlank() ? null : r.motif().trim();
+        if (motif != null && motif.length() > MOTIF_ANNULATION_MAX)
+            throw new IllegalArgumentException("Motif : " + MOTIF_ANNULATION_MAX + " caractères maximum.");
+        // Meme ordre de verrouillage que la creation : client puis commande (limite de commandes actives).
+        Client c = clients.verrouiller(email).orElseThrow(MarketplaceException::absent);
+        Livraison l = commandes.verrouiller(id).filter(x -> x.getClient().getId().equals(c.getId())).orElseThrow(MarketplaceException::absent);
+        if (l.getStatut() == StatutLivraison.ANNULEE) return LivraisonResponse.from(l);
+        if (!ANNULABLES.contains(l.getStatut()))
+            throw MarketplaceException.conflit("La préparation a commencé : la commande ne peut plus être annulée.");
+        workflow.transition(l, StatutLivraison.ANNULEE, c, "Annulée par le client" + (motif == null ? "" : " : " + motif));
+        l.setAnnuleeLe(Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS));
+        l.setMotifAnnulation(motif);
+        return LivraisonResponse.from(l);
+    }
     private static String hash(String s) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8))); }
         catch (java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }

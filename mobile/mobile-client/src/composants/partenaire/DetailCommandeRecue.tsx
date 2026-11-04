@@ -4,6 +4,7 @@ import {
   Ligne,
   MessageErreur,
   PastilleStatut,
+  ROLES_ACTEUR,
   api,
   formatHeure,
   formatJour,
@@ -51,6 +52,7 @@ export default function DetailCommandeRecue() {
   const recue = new Date(commande.dateCreation);
   const prevue = commande.pretePrevueLe ? new Date(commande.pretePrevueLe) : null;
   const enCours = commande.statut === 'ACCEPTEE' || commande.statut === 'EN_PREPARATION';
+  const annulation = [...commande.historique].reverse().find((h) => h.nouveau === 'ANNULEE');
   const majAction = (maj: CommandeDetail, message: string) => { setCommande(maj); setSucces(message); };
   return (
     <ScrollView
@@ -72,6 +74,15 @@ export default function DetailCommandeRecue() {
           <Text style={styles.bandeauTexte}>
             Heure annoncée au client{commande.nbAjustementsPreparation > 0 ? ` · délai ajusté ${commande.nbAjustementsPreparation} fois` : ''}
           </Text>
+        </View>
+      ) : null}
+      {commande.statut === 'ANNULEE' ? (
+        <View style={[styles.bandeau, styles.bandeauRefuse]}>
+          <Text style={styles.bandeauTitre}>
+            Annulée{annulation ? ` par ${annulation.acteurRole === 'CLIENT' ? 'le client' : ROLES_ACTEUR[annulation.acteurRole].toLowerCase()}` : ''}
+            {commande.annuleeLe ? ` à ${formatHeure(new Date(commande.annuleeLe))}` : ''}
+          </Text>
+          <Text style={styles.bandeauTexte}>{commande.motifAnnulation ?? 'Aucun motif donné'} · ne pas préparer</Text>
         </View>
       ) : null}
       {commande.statut === 'PRETE' && commande.preteLe ? (

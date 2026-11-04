@@ -52,6 +52,10 @@ public class MarketplaceController {
     public DevisVue devis(Authentication a, @RequestBody PanierRequest r) { return commandes.devis(a.getName(), r); }
     @PostMapping("/commandes") @ResponseStatus(HttpStatus.CREATED) @PreAuthorize("hasRole('CLIENT')")
     public LivraisonResponse commander(Authentication a, @RequestBody PanierRequest r) { return commandes.commander(a.getName(), r); }
+    @PutMapping("/commandes/{id}/annuler") @PreAuthorize("hasRole('CLIENT')")
+    public LivraisonResponse annuler(Authentication a, @PathVariable Long id, @RequestBody(required = false) AnnulationRequest r) {
+        return commandes.annuler(a.getName(), id, r);
+    }
     @GetMapping("/commandes/{id}/historique") @PreAuthorize("hasRole('CLIENT')")
     public List<com.fleetpulse.livraison.Dto.CommandePartenaireDto.HistoriqueVue> historique(Authentication a, @PathVariable Long id) {
         return commandes.historique(a.getName(), id);

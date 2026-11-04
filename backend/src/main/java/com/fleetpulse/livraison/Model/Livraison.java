@@ -49,6 +49,9 @@ public class Livraison {
     private Integer nbAjustementsPreparation;    // null = 0 (commandes anterieures)
     private Instant preparationDebutLe;
     private Instant preteLe;
+    // Sprint 2 bis : annulation par le client (US-2B12)
+    private Instant annuleeLe;
+    @Column(length = 300) private String motifAnnulation;
 
     /** Heure de fin annoncee ; repli acceptation + temps pour les commandes acceptees avant ce champ. */
     public Instant heurePretePrevue() {
