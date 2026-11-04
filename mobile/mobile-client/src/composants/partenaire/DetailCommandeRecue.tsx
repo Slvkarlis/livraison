@@ -10,7 +10,9 @@ import {
   formatHeure,
   formatJour,
   formatMontant,
+  heurePretePrevue,
   libelleEtapePartenaire,
+  libelleMotifRefus,
   libelleStatutPartenaire,
   type CommandeDetail,
 } from '@fleetpulse/shared';
@@ -18,12 +20,14 @@ import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
+import { DecisionCommande } from './DecisionCommande';
 
-// US-2B1 : detail d'une commande recue (articles, notes, montants, historique des statuts)
+// US-2B1 / US-2B2 : detail d'une commande recue (articles, montants, decision, historique des statuts)
 export default function DetailCommandeRecue() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [commande, setCommande] = useState<CommandeDetail | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [succes, setSucces] = useState('');
   const [rafraichissement, setRafraichissement] = useState(false);
 
   const charger = useCallback(async () => {
@@ -46,6 +50,7 @@ export default function DetailCommandeRecue() {
   if (!commande) return erreur ? <View style={styles.erreur}><MessageErreur message={erreur} /></View> : <Chargement />;
 
   const recue = new Date(commande.dateCreation);
+  const prete = heurePretePrevue(commande.accepteeLe, commande.tempsPreparationMinutes);
   return (
     <ScrollView
       style={styles.page}
@@ -59,6 +64,19 @@ export default function DetailCommandeRecue() {
         Commande {commande.codeSuivi} · reçue {formatJour(recue).toLowerCase()} à {formatHeure(recue)}
       </Text>
       {commande.zoneNom ? <Text style={styles.meta}>Zone : {commande.zoneNom}</Text> : null}
+      {succes ? <Text accessibilityLiveRegion="polite" style={styles.succes}>{succes}</Text> : null}
+      {commande.statut === 'ACCEPTEE' && prete ? (
+        <View style={[styles.bandeau, styles.bandeauAccepte]}>
+          <Text style={styles.bandeauTitre}>À préparer pour {formatHeure(prete)}</Text>
+          <Text style={styles.bandeauTexte}>{commande.tempsPreparationMinutes} min annoncées au client</Text>
+        </View>
+      ) : null}
+      {commande.statut === 'REFUSEE' && commande.motifRefus ? (
+        <View style={[styles.bandeau, styles.bandeauRefuse]}>
+          <Text style={styles.bandeauTitre}>Refusée : {libelleMotifRefus(commande.motifRefus)}</Text>
+          {commande.commentaireRefus ? <Text style={styles.bandeauTexte}>{commande.commentaireRefus}</Text> : null}
+        </View>
+      ) : null}
 
       <Text style={styles.section}>Articles</Text>
       <Carte>
@@ -80,6 +98,12 @@ export default function DetailCommandeRecue() {
         <View style={styles.separateur} />
         <Ligne libelle="Total encaissé par le livreur" valeur={formatMontant(commande.total)} fort />
       </Carte>
+
+      {commande.statut === 'PENDING_PARTNER' ? (
+        <View style={styles.decision}>
+          <DecisionCommande commande={commande} onDecision={(maj, message) => { setCommande(maj); setSucces(message); }} />
+        </View>
+      ) : null}
 
       <Text style={styles.section}>Historique</Text>
       <Carte>
@@ -114,6 +138,13 @@ const styles = StyleSheet.create({
   client: { fontSize: 24, fontWeight: '800', color: theme.texte, letterSpacing: -0.4, marginTop: 12 },
   meta: { fontSize: 14, color: theme.secondaire, marginTop: 4 },
   section: { fontSize: 17, fontWeight: '700', color: theme.texte, marginTop: 24, marginBottom: 8 },
+  succes: { color: theme.succes, fontWeight: '600', marginTop: 12 },
+  bandeau: { marginTop: 14, padding: 14, borderRadius: 16 },
+  bandeauAccepte: { backgroundColor: '#E0F2FE' },
+  bandeauRefuse: { backgroundColor: '#FEE2E2' },
+  bandeauTitre: { fontSize: 16, fontWeight: '700', color: theme.texte },
+  bandeauTexte: { fontSize: 14, color: theme.secondaire, marginTop: 2 },
+  decision: { marginTop: 24 },
   notes: { marginTop: 10, padding: 12, borderRadius: 14, backgroundColor: theme.fond },
   notesTitre: { fontSize: 13, fontWeight: '700', color: theme.secondaire },
   notesTexte: { fontSize: 15, color: theme.texte, marginTop: 4 },

@@ -21,4 +21,15 @@ public class CommandePartenaireController {
 
     @GetMapping("/{id}")
     public CommandeDetail detail(Authentication a, @PathVariable Long id) { return service.detail(a.getName(), id); }
+
+    // US-2B2 : decision du partenaire sur une commande PENDING_PARTNER
+    @PutMapping("/{id}/accepter")
+    public CommandeDetail accepter(Authentication a, @PathVariable Long id, @RequestBody AcceptationRequest r) {
+        return service.accepter(a.getName(), id, r);
+    }
+
+    @PutMapping("/{id}/refuser")
+    public CommandeDetail refuser(Authentication a, @PathVariable Long id, @RequestBody RefusRequest r) {
+        return service.refuser(a.getName(), id, r);
+    }
 }

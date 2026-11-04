@@ -25,6 +25,9 @@ export type StatutPaiement = 'A_LA_LIVRAISON' | 'EN_ATTENTE' | 'PAYE' | 'ECHOUE'
 
 export type TypeLivraison = 'IMMEDIATE' | 'PLANIFIEE';
 
+/** US-2B2 : motif du refus d'une commande par le partenaire. */
+export type MotifRefus = 'RUPTURE' | 'FERMETURE' | 'TROP_DE_COMMANDES' | 'AUTRE';
+
 export interface Vehicule {
   id: number;
   immatriculation: string;
@@ -75,6 +78,11 @@ export interface Livraison {
   montantACollecter: number;
   statut: StatutLivraison;
   dateCreation: string;
+  /** Decision du partenaire (Sprint 2 bis). */
+  tempsPreparationMinutes: number | null;
+  accepteeLe: string | null;
+  motifRefus: MotifRefus | null;
+  commentaireRefus: string | null;
 }
 
 export interface LoginResponse {

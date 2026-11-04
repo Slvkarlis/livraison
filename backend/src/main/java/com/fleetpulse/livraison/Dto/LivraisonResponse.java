@@ -31,7 +31,11 @@ public record LivraisonResponse(
         String zoneNom,
         java.math.BigDecimal montantArticles,
         java.util.List<MarketplaceDto.LigneVue> lignes,
-        String notes) {
+        String notes,
+        Integer tempsPreparationMinutes,   // US-2B2 : annonce a l'acceptation
+        Instant accepteeLe,
+        com.fleetpulse.livraison.Model.enums.MotifRefus motifRefus,
+        String commentaireRefus) {
 
     public static LivraisonResponse from(Livraison livraison) {
         return new LivraisonResponse(
@@ -55,7 +59,8 @@ public record LivraisonResponse(
                 livraison.getDateCreation(),
                 livraison.getPartenaire() == null ? null : livraison.getPartenaire().getId(),
                 livraison.getNomPartenaire(), livraison.getNomZone(), livraison.getMontantArticles(),
-                livraison.getLignes().stream().map(MarketplaceDto.LigneVue::from).toList(), livraison.getNotes());
+                livraison.getLignes().stream().map(MarketplaceDto.LigneVue::from).toList(), livraison.getNotes(),
+                livraison.getTempsPreparationMinutes(), livraison.getAccepteeLe(), livraison.getMotifRefus(), livraison.getCommentaireRefus());
     }
 
     /** Commandes creees avant la tarification automatique : seul montantACollecter etait renseigne. */

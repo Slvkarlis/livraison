@@ -1,7 +1,7 @@
 // Sprint 2 bis : commandes recues par le partenaire (miroir de CommandePartenaireDto).
-import type { Role, StatutLivraison } from './types';
+import type { MotifRefus, Role, StatutLivraison } from './types';
 import type { LigneCommande } from './sprint2';
-import { STATUTS } from './format';
+import { STATUTS, formatHeure } from './format';
 
 /** Libelles du point de vue du commerce ; STATUTS (format.ts) reste la formulation client. */
 const LIBELLES_PARTENAIRE: Partial<Record<StatutLivraison, string>> = {
@@ -24,7 +24,59 @@ export interface CommandeResume {
 export interface HistoriqueEntree { ancien: StatutLivraison | null; nouveau: StatutLivraison; acteurRole: Role; motif: string | null; date: string }
 export interface CommandeDetail extends CommandeResume {
   zoneNom: string | null; lignes: LigneCommande[]; notes: string | null;
-  montantArticles: number; fraisLivraison: number; historique: HistoriqueEntree[];
+  montantArticles: number; fraisLivraison: number;
+  tempsPreparationMinutes: number | null; accepteeLe: string | null; motifRefus: MotifRefus | null; commentaireRefus: string | null;
+  historique: HistoriqueEntree[];
+}
+
+// US-2B2 : decision du partenaire (bornes identiques a CommandePartenaireService)
+export const MOTIFS_REFUS: { id: MotifRefus; libelle: string }[] = [
+  { id: 'RUPTURE', libelle: 'Rupture de stock' },
+  { id: 'FERMETURE', libelle: 'Commerce sur le point de fermer' },
+  { id: 'TROP_DE_COMMANDES', libelle: 'Trop de commandes en cours' },
+  { id: 'AUTRE', libelle: 'Autre' },
+];
+export const TEMPS_PREPARATION_PROPOSES = [5, 10, 15, 20, 30];
+export const PREPARATION_MAX_MINUTES = 180;
+export const COMMENTAIRE_REFUS_MAX = 300;
+
+export function verifierTempsPreparation(saisie: string): string | null {
+  const minutes = Number(saisie.trim());
+  if (!/^\d+$/.test(saisie.trim()) || minutes < 1 || minutes > PREPARATION_MAX_MINUTES)
+    return `Temps de préparation : nombre entier de 1 à ${PREPARATION_MAX_MINUTES} minutes.`;
+  return null;
+}
+export function verifierRefus(motif: MotifRefus | null, commentaire: string): string | null {
+  if (!motif) return 'Choisissez un motif de refus.';
+  if (motif === 'AUTRE' && !commentaire.trim()) return 'Précisez le motif du refus.';
+  if (commentaire.trim().length > COMMENTAIRE_REFUS_MAX) return `Commentaire : ${COMMENTAIRE_REFUS_MAX} caractères maximum.`;
+  return null;
+}
+export function libelleMotifRefus(motif: MotifRefus): string {
+  return MOTIFS_REFUS.find(m => m.id === motif)?.libelle ?? motif;
+}
+/** Heure de fin de preparation annoncee : acceptation + temps annonce. */
+export function heurePretePrevue(accepteeLe: string | null, minutes: number | null): Date | null {
+  if (!accepteeLe || !minutes) return null;
+  return new Date(new Date(accepteeLe).getTime() + minutes * 60_000);
+}
+
+/** Phrase affichee au client sous le statut de sa commande, selon la decision du commerce. */
+export function messageDecisionClient(c: {
+  statut: StatutLivraison; nomPartenaire: string | null; tempsPreparationMinutes: number | null;
+  accepteeLe: string | null; motifRefus: MotifRefus | null; commentaireRefus: string | null;
+}): string | null {
+  const commerce = c.nomPartenaire ?? 'Le commerce';
+  if (c.statut === 'PENDING_PARTNER') return `${commerce} n'a pas encore répondu. Vous pouvez suivre la commande ici.`;
+  if (c.statut === 'ACCEPTEE') {
+    const prete = heurePretePrevue(c.accepteeLe, c.tempsPreparationMinutes);
+    return prete ? `${commerce} a accepté : prête vers ${formatHeure(prete)} (environ ${c.tempsPreparationMinutes} min).` : `${commerce} a accepté votre commande.`;
+  }
+  if (c.statut === 'REFUSEE') {
+    const motif = c.motifRefus ? libelleMotifRefus(c.motifRefus) : 'sans motif';
+    return `${commerce} a refusé : ${motif}${c.commentaireRefus ? ` — ${c.commentaireRefus}` : ''}. Aucun montant ne vous sera demandé.`;
+  }
+  return null;
 }
 
 export type GroupeCommandes = 'nouvelles' | 'en-cours' | 'pretes' | 'terminees';
@@ -49,5 +101,9 @@ export function creerApiPartenaire(request: <T>(method: string, path: string, bo
   return {
     commandesRecues: () => request<CommandeResume[]>('GET', '/api/partenaire/commandes'),
     commandeRecue: (id: number) => request<CommandeDetail>('GET', '/api/partenaire/commandes/' + id),
+    accepterCommande: (id: number, tempsPreparationMinutes: number) =>
+      request<CommandeDetail>('PUT', '/api/partenaire/commandes/' + id + '/accepter', { tempsPreparationMinutes }),
+    refuserCommande: (id: number, motif: MotifRefus, commentaire: string) =>
+      request<CommandeDetail>('PUT', '/api/partenaire/commandes/' + id + '/refuser', { motif, commentaire: commentaire.trim() || null }),
   };
 }

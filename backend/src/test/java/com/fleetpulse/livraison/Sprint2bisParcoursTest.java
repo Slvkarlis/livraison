@@ -123,4 +123,70 @@ class Sprint2bisParcoursTest {
         assertEquals(403, appel("GET", "/partenaire/commandes", null, candidat).status());
         assertEquals(401, appel("GET", "/partenaire/commandes", null, null).status());
     }
+
+    JsonNode commandeClient(long id) throws Exception {
+        for (JsonNode c : succes(200, appel("GET", "/livraisons/mes", null, client))) if (c.get("id").asLong() == id) return c;
+        throw new AssertionError("commande " + id + " absente de l'historique client");
+    }
+
+    @Test void acceptationAvecTempsDePreparationPuisDecisionFigee() throws Exception {
+        long id = commander(1, "");
+        var c = succes(200, appel("PUT", "/partenaire/commandes/" + id + "/accepter", Map.of("tempsPreparationMinutes", 15), partenaire));
+        assertEquals("ACCEPTEE", c.get("statut").asText());
+        assertEquals(15, c.get("tempsPreparationMinutes").asInt());
+        assertFalse(c.get("accepteeLe").isNull());
+        var historique = c.get("historique");
+        assertEquals(2, historique.size());
+        assertEquals("PENDING_PARTNER", historique.get(1).get("ancien").asText());
+        assertEquals("ACCEPTEE", historique.get(1).get("nouveau").asText());
+        assertEquals("PARTENAIRE", historique.get(1).get("acteurRole").asText());
+        assertTrue(historique.get(1).get("motif").asText().contains("15 min"));
+
+        var rejeu = succes(200, appel("PUT", "/partenaire/commandes/" + id + "/accepter", Map.of("tempsPreparationMinutes", 40), partenaire));
+        assertEquals(15, rejeu.get("tempsPreparationMinutes").asInt(), "un double clic ne change pas le temps annoncé");
+        assertEquals(2, rejeu.get("historique").size());
+        assertEquals("ETAT_INVALIDE", succes(409, appel("PUT", "/partenaire/commandes/" + id + "/refuser", Map.of("motif", "RUPTURE"), partenaire))
+                .get("code").asText());
+
+        var vueClient = commandeClient(id);
+        assertEquals("ACCEPTEE", vueClient.get("statut").asText());
+        assertEquals(15, vueClient.get("tempsPreparationMinutes").asInt());
+        assertEquals(1, succes(200, appel("GET", "/partenaire/commandes?statut=ACCEPTEE", null, partenaire)).size());
+    }
+
+    @Test void refusMotiveVisibleParLeClient() throws Exception {
+        long id = commander(1, "");
+        String route = "/partenaire/commandes/" + id + "/refuser";
+        succes(400, appel("PUT", route, Map.of(), partenaire));
+        succes(400, appel("PUT", route, Map.of("motif", "AUTRE"), partenaire));
+        succes(400, appel("PUT", route, Map.of("motif", "AUTRE", "commentaire", "   "), partenaire));
+        succes(400, appel("PUT", route, Map.of("motif", "INCONNU"), partenaire));
+        succes(400, appel("PUT", route, Map.of("motif", "RUPTURE", "commentaire", "x".repeat(301)), partenaire));
+
+        var c = succes(200, appel("PUT", route, Map.of("motif", "RUPTURE", "commentaire", " Plus de brik "), partenaire));
+        assertEquals("REFUSEE", c.get("statut").asText());
+        assertEquals("RUPTURE", c.get("motifRefus").asText());
+        assertEquals("Plus de brik", c.get("commentaireRefus").asText());
+        assertEquals("Rupture de stock : Plus de brik", c.get("historique").get(1).get("motif").asText());
+        assertEquals(2, succes(200, appel("PUT", route, Map.of("motif", "FERMETURE"), partenaire)).get("historique").size());
+        succes(409, appel("PUT", "/partenaire/commandes/" + id + "/accepter", Map.of("tempsPreparationMinutes", 10), partenaire));
+
+        var vueClient = commandeClient(id);
+        assertEquals("REFUSEE", vueClient.get("statut").asText());
+        assertEquals("RUPTURE", vueClient.get("motifRefus").asText());
+        assertEquals("Plus de brik", vueClient.get("commentaireRefus").asText());
+    }
+
+    @Test void decisionValideeEtReserveeAuPartenaireDeLaCommande() throws Exception {
+        long id = commander(1, "");
+        String route = "/partenaire/commandes/" + id + "/accepter";
+        succes(400, appel("PUT", route, Map.of(), partenaire));
+        succes(400, appel("PUT", route, Map.of("tempsPreparationMinutes", 0), partenaire));
+        succes(400, appel("PUT", route, Map.of("tempsPreparationMinutes", 181), partenaire));
+        succes(404, appel("PUT", route, Map.of("tempsPreparationMinutes", 10), autrePartenaire));
+        succes(404, appel("PUT", "/partenaire/commandes/" + id + "/refuser", Map.of("motif", "RUPTURE"), autrePartenaire));
+        assertEquals(403, appel("PUT", route, Map.of("tempsPreparationMinutes", 10), client).status());
+        assertEquals(403, appel("PUT", route, Map.of("tempsPreparationMinutes", 10), candidat).status());
+        assertEquals("PENDING_PARTNER", commandeClient(id).get("statut").asText(), "aucun appel refusé n'a modifié la commande");
+    }
 }

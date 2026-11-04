@@ -20,6 +20,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
+import { Puce } from './Puce';
 
 const VIDES: Record<GroupeCommandes, { titre: string; texte: string }> = {
   nouvelles: { titre: 'Aucune nouvelle commande', texte: 'Les commandes de vos clients apparaîtront ici.' },
@@ -68,25 +69,9 @@ export default function CommandesRecues() {
             <Text style={styles.bonjour}>Bonjour {profil?.prenom}</Text>
             <Text style={styles.titre}>Commandes reçues</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtres}>
-              {GROUPES_COMMANDES.map((g) => {
-                const actif = g.id === groupe;
-                return (
-                  <Pressable
-                    key={g.id}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: actif }}
-                    onPress={() => setGroupe(g.id)}
-                    style={[styles.filtre, actif && styles.filtreActif]}
-                  >
-                    <Text style={[styles.filtreTexte, actif && styles.filtreTexteActif]}>{g.libelle}</Text>
-                    {compte[g.id] > 0 ? (
-                      <View style={[styles.compteur, actif && styles.compteurActif]}>
-                        <Text style={[styles.compteurTexte, actif && styles.compteurTexteActif]}>{compte[g.id]}</Text>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                );
-              })}
+              {GROUPES_COMMANDES.map((g) => (
+                <Puce key={g.id} libelle={g.libelle} actif={g.id === groupe} compteur={compte[g.id]} onPress={() => setGroupe(g.id)} />
+              ))}
             </ScrollView>
             <MessageErreur message={erreur} />
           </View>
@@ -140,24 +125,6 @@ const styles = StyleSheet.create({
   bonjour: { fontSize: 15, color: theme.secondaire },
   titre: { fontSize: 28, fontWeight: '800', color: theme.texte, letterSpacing: -0.5, marginTop: 2 },
   filtres: { gap: 8, paddingVertical: 18 },
-  filtre: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.bordure,
-  },
-  filtreActif: { backgroundColor: theme.accent, borderColor: theme.accent },
-  filtreTexte: { fontSize: 14, fontWeight: '600', color: theme.texte },
-  filtreTexteActif: { color: theme.surAccent },
-  compteur: { minWidth: 20, paddingHorizontal: 6, borderRadius: 10, backgroundColor: theme.accentDoux, alignItems: 'center' },
-  compteurActif: { backgroundColor: theme.surAccent },
-  compteurTexte: { fontSize: 12, fontWeight: '700', color: theme.accent },
-  compteurTexteActif: { color: theme.accent },
   chargement: { marginTop: 40 },
   separateur: { height: 12 },
   carte: {

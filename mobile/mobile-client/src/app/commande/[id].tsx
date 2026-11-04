@@ -11,6 +11,7 @@ import {
   formatHeure,
   formatJour,
   formatMontant,
+  messageDecisionClient,
   type Livraison,
 } from '@fleetpulse/shared';
 import { useLocalSearchParams } from 'expo-router';
@@ -69,7 +70,7 @@ export default function DetailCommande() {
             <Text style={styles.momentTitre}>{immediate ? 'Livraison immédiate' : 'Créneau planifié'}</Text>
             <Text style={styles.momentTexte}>{formatCreneau(livraison.creneauDebut, livraison.creneauFin)}</Text>
           </View>
-        </View> : <Text style={styles.momentTexte}>La commande attend la décision du partenaire. Aucun délai de livraison annoncé.</Text>}
+        </View> : messageDecisionClient(livraison) ? <Text style={styles.momentTexte}>{messageDecisionClient(livraison)}</Text> : null}
 
         <Text style={styles.section}>Paiement</Text>
         <View style={styles.bloc}>

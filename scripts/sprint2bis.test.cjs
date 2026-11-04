@@ -44,7 +44,35 @@ test('Le partenaire voit sa propre formulation, pas celle du client', () => {
 });
 test('Les appels API visent les routes partenaire', async () => {
   const appels = [];
-  const api = r.creerApiPartenaire(async (method, path) => { appels.push(method + ' ' + path); return null; });
+  const api = r.creerApiPartenaire(async (method, path, body) => { appels.push([method + ' ' + path, body]); return null; });
   await api.commandesRecues(); await api.commandeRecue(42);
-  assert.deepEqual(appels, ['GET /api/partenaire/commandes', 'GET /api/partenaire/commandes/42']);
+  await api.accepterCommande(42, 15); await api.refuserCommande(42, 'RUPTURE', '  '); await api.refuserCommande(42, 'AUTRE', ' Four en panne ');
+  assert.deepEqual(appels, [
+    ['GET /api/partenaire/commandes', undefined], ['GET /api/partenaire/commandes/42', undefined],
+    ['PUT /api/partenaire/commandes/42/accepter', { tempsPreparationMinutes: 15 }],
+    ['PUT /api/partenaire/commandes/42/refuser', { motif: 'RUPTURE', commentaire: null }],
+    ['PUT /api/partenaire/commandes/42/refuser', { motif: 'AUTRE', commentaire: 'Four en panne' }],
+  ]);
+});
+test('Temps de préparation : entier de 1 à 180 minutes', () => {
+  for (const ok of ['1', '15', ' 30 ', '180']) assert.equal(r.verifierTempsPreparation(ok), null, ok);
+  for (const ko of ['', '0', '181', '12.5', '-5', 'dix']) assert.ok(r.verifierTempsPreparation(ko), ko);
+});
+test('Refus : motif obligatoire, commentaire obligatoire pour Autre et limité à 300 caractères', () => {
+  assert.ok(r.verifierRefus(null, ''));
+  assert.equal(r.verifierRefus('RUPTURE', ''), null);
+  assert.ok(r.verifierRefus('AUTRE', '   '));
+  assert.equal(r.verifierRefus('AUTRE', 'Four en panne'), null);
+  assert.ok(r.verifierRefus('RUPTURE', 'x'.repeat(301)));
+  assert.deepEqual(r.MOTIFS_REFUS.map(m => m.id), ['RUPTURE', 'FERMETURE', 'TROP_DE_COMMANDES', 'AUTRE'], 'miroir de MotifRefus.java');
+});
+test('Message client selon la décision du commerce', () => {
+  const base = { nomPartenaire: 'Chez Amira', tempsPreparationMinutes: null, accepteeLe: null, motifRefus: null, commentaireRefus: null };
+  assert.match(r.messageDecisionClient({ ...base, statut: 'PENDING_PARTNER' }), /pas encore répondu/);
+  const accepteeLe = new Date(2026, 10, 4, 20, 50).toISOString();
+  assert.equal(r.messageDecisionClient({ ...base, statut: 'ACCEPTEE', accepteeLe, tempsPreparationMinutes: 15 }),
+    'Chez Amira a accepté : prête vers 21:05 (environ 15 min).');
+  assert.equal(r.messageDecisionClient({ ...base, statut: 'REFUSEE', motifRefus: 'RUPTURE', commentaireRefus: 'Plus de brik' }),
+    'Chez Amira a refusé : Rupture de stock — Plus de brik. Aucun montant ne vous sera demandé.');
+  assert.equal(r.messageDecisionClient({ ...base, statut: 'LIVREE' }), null);
 });

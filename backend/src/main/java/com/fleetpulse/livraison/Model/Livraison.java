@@ -39,6 +39,11 @@ public class Livraison {
     @Column(length = 500) private String notes;
     @Column(unique = true, length = 180) private String cleIdempotence;
     private String empreinteRequete;
+    // Sprint 2 bis : decision du partenaire (US-2B2)
+    private Integer tempsPreparationMinutes;
+    private Instant accepteeLe;
+    @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(30)") private MotifRefus motifRefus;
+    @Column(length = 300) private String commentaireRefus;
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<LigneCommande> lignes = new java.util.ArrayList<>();
 

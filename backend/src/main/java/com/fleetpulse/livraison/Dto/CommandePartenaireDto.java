@@ -2,6 +2,7 @@ package com.fleetpulse.livraison.Dto;
 
 import com.fleetpulse.livraison.Dto.MarketplaceDto.LigneVue;
 import com.fleetpulse.livraison.Model.*;
+import com.fleetpulse.livraison.Model.enums.MotifRefus;
 import com.fleetpulse.livraison.Model.enums.Role;
 import com.fleetpulse.livraison.Model.enums.StatutLivraison;
 import java.math.BigDecimal;
@@ -11,6 +12,9 @@ import java.util.List;
 /** Commandes vues par le partenaire : prenom du client uniquement, ni email, ni telephone, ni adresse exacte. */
 public final class CommandePartenaireDto {
     private CommandePartenaireDto() { }
+
+    public record AcceptationRequest(Integer tempsPreparationMinutes) { }
+    public record RefusRequest(MotifRefus motif, String commentaire) { }
 
     public record CommandeResume(Long id, String codeSuivi, StatutLivraison statut, Instant dateCreation, String clientPrenom,
                                  int nbArticles, BigDecimal total) {
@@ -28,11 +32,13 @@ public final class CommandePartenaireDto {
 
     public record CommandeDetail(Long id, String codeSuivi, StatutLivraison statut, Instant dateCreation, String clientPrenom,
                                  String zoneNom, List<LigneVue> lignes, int nbArticles, String notes, BigDecimal montantArticles,
-                                 BigDecimal fraisLivraison, BigDecimal total, List<HistoriqueVue> historique) {
+                                 BigDecimal fraisLivraison, BigDecimal total, Integer tempsPreparationMinutes, Instant accepteeLe,
+                                 MotifRefus motifRefus, String commentaireRefus, List<HistoriqueVue> historique) {
         public static CommandeDetail from(Livraison c, List<HistoriqueStatut> historique) {
             return new CommandeDetail(c.getId(), c.getCodeSuivi(), c.getStatut(), c.getDateCreation(), c.getClient().getPrenom(),
                     c.getNomZone(), c.getLignes().stream().map(LigneVue::from).toList(), compterArticles(c), c.getNotes(), c.getMontantArticles(),
-                    BigDecimal.valueOf(c.getFraisLivraison()).setScale(3), c.getTotal(), historique.stream().map(HistoriqueVue::from).toList());
+                    BigDecimal.valueOf(c.getFraisLivraison()).setScale(3), c.getTotal(), c.getTempsPreparationMinutes(), c.getAccepteeLe(),
+                    c.getMotifRefus(), c.getCommentaireRefus(), historique.stream().map(HistoriqueVue::from).toList());
         }
     }
 
