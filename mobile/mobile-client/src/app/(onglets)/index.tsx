@@ -7,6 +7,7 @@ import {
   formatCreneau,
   formatMontant,
   useAuth,
+  useEvenementsCommandes,
   type Livraison,
 } from '@fleetpulse/shared';
 import { router, useFocusEffect } from 'expo-router';
@@ -31,6 +32,8 @@ export default function MesCommandes() {
   }, []);
 
   useFocusEffect(useCallback(() => { void charger(); }, [charger]));
+  // Temps reel : decision du commerce, preparation, annulation
+  useEvenementsCommandes(() => { void charger(); });
 
   async function rafraichir() {
     setRafraichissement(true);

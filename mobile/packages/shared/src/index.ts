@@ -9,3 +9,4 @@ export * from './sprint1';
 export * from './parcours';
 export * from './sprint2';
 export * from './sprint2bis';
+export * from './tempsReel';

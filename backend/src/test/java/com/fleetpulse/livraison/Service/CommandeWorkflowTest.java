@@ -20,7 +20,7 @@ class CommandeWorkflowTest {
 
     static Livraison commande(StatutLivraison statut) {
         Client client = new Client(); client.setId(7L); client.setEmail("client@test"); client.setRole(Role.CLIENT);
-        Partenaire partenaire = new Partenaire(); partenaire.setId(3L);
+        Partenaire partenaire = new Partenaire(); partenaire.setId(3L); partenaire.setEmail("partenaire3@test");
         Livraison l = new Livraison(); l.setId(1L); l.setClient(client); l.setPartenaire(partenaire); l.setStatut(statut);
         return l;
     }
@@ -40,7 +40,7 @@ class CommandeWorkflowTest {
         assertEquals(REFUSEE, h.getValue().getNouveau());
         assertEquals(Role.PARTENAIRE, h.getValue().getActeurRole());
         assertEquals("RUPTURE", h.getValue().getMotif());
-        verify(evenements).publishEvent(new CommandeStatutChange(1L, 3L, 7L, PENDING_PARTNER, REFUSEE));
+        verify(evenements).publishEvent(new CommandeStatutChange(1L, 3L, "partenaire3@test", 7L, "client@test", PENDING_PARTNER, REFUSEE));
     }
 
     @Test void cheminCompletDuSprint2bis() {

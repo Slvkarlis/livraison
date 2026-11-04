@@ -43,7 +43,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/error").permitAll()
+                        // /ws : poignee de main WebSocket ouverte, le JWT est verifie au CONNECT STOMP (AuthentificationStomp)
+                        .requestMatchers("/api/auth/**", "/error", "/ws").permitAll()
                         .anyRequest().authenticated())
                 // 401 sans jeton valide (403 reste reserve aux roles insuffisants)
                 .exceptionHandling(exceptions -> exceptions

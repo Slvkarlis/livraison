@@ -14,6 +14,7 @@ import {
   libelleEtapeClient,
   messageDecisionClient,
   peutAnnuler,
+  useEvenementsCommandes,
   type HistoriqueEntree,
   type Livraison,
 } from '@fleetpulse/shared';
@@ -33,7 +34,7 @@ export default function DetailCommande() {
   const [rafraichissement, setRafraichissement] = useState(false);
   const avis = message ?? null;
 
-  // Rechargee a chaque retour sur l'ecran et en tirant vers le bas (le temps reel arrive a l'etape 5)
+  // Rechargee a chaque retour sur l'ecran, en tirant vers le bas et a chaque evenement temps reel de cette commande
   const charger = useCallback(async () => {
     try {
       const trouvee = (await api.mesLivraisons()).find((l) => String(l.id) === id);
@@ -46,6 +47,7 @@ export default function DetailCommande() {
   }, [id]);
 
   useFocusEffect(useCallback(() => { void charger(); }, [charger]));
+  useEvenementsCommandes((e) => { if (String(e.commandeId) === id) void charger(); });
 
   async function rafraichir() {
     setRafraichissement(true);

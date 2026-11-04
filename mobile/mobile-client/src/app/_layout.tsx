@@ -1,4 +1,4 @@
-import { AuthProvider, ConfigurationProvider, peutRole, Chargement, EcranServeurInjoignable, ThemeProvider, useAuth } from '@fleetpulse/shared';
+import { AuthProvider, ConfigurationProvider, peutRole, Chargement, EcranServeurInjoignable, TempsReelProvider, ThemeProvider, useAuth } from '@fleetpulse/shared';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { theme } from '../theme';
@@ -18,6 +18,8 @@ function Navigation() {
   const partenaire = peutRole(profil, 'PARTENAIRE');
 
   return (
+    // Temps reel (Sprint 2 bis) : une connexion par session, pour le client et le partenaire actifs
+    <TempsReelProvider key={profil?.id ?? 'anonyme'} actif={actif || partenaire}>
     <MarcheSession key={profil?.id ?? 'anonyme'}><Stack
       screenOptions={{
         headerShadowVisible: false,
@@ -57,6 +59,7 @@ function Navigation() {
         <Stack.Screen name="commande/[id]" options={{ title: '', headerTransparent: true }} />
       </Stack.Protected>
     </Stack></MarcheSession>
+    </TempsReelProvider>
   );
 }
 

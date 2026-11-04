@@ -12,6 +12,8 @@ import {
   groupeDe,
   libelleStatutPartenaire,
   useAuth,
+  useEvenementsCommandes,
+  useTempsReelConnecte,
   type CommandeResume,
   type GroupeCommandes,
 } from '@fleetpulse/shared';
@@ -47,6 +49,9 @@ export default function CommandesRecues() {
   }, []);
 
   useFocusEffect(useCallback(() => { void charger(); }, [charger]));
+  // Temps reel : toute nouvelle commande ou tout changement de statut recharge la liste
+  useEvenementsCommandes(() => { void charger(); });
+  const enDirect = useTempsReelConnecte();
 
   async function rafraichir() {
     setRafraichissement(true);
@@ -66,7 +71,13 @@ export default function CommandesRecues() {
         refreshControl={<RefreshControl refreshing={rafraichissement} onRefresh={rafraichir} tintColor={theme.accent} />}
         ListHeaderComponent={
           <View>
-            <Text style={styles.bonjour}>Bonjour {profil?.prenom}</Text>
+            <View style={styles.enteteHaut}>
+              <Text style={styles.bonjour}>Bonjour {profil?.prenom}</Text>
+              <View style={styles.direct} accessibilityLabel={enDirect ? 'Mises à jour en direct' : 'Connexion en direct indisponible'}>
+                <View style={[styles.directPoint, { backgroundColor: enDirect ? theme.succes : theme.secondaire }]} />
+                <Text style={styles.directTexte}>{enDirect ? 'En direct' : 'Hors ligne'}</Text>
+              </View>
+            </View>
             <Text style={styles.titre}>Commandes reçues</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtres}>
               {GROUPES_COMMANDES.map((g) => (
@@ -122,7 +133,11 @@ function CarteCommandeRecue({ commande }: { commande: CommandeResume }) {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.fond },
   liste: { padding: 20, paddingBottom: 40, flexGrow: 1 },
+  enteteHaut: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   bonjour: { fontSize: 15, color: theme.secondaire },
+  direct: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  directPoint: { width: 8, height: 8, borderRadius: 4 },
+  directTexte: { fontSize: 12, fontWeight: '600', color: theme.secondaire },
   titre: { fontSize: 28, fontWeight: '800', color: theme.texte, letterSpacing: -0.5, marginTop: 2 },
   filtres: { gap: 8, paddingVertical: 18 },
   chargement: { marginTop: 40 },

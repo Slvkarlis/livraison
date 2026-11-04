@@ -12,6 +12,7 @@ import {
   libelleEtapePartenaire,
   libelleMotifRefus,
   libelleStatutPartenaire,
+  useEvenementsCommandes,
   type CommandeDetail,
 } from '@fleetpulse/shared';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -40,6 +41,8 @@ export default function DetailCommandeRecue() {
   }, [id]);
 
   useFocusEffect(useCallback(() => { void charger(); }, [charger]));
+  // Temps reel : ex. annulation par le client pendant que le partenaire regarde la commande
+  useEvenementsCommandes((e) => { if (e.commandeId === Number(id)) void charger(); });
 
   async function rafraichir() {
     setRafraichissement(true);

@@ -13,5 +13,8 @@
     "react": "19.3.0",
     "react-native": "0.88.1",
     "react-native-safe-area-context": "~5.10.1"
+  },
+  "dependencies": {
+    "@stomp/stompjs": "^7.5.0"
   }
 }
