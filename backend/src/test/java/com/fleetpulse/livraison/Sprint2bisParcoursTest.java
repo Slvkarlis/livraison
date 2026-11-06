@@ -306,4 +306,35 @@ class Sprint2bisParcoursTest {
         succes(200, appel("PUT", "/commandes/" + id + "/annuler", null, client));
         succes(201, appel("POST", "/commandes", quatrieme, client));
     }
+
+    @Test void etiquetteDuColisDisponibleUneFoisLaCommandePrete() throws Exception {
+        long id = commander(2, "");
+        String etiquette = "/partenaire/commandes/" + id + "/etiquette";
+        succes(409, appel("GET", etiquette, null, partenaire));
+        succes(200, appel("PUT", "/partenaire/commandes/" + id + "/accepter", Map.of("tempsPreparationMinutes", 10), partenaire));
+        succes(409, appel("GET", etiquette, null, partenaire));
+
+        var detail = succes(200, appel("PUT", "/partenaire/commandes/" + id + "/prete", null, partenaire));
+        assertFalse(detail.has("codeCollecte"), "le code n'apparaît que sur l'étiquette");
+        var e = succes(200, appel("GET", etiquette, null, partenaire));
+        String code = e.get("codeCollecte").asText();
+        assertTrue(code.matches("[A-HJKMNP-Z2-9]{6}"), code);
+        assertEquals("FLEETPULSE|" + e.get("codeSuivi").asText() + "|" + code, e.get("contenuQr").asText());
+        assertEquals("Amina", e.get("clientPrenom").asText());
+        assertEquals("Commerce A", e.get("nomCommerce").asText());
+        assertEquals(2, e.get("nbArticles").asInt());
+        assertFalse(e.get("preteLe").isNull());
+
+        succes(200, appel("PUT", "/partenaire/commandes/" + id + "/prete", null, partenaire));
+        assertEquals(code, succes(200, appel("GET", etiquette, null, partenaire)).get("codeCollecte").asText(),
+                "réimprimer donne le même code");
+        succes(404, appel("GET", etiquette, null, autrePartenaire));
+        assertEquals(403, appel("GET", etiquette, null, client).status());
+
+        long autre = commander(1, "");
+        succes(200, appel("PUT", "/partenaire/commandes/" + autre + "/accepter", Map.of("tempsPreparationMinutes", 5), partenaire));
+        succes(200, appel("PUT", "/partenaire/commandes/" + autre + "/prete", null, partenaire));
+        assertNotEquals(code, succes(200, appel("GET", "/partenaire/commandes/" + autre + "/etiquette", null, partenaire))
+                .get("codeCollecte").asText(), "un code par colis");
+    }
 }

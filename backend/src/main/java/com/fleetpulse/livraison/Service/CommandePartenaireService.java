@@ -92,7 +92,17 @@ public class CommandePartenaireService {
         if (c.getStatut() == StatutLivraison.PRETE) return vue(c);
         workflow.transition(c, StatutLivraison.PRETE, p, null);
         c.setPreteLe(maintenant());
+        c.setCodeCollecte(CodeCollecte.generer());
         return vue(c);
+    }
+
+    /** US-2B10 : etiquette du colis (QR de collecte), disponible de « prete » jusqu'a la collecte par le coursier. */
+    public EtiquetteColis etiquette(String email, Long id) {
+        Livraison c = commande(partenaireActif(email), id, false);
+        boolean enAttenteDeCollecte = c.getStatut() == StatutLivraison.PRETE || c.getStatut() == StatutLivraison.AFFECTEE;
+        if (!enAttenteDeCollecte || c.getCodeCollecte() == null)
+            throw MarketplaceException.conflit("L'étiquette est disponible quand la commande est prête, jusqu'à sa collecte.");
+        return EtiquetteColis.from(c, CodeCollecte.contenuQr(c.getCodeSuivi(), c.getCodeCollecte()));
     }
 
     /** Precision de la base (microsecondes) : la reponse renvoie la meme valeur que les lectures suivantes. */

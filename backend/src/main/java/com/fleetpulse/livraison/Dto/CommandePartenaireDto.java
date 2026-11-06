@@ -47,6 +47,15 @@ public final class CommandePartenaireDto {
         }
     }
 
+    /** US-2B10 : contenu de l'etiquette imprimee et collee sur le colis. */
+    public record EtiquetteColis(Long commandeId, String codeSuivi, String codeCollecte, String contenuQr, String clientPrenom,
+                                 String zoneNom, String nomCommerce, int nbArticles, Instant preteLe) {
+        public static EtiquetteColis from(Livraison c, String contenuQr) {
+            return new EtiquetteColis(c.getId(), c.getCodeSuivi(), c.getCodeCollecte(), contenuQr, c.getClient().getPrenom(),
+                    c.getNomZone(), c.getNomPartenaire(), compterArticles(c), c.getPreteLe());
+        }
+    }
+
     private static int compterArticles(Livraison c) {
         return c.getLignes().stream().mapToInt(LigneCommande::getQuantite).sum();
     }

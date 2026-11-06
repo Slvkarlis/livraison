@@ -1,4 +1,6 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import {
+  Bouton,
   Carte,
   Chargement,
   Ligne,
@@ -15,7 +17,7 @@ import {
   useEvenementsCommandes,
   type CommandeDetail,
 } from '@fleetpulse/shared';
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
@@ -23,7 +25,7 @@ import { FriseHistorique } from '../FriseHistorique';
 import { DecisionCommande } from './DecisionCommande';
 import { SuiviPreparation } from './SuiviPreparation';
 
-// US-2B1 a US-2B5 : detail d'une commande recue (articles, montants, decision, preparation, historique)
+// US-2B1 a US-2B5, US-2B10 : detail d'une commande recue (articles, montants, decision, preparation, etiquette, historique)
 export default function DetailCommandeRecue() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [commande, setCommande] = useState<CommandeDetail | null>(null);
@@ -56,6 +58,8 @@ export default function DetailCommandeRecue() {
   const prevue = commande.pretePrevueLe ? new Date(commande.pretePrevueLe) : null;
   const enCours = commande.statut === 'ACCEPTEE' || commande.statut === 'EN_PREPARATION';
   const annulation = [...commande.historique].reverse().find((h) => h.nouveau === 'ANNULEE');
+  // Etiquette disponible de « prete » jusqu'a la collecte par le livreur (meme regle que le backend)
+  const attendCollecte = commande.statut === 'PRETE' || commande.statut === 'AFFECTEE';
   const majAction = (maj: CommandeDetail, message: string) => { setCommande(maj); setSucces(message); };
   return (
     <ScrollView
@@ -93,6 +97,14 @@ export default function DetailCommandeRecue() {
           <Text style={styles.bandeauTitre}>Prête depuis {formatHeure(new Date(commande.preteLe))}</Text>
           <Text style={styles.bandeauTexte}>En attente du livreur</Text>
         </View>
+      ) : null}
+      {attendCollecte ? (
+        <Bouton
+          titre="Étiquette du colis (QR)"
+          onPress={() => router.push(`/partenaire/etiquette/${commande.id}`)}
+          icone={<Ionicons name="qr-code-outline" size={20} color={theme.surAccent} />}
+          style={styles.etiquette}
+        />
       ) : null}
       {commande.statut === 'REFUSEE' && commande.motifRefus ? (
         <View style={[styles.bandeau, styles.bandeauRefuse]}>
@@ -154,6 +166,7 @@ const styles = StyleSheet.create({
   bandeauTitre: { fontSize: 16, fontWeight: '700', color: theme.texte },
   bandeauTexte: { fontSize: 14, color: theme.secondaire, marginTop: 2 },
   decision: { marginTop: 24 },
+  etiquette: { marginTop: 14 },
   notes: { marginTop: 10, padding: 12, borderRadius: 14, backgroundColor: theme.fond },
   notesTitre: { fontSize: 13, fontWeight: '700', color: theme.secondaire },
   notesTexte: { fontSize: 15, color: theme.texte, marginTop: 4 },

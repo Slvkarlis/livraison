@@ -47,4 +47,8 @@ public class CommandePartenaireController {
     // US-2B5 : commande prete pour la collecte
     @PutMapping("/{id}/prete")
     public CommandeDetail marquerPrete(Authentication a, @PathVariable Long id) { return service.marquerPrete(a.getName(), id); }
+
+    // US-2B10 : etiquette du colis avec le QR de collecte
+    @GetMapping("/{id}/etiquette")
+    public EtiquetteColis etiquette(Authentication a, @PathVariable Long id) { return service.etiquette(a.getName(), id); }
 }

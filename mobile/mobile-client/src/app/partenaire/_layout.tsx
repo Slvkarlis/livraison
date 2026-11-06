@@ -19,6 +19,7 @@ export default function PartenaireLayout() {
       >
         <Stack.Screen name="(onglets)" options={{ headerShown: false }} />
         <Stack.Screen name="commande/[id]" options={{ title: 'Commande reçue' }} />
+        <Stack.Screen name="etiquette/[id]" options={{ title: 'Étiquette du colis' }} />
       </Stack>
       <AlerteNouvelleCommande />
     </View>

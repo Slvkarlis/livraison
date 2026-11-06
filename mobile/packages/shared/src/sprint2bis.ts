@@ -46,6 +46,12 @@ export interface CommandeDetail extends CommandeResume {
   historique: HistoriqueEntree[];
 }
 
+/** US-2B10 : etiquette du colis (miroir de EtiquetteColis.java). contenuQr est encode tel quel dans le QR. */
+export interface EtiquetteColis {
+  commandeId: number; codeSuivi: string; codeCollecte: string; contenuQr: string;
+  clientPrenom: string; zoneNom: string | null; nomCommerce: string | null; nbArticles: number; preteLe: string | null;
+}
+
 // US-2B12 : annulation par le client, sans frais, tant que la preparation n'a pas commence (miroir de CommandeService)
 export const MOTIF_ANNULATION_MAX = 300;
 export function peutAnnuler(statut: StatutLivraison): boolean {
@@ -129,6 +135,7 @@ export function creerApiPartenaire(request: <T>(method: string, path: string, bo
     ajusterPreparation: (id: number, tempsPreparationMinutes: number) =>
       request<CommandeDetail>('PUT', '/api/partenaire/commandes/' + id + '/preparation/temps', { tempsPreparationMinutes }),
     marquerPrete: (id: number) => request<CommandeDetail>('PUT', '/api/partenaire/commandes/' + id + '/prete'),
+    etiquetteColis: (id: number) => request<EtiquetteColis>('GET', '/api/partenaire/commandes/' + id + '/etiquette'),
   };
 }
 
