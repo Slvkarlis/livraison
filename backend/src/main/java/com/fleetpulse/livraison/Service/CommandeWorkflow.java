@@ -2,6 +2,7 @@ package com.fleetpulse.livraison.Service;
 
 import com.fleetpulse.livraison.Model.HistoriqueStatut;
 import com.fleetpulse.livraison.Model.Livraison;
+import com.fleetpulse.livraison.Model.Livreur;
 import com.fleetpulse.livraison.Model.Partenaire;
 import com.fleetpulse.livraison.Model.Utilisateur;
 import com.fleetpulse.livraison.Model.enums.StatutLivraison;
@@ -58,7 +59,9 @@ public class CommandeWorkflow {
 
     private void publier(Livraison commande, StatutLivraison ancien) {
         Partenaire p = commande.getPartenaire();
+        Livreur livreur = commande.getLivreur();
         evenements.publishEvent(new CommandeStatutChange(commande.getId(), p == null ? null : p.getId(), p == null ? null : p.getEmail(),
-                commande.getClient().getId(), commande.getClient().getEmail(), ancien, commande.getStatut()));
+                commande.getClient().getId(), commande.getClient().getEmail(), livreur == null ? null : livreur.getEmail(),
+                ancien, commande.getStatut()));
     }
 }

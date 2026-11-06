@@ -98,6 +98,12 @@ export default function DetailCommandeRecue() {
           <Text style={styles.bandeauTexte}>En attente du livreur</Text>
         </View>
       ) : null}
+      {commande.statut === 'AFFECTEE' && commande.livreurPrenom ? (
+        <View style={[styles.bandeau, styles.bandeauPrete]}>
+          <Text style={styles.bandeauTitre}>Livreur assigné : {commande.livreurPrenom}</Text>
+          <Text style={styles.bandeauTexte}>Il vient récupérer le colis : préparez l’étiquette</Text>
+        </View>
+      ) : null}
       {attendCollecte ? (
         <Bouton
           titre="Étiquette du colis (QR)"

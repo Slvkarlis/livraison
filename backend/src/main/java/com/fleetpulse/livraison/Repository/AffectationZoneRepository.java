@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AffectationZoneRepository extends JpaRepository<AffectationZone, Long> {
     List<AffectationZone> findAllByLivreurIdOrderByTypeAscIdAsc(Long livreurId);
+    List<AffectationZone> findAllByZoneId(Long zoneId);
     List<AffectationZone> findAllByType(TypeAffectation type);
     boolean existsByLivreurIdAndZoneId(Long livreurId, Long zoneId);
     boolean existsByLivreurIdAndType(Long livreurId, TypeAffectation type);

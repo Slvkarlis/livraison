@@ -5,8 +5,8 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 
-// US-03 : le livreur consulte le vehicule que le responsable lui a affecte
-export default function Accueil() {
+// Onglet Profil (US-03) : vehicule affecte par le responsable, contact, deconnexion
+export default function ProfilLivreur() {
   const { profil, rafraichir, logout } = useAuth();
   const [rafraichissement, setRafraichissement] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);

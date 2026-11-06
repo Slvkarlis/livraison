@@ -90,6 +90,8 @@ export interface Livraison {
   /** US-2B12 : annulation par le client. */
   annuleeLe: string | null;
   motifAnnulation: string | null;
+  /** US-2B8 : coursier charge de la collecte. */
+  livreurPrenom: string | null;
 }
 
 export interface LoginResponse {

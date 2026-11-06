@@ -24,6 +24,12 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "FleetPulse Livreur vérifie que vous êtes dans l'une de vos zones avant de vous déclarer disponible."
+        }
+      ],
       "expo-status-bar"
     ],
     "scheme": "fleetpulse-livreur",

@@ -40,7 +40,7 @@ class CommandeWorkflowTest {
         assertEquals(REFUSEE, h.getValue().getNouveau());
         assertEquals(Role.PARTENAIRE, h.getValue().getActeurRole());
         assertEquals("RUPTURE", h.getValue().getMotif());
-        verify(evenements).publishEvent(new CommandeStatutChange(1L, 3L, "partenaire3@test", 7L, "client@test", PENDING_PARTNER, REFUSEE));
+        verify(evenements).publishEvent(new CommandeStatutChange(1L, 3L, "partenaire3@test", 7L, "client@test", null, PENDING_PARTNER, REFUSEE));
     }
 
     @Test void cheminCompletDuSprint2bis() {

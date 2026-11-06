@@ -7,6 +7,8 @@ import { candidatureVide, codeValide, motDePasseValide, payloadCandidature, STAT
   telephoneValide, verifierCandidature, verifierIdentite, type Compte, type FormCandidature } from './sprint1';
 
 const Configuration = createContext({ demonstration: false, delaiRenvoiSecondes: 60 });
+/** Configuration publique du serveur (mode demonstration, delai de renvoi des codes). */
+export function useConfiguration() { return useContext(Configuration); }
 export function ConfigurationProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState({ demonstration: false, delaiRenvoiSecondes: 60 });
   const [erreur, setErreur] = useState<string | null>(null);

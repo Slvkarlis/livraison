@@ -43,6 +43,7 @@ export interface CommandeDetail extends CommandeResume {
   tempsPreparationMinutes: number | null; accepteeLe: string | null; motifRefus: MotifRefus | null; commentaireRefus: string | null;
   pretePrevueLe: string | null; nbAjustementsPreparation: number; preparationDebutLe: string | null; preteLe: string | null;
   annuleeLe: string | null; motifAnnulation: string | null;
+  livreurPrenom: string | null;
   historique: HistoriqueEntree[];
 }
 
@@ -89,7 +90,7 @@ export function libelleMotifRefus(motif: MotifRefus): string {
 /** Phrase affichee au client sous le statut de sa commande, selon la decision et la preparation du commerce. */
 export function messageDecisionClient(c: {
   statut: StatutLivraison; nomPartenaire: string | null; pretePrevueLe: string | null;
-  motifRefus: MotifRefus | null; commentaireRefus: string | null;
+  motifRefus: MotifRefus | null; commentaireRefus: string | null; livreurPrenom?: string | null;
 }): string | null {
   const commerce = c.nomPartenaire ?? 'Le commerce';
   const prete = c.pretePrevueLe ? formatHeure(new Date(c.pretePrevueLe)) : null;
@@ -97,6 +98,7 @@ export function messageDecisionClient(c: {
   if (c.statut === 'ACCEPTEE') return prete ? `${commerce} a accepté : prête vers ${prete}.` : `${commerce} a accepté votre commande.`;
   if (c.statut === 'EN_PREPARATION') return prete ? `${commerce} prépare votre commande : prête vers ${prete}.` : `${commerce} prépare votre commande.`;
   if (c.statut === 'PRETE') return `${commerce} : votre commande est prête. Un livreur va la récupérer.`;
+  if (c.statut === 'AFFECTEE') return `${commerce} : ${c.livreurPrenom ?? 'un livreur'} va récupérer votre commande.`;
   if (c.statut === 'ANNULEE') return 'Vous avez annulé cette commande. Aucun montant ne vous sera demandé.';
   if (c.statut === 'REFUSEE') {
     const motif = c.motifRefus ? libelleMotifRefus(c.motifRefus) : 'sans motif';

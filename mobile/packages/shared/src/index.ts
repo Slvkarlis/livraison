@@ -10,3 +10,4 @@ export * from './parcours';
 export * from './sprint2';
 export * from './sprint2bis';
 export * from './tempsReel';
+export * from './espaceLivreur';

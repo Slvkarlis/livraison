@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
-import { couleurIcone } from '../../composants/couleurIcone';
+import { couleurIcone } from '@fleetpulse/shared';
 import { theme } from '../../theme';
 
 export default function OngletsLayout() {

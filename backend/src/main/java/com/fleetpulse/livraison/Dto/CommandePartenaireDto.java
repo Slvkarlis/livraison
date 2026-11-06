@@ -36,13 +36,14 @@ public final class CommandePartenaireDto {
                                  BigDecimal fraisLivraison, BigDecimal total, Integer tempsPreparationMinutes, Instant accepteeLe,
                                  MotifRefus motifRefus, String commentaireRefus, Instant pretePrevueLe, int nbAjustementsPreparation,
                                  Instant preparationDebutLe, Instant preteLe, Instant annuleeLe, String motifAnnulation,
-                                 List<HistoriqueVue> historique) {
+                                 String livreurPrenom, List<HistoriqueVue> historique) {
         public static CommandeDetail from(Livraison c, List<HistoriqueStatut> historique) {
             return new CommandeDetail(c.getId(), c.getCodeSuivi(), c.getStatut(), c.getDateCreation(), c.getClient().getPrenom(),
                     c.getNomZone(), c.getLignes().stream().map(LigneVue::from).toList(), compterArticles(c), c.getNotes(), c.getMontantArticles(),
                     BigDecimal.valueOf(c.getFraisLivraison()).setScale(3), c.getTotal(), c.getTempsPreparationMinutes(), c.getAccepteeLe(),
                     c.getMotifRefus(), c.getCommentaireRefus(), c.heurePretePrevue(), c.ajustementsPreparation(),
                     c.getPreparationDebutLe(), c.getPreteLe(), c.getAnnuleeLe(), c.getMotifAnnulation(),
+                    c.getLivreur() == null ? null : c.getLivreur().getPrenom(),
                     historique.stream().map(HistoriqueVue::from).toList());
         }
     }

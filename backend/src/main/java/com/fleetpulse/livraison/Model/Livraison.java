@@ -49,6 +49,9 @@ public class Livraison {
     private Integer nbAjustementsPreparation;    // null = 0 (commandes anterieures)
     private Instant preparationDebutLe;
     private Instant preteLe;
+    // Sprint 2 bis : coursier charge de la collecte (affectation simple US-2B8, remplacee par le dispatch IA au Sprint 4)
+    @ManyToOne private Livreur livreur;
+    private Instant affecteeLe;
     // Sprint 2 bis : code de collecte imprime en QR sur l'etiquette du colis (US-2B10), utilise une fois (US-2B9)
     @Column(length = 12) private String codeCollecte;
     // Sprint 2 bis : annulation par le client (US-2B12)

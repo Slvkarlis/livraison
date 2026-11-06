@@ -40,7 +40,8 @@ public record LivraisonResponse(
         Instant preparationDebutLe,
         Instant preteLe,
         Instant annuleeLe,                 // US-2B12
-        String motifAnnulation) {
+        String motifAnnulation,
+        String livreurPrenom) {            // US-2B8 : coursier charge de la collecte
 
     public static LivraisonResponse from(Livraison livraison) {
         return new LivraisonResponse(
@@ -67,7 +68,8 @@ public record LivraisonResponse(
                 livraison.getLignes().stream().map(MarketplaceDto.LigneVue::from).toList(), livraison.getNotes(),
                 livraison.getTempsPreparationMinutes(), livraison.getAccepteeLe(), livraison.getMotifRefus(), livraison.getCommentaireRefus(),
                 livraison.heurePretePrevue(), livraison.getPreparationDebutLe(), livraison.getPreteLe(),
-                livraison.getAnnuleeLe(), livraison.getMotifAnnulation());
+                livraison.getAnnuleeLe(), livraison.getMotifAnnulation(),
+                livraison.getLivreur() == null ? null : livraison.getLivreur().getPrenom());
     }
 
     /** Commandes creees avant la tarification automatique : seul montantACollecter etait renseigne. */

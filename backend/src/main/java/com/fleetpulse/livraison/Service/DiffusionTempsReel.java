@@ -6,7 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-/** Pousse chaque changement de statut au partenaire et au client de la commande, une fois la transaction validee. */
+/** Pousse chaque changement de statut au partenaire, au client et au coursier de la commande, une fois la transaction validee. */
 @Component @RequiredArgsConstructor
 public class DiffusionTempsReel {
     static final String FILE = "/queue/commandes";
@@ -18,5 +18,6 @@ public class DiffusionTempsReel {
         EvenementCommande evenement = new EvenementCommande(e.commandeId(), e.ancien(), e.nouveau());
         if (e.partenaireEmail() != null) messages.convertAndSendToUser(e.partenaireEmail(), FILE, evenement);
         messages.convertAndSendToUser(e.clientEmail(), FILE, evenement);
+        if (e.livreurEmail() != null) messages.convertAndSendToUser(e.livreurEmail(), FILE, evenement);
     }
 }

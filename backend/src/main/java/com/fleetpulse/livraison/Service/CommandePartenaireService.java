@@ -20,6 +20,7 @@ public class CommandePartenaireService {
     private final LivraisonRepository commandes;
     private final HistoriqueStatutRepository historique;
     private final CommandeWorkflow workflow;
+    private final AffectationMissionService affectationMissions;
 
     Partenaire partenaireActif(String email) {
         Partenaire p = partenaires.findByEmail(email).orElseThrow(MarketplaceException::absent);
@@ -93,6 +94,7 @@ public class CommandePartenaireService {
         workflow.transition(c, StatutLivraison.PRETE, p, null);
         c.setPreteLe(maintenant());
         c.setCodeCollecte(CodeCollecte.generer());
+        affectationMissions.affecterSiPossible(c);   // US-2B8 : un coursier disponible de la zone, sinon la commande attend
         return vue(c);
     }
 
