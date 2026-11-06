@@ -149,6 +149,12 @@ input:disabled { background: var(--fond); color: var(--discret); }
 .grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .pied-modale { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 
+/* US-2B11 : zones d'un livreur */
+.liste-affectations { list-style: none; margin: 0 0 18px; padding: 0; }
+.liste-affectations li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--bordure); }
+.liste-affectations li.estompe strong { color: var(--discret); }
+.formulaire h3 { font-size: 15px; margin: 0; }
+
 .detail-statut { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .details { display: grid; grid-template-columns: 150px 1fr; gap: 10px 12px; margin: 0; }
 .details dt { color: var(--discret); }

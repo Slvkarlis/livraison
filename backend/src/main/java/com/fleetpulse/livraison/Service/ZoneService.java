@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 public class ZoneService {
     private final ZoneRepository zones;
     private final PartenaireRepository partenaires;
+    private final AffectationZoneRepository affectations;
     private final AuditService audit;
     private final jakarta.persistence.EntityManager entityManager;
     private static final GeometryFactory GEOMETRY = new GeometryFactory(new PrecisionModel(), 4326);
@@ -89,6 +90,8 @@ public class ZoneService {
         Zone z = zones.findById(id).orElseThrow(MarketplaceException::absent);
         if (partenaires.findAll().stream().anyMatch(p -> p.getZone() != null && p.getZone().getId().equals(id)))
             throw MarketplaceException.conflit("Cette zone couvre des partenaires. Modifiez sa couverture avant de la supprimer.");
+        if (affectations.existsByZoneId(id))
+            throw MarketplaceException.conflit("Des livreurs sont affectés à cette zone. Retirez leurs affectations avant de la supprimer.");
         audit.enregistrer(ActionAudit.ZONE_SUPPRIMEE, "ZONE", id, z.getNom());
         zones.delete(z);
     }

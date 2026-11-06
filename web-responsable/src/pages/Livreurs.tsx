@@ -1,14 +1,16 @@
 import { useCallback, useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { Alerte, BadgeActif, Champ, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
+import { ZonesLivreur } from '../composants/ZonesLivreur';
 import type { Livreur, LivreurRequest, Vehicule } from '../types';
 
-// US-02 : gestion des comptes livreurs ; US-03 : association d'un vehicule a un livreur
+// US-02 : gestion des comptes livreurs ; US-03 : association d'un vehicule a un livreur ; US-2B11 : zones de travail
 export default function Livreurs() {
   const charger = useCallback(() => Promise.all([api.livreurs(), api.vehicules()]), []);
   const { donnees, erreur, chargement, recharger } = useDonnees(charger);
   const [livreurs, vehicules] = donnees ?? [[], []];
   const [edition, setEdition] = useState<Livreur | 'nouveau' | null>(null);
+  const [zonesDe, setZonesDe] = useState<Livreur | null>(null);
   const [erreurAction, setErreurAction] = useState<string | null>(null);
   const [enCours, setEnCours] = useState<number | null>(null);
 
@@ -50,6 +52,7 @@ export default function Livreurs() {
                 <th>Email</th>
                 <th>Téléphone</th>
                 <th>Véhicule</th>
+                <th>Zone principale</th>
                 <th>Statut</th>
                 <th />
               </tr>
@@ -63,8 +66,10 @@ export default function Livreurs() {
                   <td>
                     <SelectVehicule livreur={l} vehicules={vehicules} desactive={enCours === l.id} onChange={(v) => changerVehicule(l, v)} />
                   </td>
+                  <td>{l.zonePrincipale ?? <span className="discret">Aucune</span>}</td>
                   <td><BadgeActif actif={l.actif} /></td>
                   <td className="actions-ligne">
+                    <button className="bouton-lien" onClick={() => setZonesDe(l)}>Zones</button>
                     <button className="bouton-lien" onClick={() => setEdition(l)}>Modifier</button>
                     <button className="bouton-lien" disabled={enCours === l.id}
                       onClick={() => void agir(l.id, () => (l.actif
@@ -82,6 +87,10 @@ export default function Livreurs() {
       {edition && (
         <FormulaireLivreur livreur={edition === 'nouveau' ? null : edition} onFermer={() => setEdition(null)}
           onEnregistre={() => { setEdition(null); void recharger(); }} />
+      )}
+
+      {zonesDe && (
+        <ZonesLivreur livreur={zonesDe} onFermer={() => setZonesDe(null)} onModifie={() => void recharger()} />
       )}
     </>
   );

@@ -1,5 +1,5 @@
 import type {
-  Livraison, Livreur, LivreurRequest, LoginResponse, Profil, Vehicule, VehiculeRequest,
+  AffectationRequest, AffectationZone, Livraison, Livreur, LivreurRequest, LoginResponse, Profil, Vehicule, VehiculeRequest,
 } from './types';
 
 import { creerClientHttp } from '../../mobile/packages/shared/src/http';
@@ -63,6 +63,13 @@ export const api = {
     request<Livreur>('PUT', `/api/admin/livreurs/${livreurId}/vehicule`, { vehiculeId },
       { 404: 'Véhicule inactif ou introuvable.' }),
   retirerVehicule: (livreurId: number) => request<void>('DELETE', `/api/admin/livreurs/${livreurId}/vehicule`),
+
+  // US-2B11 : zones de travail d'un livreur
+  zonesLivreur: (livreurId: number) => request<AffectationZone[]>('GET', `/api/admin/livreurs/${livreurId}/zones`),
+  affecterZone: (livreurId: number, data: AffectationRequest) =>
+    request<AffectationZone>('POST', `/api/admin/livreurs/${livreurId}/zones`, data),
+  retirerAffectation: (livreurId: number, affectationId: number) =>
+    request<void>('DELETE', `/api/admin/livreurs/${livreurId}/zones/${affectationId}`),
 
   // US-07
   livraisons: () => request<Livraison[]>('GET', '/api/livraisons'),

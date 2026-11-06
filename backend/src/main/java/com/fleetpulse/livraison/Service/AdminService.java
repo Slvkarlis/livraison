@@ -10,13 +10,17 @@ import com.fleetpulse.livraison.Model.Vehicule;
 import com.fleetpulse.livraison.Model.enums.ActionAudit;
 import com.fleetpulse.livraison.Model.enums.Role;
 import com.fleetpulse.livraison.Model.enums.StatutCompte;
+import com.fleetpulse.livraison.Model.enums.TypeAffectation;
+import com.fleetpulse.livraison.Repository.AffectationZoneRepository;
 import com.fleetpulse.livraison.Repository.LivreurRepository;
 import com.fleetpulse.livraison.Repository.UtilisateurRepository;
 import com.fleetpulse.livraison.Repository.VehiculeRepository;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,10 +44,16 @@ public class AdminService {
     private JetonRafraichissementService jetonService;
     @Autowired
     private AuditService auditService;
+    @Autowired
+    private AffectationZoneRepository affectationRepository;
 
     @Transactional(readOnly = true)
     public List<LivreurResponse> listLivreurs() {
-        return livreurRepository.findAllByStatutInOrderByNomAscPrenomAsc(FLOTTE).stream().map(LivreurResponse::from).toList();
+        // Zone principale de chaque livreur (US-2B11), chargee en une seule requete
+        Map<Long, String> zonesPrincipales = affectationRepository.findAllByType(TypeAffectation.PRINCIPALE).stream()
+                .collect(Collectors.toMap(a -> a.getLivreur().getId(), a -> a.getZone().getNom()));
+        return livreurRepository.findAllByStatutInOrderByNomAscPrenomAsc(FLOTTE).stream()
+                .map(l -> LivreurResponse.from(l, zonesPrincipales.get(l.getId()))).toList();
     }
 
     @Transactional

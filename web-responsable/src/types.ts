@@ -43,6 +43,30 @@ export interface Livreur {
   telephone: string | null;
   actif: boolean;
   vehiculeId: number | null;
+  /** US-2B11 : nom de la zone principale, null si non affecte. */
+  zonePrincipale: string | null;
+}
+
+/** US-2B11 : rattachement d'un livreur a une zone (miroir de AffectationZoneDto). */
+export type TypeAffectation = 'PRINCIPALE' | 'SECONDAIRE' | 'TEMPORAIRE';
+
+export interface AffectationZone {
+  id: number;
+  zoneId: number;
+  zoneNom: string;
+  type: TypeAffectation;
+  /** Renfort temporaire uniquement. */
+  debut: string | null;
+  fin: string | null;
+  /** false pour un renfort pas encore commence ou deja termine. */
+  enVigueur: boolean;
+}
+
+export interface AffectationRequest {
+  zoneId: number;
+  type: TypeAffectation;
+  debut?: string;
+  fin?: string;
 }
 
 export interface LivreurRequest {
