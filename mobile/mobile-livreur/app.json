@@ -30,6 +30,13 @@
           "locationWhenInUsePermission": "FleetPulse Livreur vérifie que vous êtes dans l'une de vos zones avant de vous déclarer disponible."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FleetPulse Livreur utilise l'appareil photo pour scanner le QR des colis à la collecte.",
+          "recordAudioAndroid": false
+        }
+      ],
       "expo-status-bar"
     ],
     "scheme": "fleetpulse-livreur",

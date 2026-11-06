@@ -22,4 +22,20 @@ class CodeCollecteTest {
     @Test void contenuDuQrRelieLeColisALaCommande() {
         assertEquals("FLEETPULSE|FP-ABC|K7Q2MX", CodeCollecte.contenuQr("FP-ABC", "K7Q2MX"));
     }
+
+    @Test void lectureDuQrScanneOuDuCodeSaisi() {
+        assertEquals("K7Q2MX", CodeCollecte.lire("FLEETPULSE|FP-ABC|K7Q2MX", "FP-ABC"));
+        assertEquals("K7Q2MX", CodeCollecte.lire(" k7 q2mx ", "FP-ABC"), "saisie manuelle : casse et espaces tolérés");
+        IllegalArgumentException autreColis = assertThrows(IllegalArgumentException.class,
+                () -> CodeCollecte.lire("FLEETPULSE|FP-XYZ|K7Q2MX", "FP-ABC"));
+        assertTrue(autreColis.getMessage().contains("FP-XYZ"));
+        assertThrows(IllegalArgumentException.class, () -> CodeCollecte.lire("FLEETPULSE|incomplet", "FP-ABC"));
+        assertThrows(IllegalArgumentException.class, () -> CodeCollecte.lire("  ", "FP-ABC"));
+    }
+
+    @Test void comparaisonExacte() {
+        assertTrue(CodeCollecte.correspond("K7Q2MX", "K7Q2MX"));
+        assertFalse(CodeCollecte.correspond("K7Q2MX", "K7Q2MY"));
+        assertFalse(CodeCollecte.correspond(null, "K7Q2MX"));
+    }
 }

@@ -199,4 +199,56 @@ class Sprint2bisMissionsTest {
         assertEquals(403, appel("PUT", "/livreur/disponibilite", Map.of("disponible", false), partenaire).status());
         assertEquals(401, appel("GET", "/livreur/disponibilite", null, null).status());
     }
+
+    // ---------- US-2B9 : collecte du colis par scan du QR ----------
+
+    JsonNode etiquette(long commandeId) throws Exception {
+        return succes(200, appel("GET", "/partenaire/commandes/" + commandeId + "/etiquette", null, partenaire));
+    }
+    Reponse collecter(Coursier c, long commandeId, String code) throws Exception {
+        return appel("POST", "/livreur/missions/" + commandeId + "/collecte", Map.of("code", code), c.token());
+    }
+
+    @Test void collecteParScanDuQrDuBonColis() throws Exception {
+        Coursier sami = coursier("Sami");
+        Coursier autre = coursier("Karim");
+        affecterZone(sami, zoneA, "PRINCIPALE");
+        succes(200, disponible(sami, dansA));
+        long id = commandePrete().get("id").asLong();
+        long autreCommande = commandePrete().get("id").asLong();
+        String qr = etiquette(id).get("contenuQr").asText();
+
+        assertTrue(succes(400, collecter(sami, id, "AAAAAA")).get("message").asText().contains("incorrect"));
+        assertTrue(succes(400, collecter(sami, id, etiquette(autreCommande).get("contenuQr").asText()))
+                .get("message").asText().contains("autre commande"), "QR d'un autre colis refusé");
+        succes(404, collecter(autre, id, qr));
+
+        var recuperee = succes(200, collecter(sami, id, qr));
+        assertEquals("RECUPEREE", recuperee.get("statut").asText());
+        assertFalse(recuperee.get("recupereeLe").isNull());
+        assertEquals(recuperee.get("recupereeLe").asText(), succes(200, collecter(sami, id, qr)).get("recupereeLe").asText(),
+                "rejouer la collecte ne change rien");
+
+        var vuePartenaire = succes(200, appel("GET", "/partenaire/commandes/" + id, null, partenaire));
+        assertEquals("RECUPEREE", vuePartenaire.get("statut").asText());
+        var derniere = vuePartenaire.get("historique").get(vuePartenaire.get("historique").size() - 1);
+        assertEquals("LIVREUR", derniere.get("acteurRole").asText());
+        assertEquals("Colis scanné à la boutique", derniere.get("motif").asText());
+        succes(409, appel("GET", "/partenaire/commandes/" + id + "/etiquette", null, partenaire));
+        assertEquals("RECUPEREE", succes(200, appel("GET", "/livreur/missions/" + id, null, sami.token())).get("statut").asText());
+    }
+
+    @Test void collecteParSaisieManuelleDuCode() throws Exception {
+        Coursier sami = coursier("Sami");
+        affecterZone(sami, zoneA, "PRINCIPALE");
+        succes(200, disponible(sami, dansA));
+        long id = commandePrete().get("id").asLong();
+        String code = etiquette(id).get("codeCollecte").asText();
+        String saisie = code.substring(0, 3).toLowerCase() + " " + code.substring(3).toLowerCase();
+        assertEquals("RECUPEREE", succes(200, collecter(sami, id, saisie)).get("statut").asText());
+        var vueClient = java.util.stream.StreamSupport.stream(succes(200, appel("GET", "/livraisons/mes", null, client)).spliterator(), false)
+                .filter(l -> l.get("id").asLong() == id).findFirst().orElseThrow();
+        assertEquals("RECUPEREE", vueClient.get("statut").asText());
+        assertFalse(vueClient.get("recupereeLe").isNull());
+    }
 }

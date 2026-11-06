@@ -4,12 +4,19 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
 
+/** Ou en est la collecte : colis deja recupere, ou pret depuis quelle heure. */
+function etatCollecte(m: Mission): string {
+  if (m.recupereeLe) return ` · récupérée à ${formatHeure(new Date(m.recupereeLe))}`;
+  if (m.preteLe) return ` · prête depuis ${formatHeure(new Date(m.preteLe))}`;
+  return '';
+}
+
 /** Une mission de collecte dans la liste : commerce, adresse, client et montant a encaisser. */
 export function CarteMission({ mission }: { mission: Mission }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Mission ${mission.codeSuivi} chez ${mission.nomCommerce}`}
+      accessibilityLabel={`Mission ${mission.codeSuivi}, ${mission.nomCommerce}`}
       onPress={() => router.push(`/mission/${mission.id}`)}
       style={({ pressed }) => [styles.carte, pressed && { opacity: 0.85 }]}
     >
@@ -21,7 +28,7 @@ export function CarteMission({ mission }: { mission: Mission }) {
         <Text style={styles.adresse} numberOfLines={1}>{mission.adresseCommerce}</Text>
         <Text style={styles.details}>
           {mission.clientPrenom} · {mission.nbArticles} article{mission.nbArticles > 1 ? 's' : ''}
-          {mission.preteLe ? ` · prête depuis ${formatHeure(new Date(mission.preteLe))}` : ''}
+          {etatCollecte(mission)}
         </Text>
       </View>
       <Text style={styles.montant}>{formatMontant(mission.montantACollecter)}</Text>

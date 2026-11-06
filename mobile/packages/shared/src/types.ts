@@ -92,6 +92,8 @@ export interface Livraison {
   motifAnnulation: string | null;
   /** US-2B8 : coursier charge de la collecte. */
   livreurPrenom: string | null;
+  /** US-2B9 : colis pris en charge a la boutique. */
+  recupereeLe: string | null;
 }
 
 export interface LoginResponse {

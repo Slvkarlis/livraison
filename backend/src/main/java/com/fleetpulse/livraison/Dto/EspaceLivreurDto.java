@@ -22,16 +22,19 @@ public final class EspaceLivreurDto {
 
     public record DisponibiliteVue(boolean disponible, Instant miseAJourLe, List<ZoneAutorisee> zones) { }
 
+    /** US-2B9 : contenu du QR scanne, ou code de collecte saisi a la main. */
+    public record CollecteRequest(String code) { }
+
     /** Mission de collecte : adresse du commerce ; du client, seulement le prenom et la zone (livraison au Sprint 3). */
     public record MissionVue(Long id, String codeSuivi, StatutLivraison statut, String nomCommerce, String adresseCommerce,
                              Double latitudeCommerce, Double longitudeCommerce, String zoneNom, String clientPrenom,
-                             int nbArticles, BigDecimal montantACollecter, Instant preteLe, Instant affecteeLe) {
+                             int nbArticles, BigDecimal montantACollecter, Instant preteLe, Instant affecteeLe, Instant recupereeLe) {
         public static MissionVue from(Livraison c) {
             Partenaire p = c.getPartenaire();
             int nbArticles = c.getLignes().stream().mapToInt(LigneCommande::getQuantite).sum();
             return new MissionVue(c.getId(), c.getCodeSuivi(), c.getStatut(), p.getNomCommerce(), p.getAdresse(),
                     p.getLatitude(), p.getLongitude(), c.getNomZone(), c.getClient().getPrenom(), nbArticles, c.getTotal(),
-                    c.getPreteLe(), c.getAffecteeLe());
+                    c.getPreteLe(), c.getAffecteeLe(), c.getRecupereeLe());
         }
     }
 }

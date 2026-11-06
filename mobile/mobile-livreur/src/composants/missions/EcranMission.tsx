@@ -4,6 +4,7 @@ import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
+import { PanneauCollecte } from './PanneauCollecte';
 
 /** Itineraire vers le commerce dans l'application de cartes du telephone (ou Google Maps dans le navigateur). */
 function lienItineraire(m: Mission): string | null {
@@ -11,7 +12,7 @@ function lienItineraire(m: Mission): string | null {
   return `https://www.google.com/maps/dir/?api=1&destination=${m.latitudeCommerce},${m.longitudeCommerce}`;
 }
 
-// US-2B8 : detail d'une mission de collecte (le scan du QR a la boutique arrive avec US-2B9)
+// US-2B8 : detail d'une mission de collecte ; US-2B9 : confirmation de la collecte par scan du QR
 export default function EcranMission() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [mission, setMission] = useState<Mission | null>(null);
@@ -55,7 +56,13 @@ export default function EcranMission() {
         <Ligne libelle="À encaisser à la livraison" valeur={formatMontant(mission.montantACollecter)} fort />
       </View>
 
-      <Text style={styles.note}>À la boutique, scannez le QR collé sur le colis pour confirmer la prise en charge.</Text>
+      {mission.statut === 'AFFECTEE' ? <PanneauCollecte missionId={mission.id} onCollectee={setMission} /> : null}
+      {mission.statut === 'RECUPEREE' && mission.recupereeLe ? (
+        <View style={styles.collectee}>
+          <Ionicons name="checkmark-circle" size={22} color={theme.accent} />
+          <Text style={styles.collecteeTexte}>Colis récupéré à {formatHeure(new Date(mission.recupereeLe))}</Text>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -88,5 +95,13 @@ const styles = StyleSheet.create({
   fort: { fontWeight: '800', color: theme.accent },
   lien: { fontSize: 15, fontWeight: '700', color: theme.accent, marginTop: 6 },
   ligne: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 2 },
-  note: { fontSize: 13, color: theme.secondaire, textAlign: 'center' },
+  collectee: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 16,
+    borderRadius: theme.rayon,
+    backgroundColor: theme.accentDoux,
+  },
+  collecteeTexte: { fontSize: 16, fontWeight: '700', color: theme.texte },
 });

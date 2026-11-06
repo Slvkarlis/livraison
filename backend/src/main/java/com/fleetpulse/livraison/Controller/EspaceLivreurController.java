@@ -26,4 +26,10 @@ public class EspaceLivreurController {
 
     @GetMapping("/missions/{id}")
     public MissionVue mission(Authentication a, @PathVariable Long id) { return service.mission(a.getName(), id); }
+
+    // US-2B9 : prise en charge du colis a la boutique (QR scanne ou code saisi)
+    @PostMapping("/missions/{id}/collecte")
+    public MissionVue confirmerCollecte(Authentication a, @PathVariable Long id, @RequestBody CollecteRequest r) {
+        return service.confirmerCollecte(a.getName(), id, r);
+    }
 }

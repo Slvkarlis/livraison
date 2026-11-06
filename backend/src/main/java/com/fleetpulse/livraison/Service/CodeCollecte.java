@@ -1,6 +1,9 @@
 package com.fleetpulse.livraison.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.Locale;
 
 /**
  * Code de collecte d'un colis (US-2B10) : imprime en QR sur l'etiquette par le partenaire,
@@ -28,5 +31,27 @@ public final class CodeCollecte {
 
     public static String contenuQr(String codeSuivi, String code) {
         return PREFIXE_QR + "|" + codeSuivi + "|" + code;
+    }
+
+    /**
+     * Lit ce que le coursier envoie : le contenu du QR scanne, ou le code saisi a la main
+     * (majuscules et espaces toleres). Un QR d'une autre commande est refuse avec un message explicite.
+     */
+    public static String lire(String saisie, String codeSuiviAttendu) {
+        if (saisie == null || saisie.isBlank()) throw new IllegalArgumentException("Scannez le QR du colis ou saisissez son code.");
+        String texte = saisie.trim();
+        if (!texte.startsWith(PREFIXE_QR + "|")) return texte.replace(" ", "").toUpperCase(Locale.ROOT);
+
+        String[] parties = texte.split("\\|");
+        if (parties.length != 3) throw new IllegalArgumentException("QR non reconnu : ce n'est pas une étiquette FleetPulse.");
+        if (!parties[1].equals(codeSuiviAttendu))
+            throw new IllegalArgumentException("Ce colis appartient à une autre commande (" + parties[1] + ").");
+        return parties[2].toUpperCase(Locale.ROOT);
+    }
+
+    /** Comparaison en temps constant (ne revele pas, par sa duree, combien de caracteres sont justes). */
+    public static boolean correspond(String attendu, String recu) {
+        return attendu != null && recu != null
+                && MessageDigest.isEqual(attendu.getBytes(StandardCharsets.UTF_8), recu.getBytes(StandardCharsets.UTF_8));
     }
 }

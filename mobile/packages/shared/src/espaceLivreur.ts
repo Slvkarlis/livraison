@@ -11,7 +11,7 @@ export interface Mission {
   id: number; codeSuivi: string; statut: StatutLivraison;
   nomCommerce: string; adresseCommerce: string; latitudeCommerce: number | null; longitudeCommerce: number | null;
   zoneNom: string | null; clientPrenom: string; nbArticles: number; montantACollecter: number;
-  preteLe: string | null; affecteeLe: string | null;
+  preteLe: string | null; affecteeLe: string | null; recupereeLe: string | null;
 }
 
 export const LIBELLES_AFFECTATION: Record<TypeAffectation, string> = {
@@ -31,5 +31,7 @@ export function creerApiLivreur(request: <T>(method: string, path: string, body?
     seDeclarerIndisponible: () => request<Disponibilite>('PUT', '/api/livreur/disponibilite', { disponible: false }),
     missions: () => request<Mission[]>('GET', '/api/livreur/missions'),
     mission: (id: number) => request<Mission>('GET', '/api/livreur/missions/' + id),
+    /** US-2B9 : code = contenu du QR scanne, ou code de collecte saisi a la main. */
+    confirmerCollecte: (id: number, code: string) => request<Mission>('POST', '/api/livreur/missions/' + id + '/collecte', { code }),
   };
 }

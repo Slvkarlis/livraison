@@ -54,6 +54,7 @@ public class Livraison {
     private Instant affecteeLe;
     // Sprint 2 bis : code de collecte imprime en QR sur l'etiquette du colis (US-2B10), utilise une fois (US-2B9)
     @Column(length = 12) private String codeCollecte;
+    private Instant recupereeLe;   // US-2B9 : colis scanne par le coursier a la boutique (le code ne sert plus)
     // Sprint 2 bis : annulation par le client (US-2B12)
     private Instant annuleeLe;
     @Column(length = 300) private String motifAnnulation;

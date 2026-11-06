@@ -104,6 +104,15 @@ export default function DetailCommandeRecue() {
           <Text style={styles.bandeauTexte}>Il vient récupérer le colis : préparez l’étiquette</Text>
         </View>
       ) : null}
+      {commande.statut === 'RECUPEREE' ? (
+        <View style={[styles.bandeau, styles.bandeauPrete]}>
+          <Text style={styles.bandeauTitre}>
+            Récupérée par {commande.livreurPrenom ?? 'le livreur'}
+            {commande.recupereeLe ? ` à ${formatHeure(new Date(commande.recupereeLe))}` : ''}
+          </Text>
+          <Text style={styles.bandeauTexte}>Le colis a quitté la boutique</Text>
+        </View>
+      ) : null}
       {attendCollecte ? (
         <Bouton
           titre="Étiquette du colis (QR)"

@@ -2,6 +2,7 @@ package com.fleetpulse.livraison.Service;
 
 import com.fleetpulse.livraison.Dto.EspaceLivreurDto.*;
 import com.fleetpulse.livraison.Model.*;
+import com.fleetpulse.livraison.Model.enums.StatutLivraison;
 import com.fleetpulse.livraison.Repository.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -22,6 +23,7 @@ public class EspaceLivreurService {
     private final LivraisonRepository commandes;
     private final ZoneService zones;
     private final AffectationMissionService affectationMissions;
+    private final CommandeWorkflow workflow;
 
     @Transactional(readOnly = true)
     public DisponibiliteVue disponibilite(String email) {
@@ -65,13 +67,35 @@ public class EspaceLivreurService {
                 .stream().map(MissionVue::from).toList();
     }
 
-    /** Mission d'un autre coursier : 404, sans reveler son existence. */
     @Transactional(readOnly = true)
     public MissionVue mission(String email, Long id) {
+        return MissionVue.from(mission(livreur(email), id, false));
+    }
+
+    /**
+     * US-2B9 : le coursier confirme la prise en charge en scannant le QR du colis (ou en saisissant son code).
+     * Rejouer la meme collecte (reseau instable) renvoie la mission sans rien changer.
+     */
+    public MissionVue confirmerCollecte(String email, Long id, CollecteRequest r) {
         Livreur livreur = livreur(email);
-        return commandes.findById(id)
+        Livraison commande = mission(livreur, id, true);
+        if (commande.getStatut() == StatutLivraison.RECUPEREE) return MissionVue.from(commande);
+        if (commande.getStatut() != StatutLivraison.AFFECTEE)
+            throw MarketplaceException.conflit("Cette commande n'attend plus de collecte.");
+
+        String code = CodeCollecte.lire(r == null ? null : r.code(), commande.getCodeSuivi());
+        if (!CodeCollecte.correspond(commande.getCodeCollecte(), code))
+            throw new IllegalArgumentException("Code de collecte incorrect : vérifiez l'étiquette du colis.");
+
+        commande.setRecupereeLe(Instant.now().truncatedTo(ChronoUnit.MICROS));
+        workflow.transition(commande, StatutLivraison.RECUPEREE, livreur, "Colis scanné à la boutique");
+        return MissionVue.from(commande);
+    }
+
+    /** Mission d'un autre coursier : 404, sans reveler son existence. verrou : pour la collecte. */
+    private Livraison mission(Livreur livreur, Long id, boolean verrou) {
+        return (verrou ? commandes.verrouiller(id) : commandes.findById(id))
                 .filter(c -> c.getLivreur() != null && c.getLivreur().getId().equals(livreur.getId()))
-                .map(MissionVue::from)
                 .orElseThrow(MarketplaceException::absent);
     }
 

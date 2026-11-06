@@ -33,12 +33,14 @@ test('Les appels API visent les routes du coursier', async () => {
   await api.seDeclarerIndisponible();
   await api.missions();
   await api.mission(7);
+  await api.confirmerCollecte(7, 'FLEETPULSE|FP-ABC|K7Q2MX');
   assert.deepEqual(appels, [
     ['GET /api/livreur/disponibilite', undefined],
     ['PUT /api/livreur/disponibilite', { disponible: true, latitude: 36.81, longitude: 10.18 }],
     ['PUT /api/livreur/disponibilite', { disponible: false }],
     ['GET /api/livreur/missions', undefined],
     ['GET /api/livreur/missions/7', undefined],
+    ['POST /api/livreur/missions/7/collecte', { code: 'FLEETPULSE|FP-ABC|K7Q2MX' }],
   ]);
 });
 
@@ -47,4 +49,7 @@ test('Le client voit qui vient récupérer sa commande', () => {
   assert.equal(sprint2bis.messageDecisionClient({ ...base, statut: 'AFFECTEE', livreurPrenom: 'Sami' }),
     'Chez Amira : Sami va récupérer votre commande.');
   assert.equal(sprint2bis.messageDecisionClient({ ...base, statut: 'AFFECTEE' }), 'Chez Amira : un livreur va récupérer votre commande.');
+  assert.equal(sprint2bis.messageDecisionClient({ ...base, statut: 'RECUPEREE', livreurPrenom: 'Sami' }),
+    'Sami a récupéré votre commande. Elle est en route vers vous.');
+  assert.equal(sprint2bis.libelleEtapeClient({ ancien: 'AFFECTEE', nouveau: 'RECUPEREE' }), 'Récupérée par le livreur');
 });
