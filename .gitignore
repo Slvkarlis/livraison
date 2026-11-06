@@ -35,3 +35,7 @@ build/
 ### Node / Expo ###
 node_modules/
 .tmp/
+
+### Internal working docs (kept locally only) ###
+docs/SPRINT2BIS_PLAN.md
+docs/ASSESSMENT.md

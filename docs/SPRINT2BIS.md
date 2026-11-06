@@ -1,6 +1,6 @@
 # Sprint 2 bis — Partner interface and First Mile
 
-Branch `sprint-2bis` (from `corrections`), 2026-11-04 → 2026-11-06. One commit per validated step, see [`SPRINT2BIS_PLAN.md`](SPRINT2BIS_PLAN.md).
+Branch `sprint-2bis` (from `corrections`), 2026-11-04 → 2026-11-06. One commit per validated step; the files changed by each commit are listed in [`SPRINT2BIS_CHANGES.md`](SPRINT2BIS_CHANGES.md).
 Scope: 9 user stories, **40 points** (US-2B3, the 2-minute expiry, was descoped on 2026-11-03).
 
 ## Delivered
