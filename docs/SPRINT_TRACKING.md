@@ -22,16 +22,18 @@ Legend: ✅ done · 🟡 partial (see note) · ⬜ not started · ➖ descoped �
 |---|---|---|---|---|---|
 | 1 | Authentification, rôles et gestion des comptes | 9 | 42 | ✅ Done | 42 |
 | 2 | Catalogue, zones et prise de commande | 9 | 44 | 🟡 Nearly done | ~39 |
-| 2 bis | Interface partenaire et First Mile | 10 (1 descoped) | 43 (40 in scope) | ⬜ **Next** | 0 |
-| 3 | Tracking temps réel et Last Mile | 8 | 42 | ⬜ | 0 |
+| 2 bis | Interface partenaire et First Mile | 10 (1 descoped) | 43 (40 in scope) | ✅ Done (device pass pending) | 40 |
+| 3 | Tracking temps réel et Last Mile | 8 | 42 | ⬜ **Next** | 0 |
 | 4 | Dispatch IA par lots | 7 | 45 | ⬜ | 0 |
 | 5 | Chaîne financière | 7 | 40 | ⬜ | 0 |
 | 6 | Dashboard BI et notation | 8 | 42 | ⬜ | 0 |
 | 7 | Échecs, litiges et pilote | 8 | 37 | ⬜ | 0 |
 | 8 | Prospection automatisée et prévision de la demande | 6 | 37 | ⬜ | 0 |
-| **Total** | | **72 (1 descoped)** | **372 (369 in scope)** | | **~81 (≈ 22 %)** |
+| **Total** | | **72 (1 descoped)** | **372 (369 in scope)** | | **~121 (≈ 33 %)** |
 
-Current verification on this branch (2026-11-03): backend `mvn test` **53/53**, Node tests **32/32**, mobile typecheck ✅, mobile ESLint ✅, web build ✅. Backend + web + client app run locally (client app opened on an iPhone through Expo Go).
+Current verification on branch `sprint-2bis` (2026-11-06): backend `mvn test` **77/77**, Node tests **49/49**, mobile typecheck ✅, mobile ESLint ✅, web build ✅. Runs locally on MySQL 8.4 (Docker); every Sprint 2 bis step demoed in the browser preview. Sprint 2 bis report: [`SPRINT2BIS.md`](SPRINT2BIS.md).
+
+_2026-11-03 baseline on `corrections`: 53/53 backend, 32/32 Node; client app opened on an iPhone through Expo Go._
 
 ---
 
@@ -74,7 +76,7 @@ Known limits carried forward: no real SMS/email gateway (`NotificationSender` on
 - [ ] **US-208, adjacent zones:** shared borders are accepted but not recorded. Store each zone's adjacent zones (computed with JTS `touches` when a zone is saved) and show them on the web zones page. Estimated ~1–2 pts. Sprint 4 batching (US-403) needs it.
 
 **Clean-up (decided 2026-11-03, COD only):**
-- [ ] Remove Stripe and the old depot/slot order flow (`ASSESSMENT.md` §4.3, groups A → B → C).
+- [x] Remove Stripe and the old depot/slot order flow: groups A and the mobile part of B done in Sprint 2 bis step 0. **Left:** group C (entity fields + migration).
 - [ ] Remove the leftover fields from the responsable order detail (Type / Créneau / Distance / Supplément immédiat).
 
 **Small gaps worth closing in the same pass:**
@@ -83,7 +85,8 @@ Known limits carried forward: no real SMS/email gateway (`NotificationSender` on
 - [ ] US-204: the cart is lost when the app restarts. Optionally persist it per account with AsyncStorage.
 
 **Verification:**
-- [ ] Database on MySQL **8** (MAMP 5.7 is not supported), and run `backend/migrations/sprint2-mysql.sql` on a copy (it has never been run).
+- [x] Database on MySQL **8** (Docker `mysql:8.4` on port 3307, see README).
+- [ ] Run `backend/migrations/sprint2-mysql.sql` on a copy (it has never been run).
 - [ ] Device pass of the full flow on Android + iOS (Expo Go): partner opens shop → client orders → responsable sees the order.
 - [ ] Full test suite green + sprint review with the PO.
 
@@ -100,22 +103,22 @@ Known limits carried forward: no real SMS/email gateway (`NotificationSender` on
 **What still doesn't happen after Sprint 2** (this is Sprint 2 bis and later): the partner **doesn't see or answer incoming orders**, so every order stays "En attente du partenaire". There's no client cancellation, no courier mission, pickup or delivery, no tracking, and no real SMS (codes appear in the server log in demo mode).
 ---
 
-## Sprint 2 bis — Interface partenaire et First Mile (43 pts, 40 in scope) ⬜ NEXT
+## Sprint 2 bis — Interface partenaire et First Mile (43 pts, 40 in scope) ✅
 
-All partner stories are built in the **mobile app** (partner screens inside `mobile-client`, decision 2026-11-03).
+All partner stories are built in the **mobile app** (partner screens inside `mobile-client`, decision 2026-11-03). Branch `sprint-2bis`, one commit per step. Full report, API contracts and limits: [`SPRINT2BIS.md`](SPRINT2BIS.md). 📱 = device pass still to do for the whole sprint.
 
 | ID | User story | Pts | Status | Prerequisites / notes |
 |---|---|---|---|---|
-| US-2B1 | Partner gets new orders in real time (notification, sound ~~, 2-min countdown~~) | 5 | ⬜ | Needs a **WebSocket channel** (none exists) and a partner order list (no `/partenaire/commandes` endpoint yet). The countdown is dropped along with the expiry. Sound + notification on the phone: in-app with `expo-av` while the app is open, and Expo push notifications when it's in the background. |
-| US-2B2 | Partner accepts / refuses (reason, incl. out of stock) | 5 | ⬜ | Needs the order **state machine** (no transition endpoint exists). |
+| US-2B1 | Partner gets new orders in real time (notification, sound ~~, 2-min countdown~~) | 5 | ✅ 🧪 📱 | Partner tabs + order list/detail/history; STOMP WebSocket `/ws` with JWT; banner + sound (`expo-audio`) while the app is open. **Background push** (app closed) moves to US-304, Sprint 3. |
+| US-2B2 | Partner accepts / refuses (reason, incl. out of stock) | 5 | ✅ 🧪 | `CommandeWorkflow` state machine + `HistoriqueStatut`. Accept with prep time; refuse with RUPTURE / FERMETURE / TROP_DE_COMMANDES / AUTRE (+comment). |
 | US-2B3 | ~~Order auto-expires after 2 min with no answer~~ | 3 | ➖ | **Descoped 2026-11-03.** An unanswered order stays `PENDING_PARTNER` until the partner answers, the client cancels (US-2B12) or the Responsable cancels (US-311). |
-| US-2B4 | Partner sets / adjusts (max 2×) prep time, signals prep start | 3 | ⬜ | New fields on the order. |
-| US-2B5 | Partner signals the order is ready | 3 | ⬜ | |
-| US-2B8 | Courier goes available / unavailable in authorised zones and receives pickup missions (simple assignment) | 8 | ⬜ | Needs US-2B11 + courier GPS. The courier app currently only shows vehicle + profile. |
-| US-2B9 | Courier scans the parcel QR in store → `PICKED_UP` | 5 | ⬜ | Camera / QR scanning in Expo. |
-| US-2B10 | Partner generates and prints the parcel QR | 3 | ⬜ | Signed, single-use token. On mobile: show the QR on screen, and print/share it as a PDF with `expo-print`. |
-| US-2B11 | Responsable assigns each courier a main zone, secondary zones and temporary assignments | 5 | ⬜ | New `AffectationZone` entity + web page. |
-| US-2B12 | Client cancels while `PENDING_PARTNER` or `ACCEPTED` | 3 | ⬜ | Endpoint + button. |
+| US-2B4 | Partner sets / adjusts (max 2×) prep time, signals prep start | 3 | ✅ 🧪 | Client sees the updated ready time and a timeline. |
+| US-2B5 | Partner signals the order is ready | 3 | ✅ 🧪 | Generates the pickup code and triggers courier assignment. |
+| US-2B8 | Courier goes available / unavailable in authorised zones and receives pickup missions (simple assignment) | 8 | ✅ 🧪 📱 | GPS must be inside a zone in force. Assignment: main > secondary > temporary, then fewest missions, max 3; waiting orders assigned when a courier frees up. Replaced by AI dispatch in Sprint 4. |
+| US-2B9 | Courier scans the parcel QR in store → `PICKED_UP` | 5 | ✅ 🧪 📱 | Status `RECUPEREE`. `expo-camera` scan or typed 6-char code; wrong code / other order's QR / other courier refused. No rate limit on wrong attempts yet (security pass). |
+| US-2B10 | Partner generates and prints the parcel QR | 3 | ✅ 🧪 | Random single-use code (not signed, stored in clear for reprint). Label with QR, print/share via `expo-print`. |
+| US-2B11 | Responsable assigns each courier a main zone, secondary zones and temporary assignments | 5 | ✅ 🧪 | `AffectationZone` + web "Zones" dialog in **Livreurs**, audited. |
+| US-2B12 | Client cancels while `PENDING_PARTNER` or `ACCEPTED` | 3 | ✅ 🧪 | Free, optional reason; partner sees "Annulée par le client". |
 
 ---
 
@@ -200,7 +203,7 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 | # | Criterion | Status |
 |---|---|---|
 | 1 | Client can place a COD order ~~; it expires at 2 min without a partner answer~~ | ✅ (expiry descoped 2026-11-03) |
-| 2 | Accepted order auto-assigned to an authorised courier, in a batch of 2–3 when possible | ⬜ |
+| 2 | Accepted order auto-assigned to an authorised courier, in a batch of 2–3 when possible | 🟡 Simple single-order assignment done (Sprint 2 bis); batching is Sprint 4 |
 | 3 | Live tracking + updated ETA + promised time | ⬜ |
 | 4 | Delivery validated only after amount confirmation + valid QR (or fallback code) | ⬜ |
 | 5 | Cash traced per courier and reconcilable | ⬜ |
@@ -212,7 +215,7 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 
 ## Schedule check
 
-7 sprints (2 bis → 8, **283 pts** in scope, plus ~5 pts left in Sprint 2) remain, about 14 weeks at 2 weeks per sprint. The team's capacity is 40–45 pts, which roughly matches the plan. Sprints 4 and 8 also need a Python AI service that **doesn't exist yet**, so start setting it up during Sprint 3 at the latest. See `docs/ASSESSMENT.md` for risks and recommendations.
+6 sprints (3 → 8, **243 pts**, plus ~5 pts left in Sprint 2) remain, about 12 weeks at 2 weeks per sprint. The team's capacity is 40–45 pts, which roughly matches the plan. Sprints 4 and 8 also need a Python AI service that **doesn't exist yet**, so start setting it up during Sprint 3 at the latest. See `docs/ASSESSMENT.md` for risks and recommendations.
 
 ## Change log
 
@@ -221,3 +224,4 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 | 2026-11-03 | File created from the spec + review of branch `corrections` (`1962784`). |
 | 2026-11-03 | Decisions recorded: MySQL kept, COD only, partner web app, US-2B3 descoped, security last. |
 | 2026-11-03 | Partner decision revised: stays in the mobile app for now. |
+| 2026-11-06 | Sprint 2 bis done on branch `sprint-2bis` (9 US, 40 pts), report in `SPRINT2BIS.md`. Device pass pending. |

@@ -90,7 +90,7 @@ Severity: 🔴 high · 🟠 medium · 🟡 low. ✔️ = closed by a decision.
 
 | # | Sev | Finding | Recommendation |
 |---|---|---|---|
-| A1 | 🔴 | **No real-time channel.** The spec requires WebSocket for positions, statuses and offers, with ≤ 5 s position latency. Sprint 2 bis already needs partner alerts. | Add Spring WebSocket/STOMP with JWT on CONNECT as the **first** Sprint 2 bis task. Expo client: `@stomp/stompjs`. |
+| A1 | ✔️ | ~~No real-time channel.~~ **Closed in Sprint 2 bis: STOMP over WebSocket at `/ws`, JWT on CONNECT, per-user queues.** Courier positions (Sprint 3) can reuse it. Original note: The spec requires WebSocket for positions, statuses and offers, with ≤ 5 s position latency. Sprint 2 bis already needs partner alerts. | Add Spring WebSocket/STOMP with JWT on CONNECT as the **first** Sprint 2 bis task. Expo client: `@stomp/stompjs`. |
 | A2 | ✔️ | ~~No scheduling for the 2-min order expiry.~~ **Closed: expiry not needed (US-2B3 descoped).** | A scheduler will still be needed later for time-based jobs (weekly closing in Sprint 5, forecast refresh in Sprint 8), but not for Sprint 2 bis. |
 | A3 | 🔴 | **No order state machine.** `StatutLivraison` mixes the spec's English (`PENDING_PARTNER`) with legacy French (`EN_PREPARATION`, `AFFECTEE`, `A_PROXIMITE`…). States the spec needs are missing (`ACCEPTED`, `REFUSED`, `READY`, `PICKED_UP`, `DELIVERED`, `CANCELLED`, `FAILED`), and so are transition guards and status history. | Define the full lifecycle once (all sprints), implement one `transition()` service with an allowed-transition table + a `HistoriqueStatut` entity (US-401 needs it) + an event publish. |
 | A4 | ✔️ 🟠 | **Database: decided to stay on MySQL** (the spec listed PostgreSQL/PostGIS + Redis). The current approach (JTS in Java, WKT text column, bounding-box index) works for zones. For Sprints 3/4/6 (GPS history, nearest courier, heatmaps), use MySQL 8 spatial features (`POINT` columns + `SPATIAL INDEX`, `ST_Distance_Sphere`) and an archiving/partitioning strategy for positions. | **Require MySQL 8+** for everyone: MAMP's 5.7.24 is not supported by Hibernate 7 and `sprint2-mysql.sql`. Swap MAMP's MySQL for 8.x or use a MySQL 8 Docker container. Document it in the README. |
@@ -100,6 +100,8 @@ Severity: 🔴 high · 🟠 medium · 🟡 low. ✔️ = closed by a decision.
 | A8 | 🟡 | Domain naming differs from the spec (Livraison = Commande, Livreur = Coursier, FleetPulse = First deliverly). | Fine to keep, but add a glossary to the README so the class diagram and code can be mapped. |
 
 ### 4.3 Leftover code from before the spec
+
+> **Update 2026-11-06:** group A and the mobile CARTE branches of group B were removed in Sprint 2 bis step 0 (commit `c1c700b`). Left: the web back-office order detail (Type / Créneau / Distance / Supplément) and group C.
 
 The first prototype (Sept. 2026) followed a different design: single depot, km-based price, delivery slots, Stripe card payment, immediate +50 %. Most of it is still wired in:
 
