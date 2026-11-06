@@ -3,6 +3,8 @@
 Source: *Cahier des charges — First deliverly* (9 sprints × 2 weeks, 72 US, 372 points, capacity 40–45 pts/sprint).
 Branch reviewed: `corrections` @ `1962784` — 2026-11-03.
 
+How each sprint is planned, run and documented: [`SPRINT_PLAN.md`](SPRINT_PLAN.md).
+
 Legend: ✅ done · 🟡 partial (see note) · ⬜ not started · ➖ descoped · 🧪 verified by automated tests · 📱 not yet verified on a device
 
 ## Decisions
@@ -225,3 +227,4 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 | 2026-11-03 | Decisions recorded: MySQL kept, COD only, partner web app, US-2B3 descoped, security last. |
 | 2026-11-03 | Partner decision revised: stays in the mobile app for now. |
 | 2026-11-06 | Sprint 2 bis done on branch `sprint-2bis` (9 US, 40 pts), report in `SPRINT2BIS.md`. Device pass pending. |
+| 2026-11-06 | Added `SPRINT_PLAN.md`: the general structure every sprint follows (plan template, steps, checks, commits, docs). |

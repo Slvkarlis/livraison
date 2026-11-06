@@ -357,9 +357,21 @@ Markers: **A** added · **M** modified · **D** deleted · **R** renamed/moved.
 
 ---
 
-## docs(sprint-2bis): per-commit change log; keep plan and assessment local
+## `8264038` docs(sprint-2bis): per-commit change log; keep plan and assessment local
 
 - **A** `docs/SPRINT2BIS_CHANGES.md`: this file, the exact per-file changes of every Sprint 2 bis commit.
 - **M** `.gitignore`: ignores `docs/SPRINT2BIS_PLAN.md` and `docs/ASSESSMENT.md` (internal working docs).
 - **D** `docs/SPRINT2BIS_PLAN.md`, `docs/ASSESSMENT.md`: removed from git only (`git rm --cached`). The files stay on disk, and earlier commits still contain them.
 - **M** `docs/SPRINT2BIS.md`: the header links to this change log instead of the plan.
+
+---
+
+## docs: general sprint plan for future sprints
+
+- **A** `docs/SPRINT_PLAN.md`: how every sprint is run, for future sprints. It covers:
+  - the documents each sprint produces (plan, changes, report, tracking);
+  - the working rules: steps, demo in the preview, validation, one commit per step, push when agreed;
+  - commit message conventions and the checks to run for every step;
+  - mobile rules and a `SPRINT<N>_PLAN.md` template to copy.
+- **M** `docs/SPRINT_TRACKING.md`: links to `SPRINT_PLAN.md` at the top, plus a change log line.
+- **M** `docs/SPRINT2BIS_CHANGES.md`: hash `8264038` filled in on the previous entry, and this entry.
