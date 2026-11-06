@@ -32,15 +32,16 @@ public class SecurityConfig {
     private UtilisateurDetailsService detailsService;
     @Autowired
     private AuthenticationConfiguration authenticationConfiguration;
-    // Origines web autorisees (apercu Expo web en developpement) ; vide = aucune requete cross-origin acceptee
+    // Origines web autorisees (apercu Expo web en developpement). Vide : CORS non active, comportement d'origine.
     @Value("${app.cors.origines:}")
     private List<String> originesCors;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        List<String> origines = originesCors.stream().map(String::trim).filter(o -> !o.isEmpty()).toList();
+        if (!origines.isEmpty()) http.cors(cors -> cors.configurationSource(corsConfigurationSource(origines)));
         return http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // /ws : poignee de main WebSocket ouverte, le JWT est verifie au CONNECT STOMP (AuthentificationStomp)
@@ -54,9 +55,9 @@ public class SecurityConfig {
                 .build();
     }
 
-    private CorsConfigurationSource corsConfigurationSource() {
+    private static CorsConfigurationSource corsConfigurationSource(List<String> origines) {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(originesCors.stream().map(String::trim).filter(o -> !o.isEmpty()).toList());
+        configuration.setAllowedOrigins(origines);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
