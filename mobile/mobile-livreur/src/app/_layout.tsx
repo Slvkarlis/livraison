@@ -1,6 +1,8 @@
 import { AuthProvider, ConfigurationProvider, peutRole, Chargement, EcranServeurInjoignable, TempsReelProvider, ThemeProvider, useAuth } from '@fleetpulse/shared';
 import { Stack } from 'expo-router';
+import type React from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { SuiviPositionProvider } from '../composants/suivi/SuiviPosition';
 import { theme } from '../theme';
 
 function Navigation() {
@@ -15,6 +17,8 @@ function Navigation() {
   return (
     // Temps reel (US-2B8) : les nouvelles missions arrivent sans actualiser
     <TempsReelProvider key={profil?.id ?? 'anonyme'} actif={actif}>
+    {/* US-301 : position transmise pendant les missions, quel que soit l'ecran ouvert */}
+    <SuiviPositionAvecCompte actif={actif}>
     <Stack
       screenOptions={{
         headerShown: false,
@@ -38,8 +42,14 @@ function Navigation() {
         <Stack.Screen name="mission/[id]" options={{ title: 'Mission', headerShown: true }} />
       </Stack.Protected>
     </Stack>
+    </SuiviPositionAvecCompte>
     </TempsReelProvider>
   );
+}
+
+/** Le suivi n'existe que pour un coursier actif (pas d'appel API avant la connexion). */
+function SuiviPositionAvecCompte({ actif, children }: { actif: boolean; children: React.ReactNode }) {
+  return actif ? <SuiviPositionProvider>{children}</SuiviPositionProvider> : <>{children}</>;
 }
 
 export default function RootLayout() {

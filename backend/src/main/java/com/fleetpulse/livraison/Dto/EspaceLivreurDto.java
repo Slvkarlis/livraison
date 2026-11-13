@@ -25,16 +25,28 @@ public final class EspaceLivreurDto {
     /** US-2B9 : contenu du QR scanne, ou code de collecte saisi a la main. */
     public record CollecteRequest(String code) { }
 
-    /** Mission de collecte : adresse du commerce ; du client, seulement le prenom et la zone (livraison au Sprint 3). */
+    /**
+     * Mission : adresse du commerce ; du client, le prenom et la zone, puis l'adresse de livraison
+     * une fois le colis collecte (minimisation : le coursier n'en a pas besoin avant).
+     */
     public record MissionVue(Long id, String codeSuivi, StatutLivraison statut, String nomCommerce, String adresseCommerce,
                              Double latitudeCommerce, Double longitudeCommerce, String zoneNom, String clientPrenom,
-                             int nbArticles, BigDecimal montantACollecter, Instant preteLe, Instant affecteeLe, Instant recupereeLe) {
+                             int nbArticles, BigDecimal montantACollecter, Instant preteLe, Instant affecteeLe, Instant recupereeLe,
+                             String adresseLivraison, Double latitudeLivraison, Double longitudeLivraison) {
         public static MissionVue from(Livraison c) {
             Partenaire p = c.getPartenaire();
             int nbArticles = c.getLignes().stream().mapToInt(LigneCommande::getQuantite).sum();
+            boolean colisABord = c.getRecupereeLe() != null;
             return new MissionVue(c.getId(), c.getCodeSuivi(), c.getStatut(), p.getNomCommerce(), p.getAdresse(),
                     p.getLatitude(), p.getLongitude(), c.getNomZone(), c.getClient().getPrenom(), nbArticles, c.getTotal(),
-                    c.getPreteLe(), c.getAffecteeLe(), c.getRecupereeLe());
+                    c.getPreteLe(), c.getAffecteeLe(), c.getRecupereeLe(),
+                    colisABord ? c.getAdresse() : null, colisABord ? c.getLatitude() : null, colisABord ? c.getLongitude() : null);
         }
     }
+
+    /** US-301 : position envoyee par l'application pendant les missions. precision : metres (facultatif). */
+    public record PositionRequest(Double latitude, Double longitude, Double precision) { }
+
+    /** acceptee false : point ecarte (imprecis ou deplacement impossible), la derniere position reste valable. */
+    public record PositionVue(boolean acceptee, String raison, Instant date, boolean enMission) { }
 }

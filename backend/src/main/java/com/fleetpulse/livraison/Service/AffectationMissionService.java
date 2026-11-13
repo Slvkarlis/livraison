@@ -23,8 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service @RequiredArgsConstructor @Transactional
 public class AffectationMissionService {
     static final int MISSIONS_MAX = 3;
-    /** Missions en cours : affectees, puis collectees (jusqu'a la livraison, Sprint 3). */
-    static final Set<StatutLivraison> MISSIONS_EN_COURS = EnumSet.of(StatutLivraison.AFFECTEE, StatutLivraison.RECUPEREE);
+    /** Missions en cours : affectees, collectees, puis a proximite du client jusqu'a la remise (LIVREE). */
+    static final Set<StatutLivraison> MISSIONS_EN_COURS =
+            EnumSet.of(StatutLivraison.AFFECTEE, StatutLivraison.RECUPEREE, StatutLivraison.A_PROXIMITE);
+    /** US-302 : colis a bord, en route vers le client : le client peut suivre le coursier. */
+    static final Set<StatutLivraison> EN_ROUTE_VERS_CLIENT = EnumSet.of(StatutLivraison.RECUPEREE, StatutLivraison.A_PROXIMITE);
 
     private final AffectationZoneRepository affectations;
     private final LivraisonRepository commandes;

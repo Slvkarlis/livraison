@@ -2,6 +2,7 @@ package com.fleetpulse.livraison.Controller;
 
 import com.fleetpulse.livraison.Dto.EspaceLivreurDto.*;
 import com.fleetpulse.livraison.Service.EspaceLivreurService;
+import com.fleetpulse.livraison.Service.SuiviPositionService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController @RequestMapping("/api/livreur") @RequiredArgsConstructor @PreAuthorize("hasRole('LIVREUR')")
 public class EspaceLivreurController {
     private final EspaceLivreurService service;
+    private final SuiviPositionService suiviPosition;
 
     @GetMapping("/disponibilite")
     public DisponibiliteVue disponibilite(Authentication a) { return service.disponibilite(a.getName()); }
@@ -32,4 +34,8 @@ public class EspaceLivreurController {
     public MissionVue confirmerCollecte(Authentication a, @PathVariable Long id, @RequestBody CollecteRequest r) {
         return service.confirmerCollecte(a.getName(), id, r);
     }
+
+    // US-301 : position GPS envoyee par l'application pendant les missions
+    @PutMapping("/position")
+    public PositionVue position(Authentication a, @RequestBody PositionRequest r) { return suiviPosition.enregistrer(a.getName(), r); }
 }

@@ -53,8 +53,7 @@ public class EspaceLivreurService {
                     + "). Rendez-vous dans l'une d'elles pour vous déclarer disponible.");
 
         livreur.setDisponible(true);
-        livreur.setDerniereLatitude(r.latitude());
-        livreur.setDerniereLongitude(r.longitude());
+        livreur.placer(r.latitude(), r.longitude(), maintenant);
         livreur.setDisponibiliteMiseAJourLe(maintenant);
         affectationMissions.affecterCommandesEnAttente(livreur, autorisees.stream().map(a -> a.getZone().getId()).toList());
         return vue(livreur);

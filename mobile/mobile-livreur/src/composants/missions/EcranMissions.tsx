@@ -13,6 +13,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
+import { CarteSuiviGps } from '../suivi/CarteSuiviGps';
 import { CarteDisponibilite } from './CarteDisponibilite';
 import { CarteMission } from './CarteMission';
 
@@ -70,7 +71,8 @@ export default function EcranMissions() {
             <Text style={styles.titre}>Missions</Text>
             <MessageErreur message={erreur} />
             {disponibilite ? <CarteDisponibilite disponibilite={disponibilite} onChange={(d) => void apresChangementDisponibilite(d)} /> : null}
-            {missions && missions.length > 0 ? <Text style={styles.section}>À COLLECTER</Text> : null}
+            <CarteSuiviGps />
+            {missions && missions.length > 0 ? <Text style={styles.section}>EN COURS</Text> : null}
           </View>
         }
         ListEmptyComponent={
