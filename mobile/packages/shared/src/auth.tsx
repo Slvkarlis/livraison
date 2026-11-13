@@ -11,6 +11,17 @@ interface AuthState {
   ouvrir: (jetons: Jetons) => Promise<void>; logout: () => Promise<void>; rafraichir: () => Promise<void>;
 }
 const AuthContext = createContext<AuthState | null>(null);
+/** US-304 : actions a faire tant que la session est encore valide (ex. oublier le jeton push du telephone). */
+const avantDeconnexion = new Set<() => Promise<unknown>>();
+export function surDeconnexion(fn: () => Promise<unknown>): () => void {
+  avantDeconnexion.add(fn);
+  return () => { avantDeconnexion.delete(fn); };
+}
+/** Au plus 3 s : la deconnexion ne doit jamais rester bloquee par le reseau. */
+function executerAvantDeconnexion(): Promise<unknown> {
+  const actions = [...avantDeconnexion].map((fn) => fn().catch(() => {}));
+  return Promise.race([Promise.all(actions), new Promise((resolve) => setTimeout(resolve, 3000))]);
+}
 export function AuthProvider({ role, children }: { role: Role; children: ReactNode }) {
   const [profil, setProfil] = useState<Profil | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -26,6 +37,7 @@ export function AuthProvider({ role, children }: { role: Role; children: ReactNo
     } catch (e) { await api.logout().catch(() => {}); throw e; }
   }, [role]);
   const logout = useCallback(async () => {
+    await executerAvantDeconnexion();
     setProfil(null); setServeurInjoignable(null);
     try { await api.logout(); }
     catch { setNotification('Session locale fermée. Révocation serveur impossible : vérifiez le réseau.'); }

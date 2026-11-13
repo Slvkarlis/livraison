@@ -147,3 +147,35 @@ Markers: **A** added · **M** modified · **D** deleted · **R** renamed/moved.
 - **M** `S/remise.ts`: `lireMontant`, `ecartEncaissement` (in millimes).
 - **M** `S/types.ts`, `S/format.ts`, `S/sprint2bis.ts`, `W/types.ts`, `W/format.ts`: `ENCAISSE` "Réglée au livreur", `livreeLe`.
 - **M** `scripts/remise.test.cjs`: amount parsing, gap, courier route.
+
+---
+
+## feat(US-304): client notified at every status change
+
+**Backend**
+- **A** `B/Service/NotificationService.java`:
+  - Listens to `CommandeStatutChange` after commit, in its own transaction (a notification failure never undoes a status change; a cancelled change never notifies).
+  - For each real status change: inbox row, real-time banner on `/user/queue/notifications`, push to the client's phones. Phones the push service reports as uninstalled are forgotten.
+  - Inbox (50 latest, unread count), "mark all read".
+  - Phone registration: Expo token format checked; a shared phone moves to the last account logged in; removal only by its owner.
+- **A** `B/Service/MessagesStatut.java`: client wording per status (Tunis time), same phrasing as the app; none for the order the client just placed.
+- **A** `B/Service/PushSender.java` + **A** `B/Service/ExpoPushSender.java`:
+  - Expo push API, batches of 100, channel `commandes`, 3 s / 5 s timeouts; reads `DeviceNotRegistered` tickets.
+  - Disabled by default (`app.push.expo.actif=false`): logged only.
+- **A** `B/Model/Notification.java` (table `notification_utilisateur`), **A** `B/Model/AppareilNotification.java`, **A** both repositories, **A** `B/Dto/NotificationDto.java`.
+- **A** `B/Controller/NotificationController.java`: `GET /api/notifications`, `PUT /api/notifications/lues`, `PUT|DELETE /api/notifications/appareil`.
+- **M** `backend/src/main/resources/application.properties`: `app.push.expo.actif`, `app.push.expo.jeton-acces` (env `APP_PUSH_EXPO_ACTIF`, `APP_PUSH_EXPO_JETON`).
+- **A** `T/Sprint3NotificationTest.java`: one notification per status change in order, push with the order id, read status; token validation, phone changing account, uninstalled phone forgotten, 401 without session.
+- **A** `T/Service/ExpoPushSenderTest.java`: ticket parsing, disabled by default.
+
+**Client app**
+- **A** `C/composants/notifications/NotificationsClient.tsx`: banner at each real-time notification (6 s, tap → order); registers the phone for push and removes it at logout; a tapped push opens the order.
+- **A** `C/composants/notifications/pushNatif.ts`: Android channel, permission, Expo token (only with an EAS `projectId`; otherwise `null` and the banner still works). **A** `pushNatif.web.ts`: web fallback with no push.
+- **M** `C/app/_layout.tsx`: mounts it for the active client.
+- **M** `mobile/mobile-client/app.json`: plugin `expo-notifications`. **M** `mobile/mobile-client/package.json`, `mobile/package-lock.json`: `expo-notifications ~58.1.9` (`npx expo install`).
+
+**Shared mobile**
+- **A** `S/notifications.ts`: types, `lireNotification`, `commandeDuPush`, `DUREE_BANDEAU_MS`, `creerApiNotifications`.
+- **M** `S/tempsReel.tsx`: third subscription `/user/queue/notifications`, `useNotificationsTempsReel`.
+- **M** `S/auth.tsx`: `surDeconnexion(fn)`, run (3 s max) while the session is still valid.
+- **M** `S/api.ts`, `S/index.ts`. **A** `scripts/notifications.test.cjs`. **M** `scripts/tempsReel.test.cjs`: stub.

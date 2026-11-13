@@ -5,6 +5,7 @@ import { theme } from '../theme';
 import { MarcheSession } from '../marche-session';
 import { useEffect } from 'react';
 import { definirAdresse } from '../brouillon';
+import { NotificationsClient } from '../composants/notifications/NotificationsClient';
 
 function Navigation() {
   const { profil, chargement, serveurInjoignable, reessayer, logout } = useAuth();
@@ -60,6 +61,8 @@ function Navigation() {
         <Stack.Screen name="commande/remise/[id]" options={{ title: 'Remise du colis' }} />
       </Stack.Protected>
     </Stack></MarcheSession>
+    {/* US-304 : bandeau et push des changements de statut */}
+    <NotificationsClient actif={actif} />
     </TempsReelProvider>
   );
 }

@@ -30,7 +30,8 @@
           "locationWhenInUsePermission": "FleetPulse utilise votre position pour renseigner l'adresse de livraison."
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-notifications"
     ],
     "scheme": "fleetpulse-client",
     "backgroundColor": "#F4F3FA"

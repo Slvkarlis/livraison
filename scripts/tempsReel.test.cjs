@@ -16,6 +16,7 @@ const factices = {
   './api': { api: {}, http: {} },
   './config': { apiBaseUrl: () => '' },
   './suivi': { lirePositionCommande: () => null },
+  './notifications': { lireNotification: () => null },
 };
 const m = { exports: {} };
 new Function('module', 'exports', 'require', code)(m, m.exports, (id) => factices[id] ?? require(id));

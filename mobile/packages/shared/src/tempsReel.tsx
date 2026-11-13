@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { Platform } from 'react-native';
 import { api, http } from './api';
 import { apiBaseUrl } from './config';
+import { lireNotification, type NotificationCommande } from './notifications';
 import { lirePositionCommande, type PositionCommande } from './suivi';
 import type { StatutLivraison } from './types';
 
@@ -11,10 +12,13 @@ import type { StatutLivraison } from './types';
 export interface EvenementCommande { commandeId: number; ancien: StatutLivraison | null; nouveau: StatutLivraison }
 type Ecouteur = (evenement: EvenementCommande) => void;
 type EcouteurPosition = (position: PositionCommande) => void;
+type EcouteurNotification = (notification: NotificationCommande) => void;
 
 export const FILE_COMMANDES = '/user/queue/commandes';
 /** US-302 : positions du coursier, recues par le client dont le colis est a bord. */
 export const FILE_POSITIONS = '/user/queue/positions';
+/** US-304 : notification a chaque changement de statut (bandeau dans l'application). */
+export const FILE_NOTIFICATIONS = '/user/queue/notifications';
 /** http://hote:8083 -> ws://hote:8083/ws (https -> wss). */
 export function urlTempsReel(base: string): string {
   return base.replace(/^http/, 'ws').replace(/\/+$/, '') + '/ws';
@@ -32,13 +36,15 @@ interface TempsReel {
   connecte: boolean;
   abonner: (fn: Ecouteur) => () => void;
   abonnerPositions: (fn: EcouteurPosition) => () => void;
+  abonnerNotifications: (fn: EcouteurNotification) => () => void;
 }
-const TempsReelContext = createContext<TempsReel>({ connecte: false, abonner: () => () => {}, abonnerPositions: () => () => {} });
+const TempsReelContext = createContext<TempsReel>({ connecte: false, abonner: () => () => {}, abonnerPositions: () => () => {}, abonnerNotifications: () => () => {} });
 
 /** Une seule connexion par application, ouverte tant que actif (utilisateur connecte et compte actif). */
 export function TempsReelProvider({ actif, children }: { actif: boolean; children: ReactNode }) {
   const ecouteurs = useRef(new Set<Ecouteur>());
   const ecouteursPositions = useRef(new Set<EcouteurPosition>());
+  const ecouteursNotifications = useRef(new Set<EcouteurNotification>());
   const [connecte, setConnecte] = useState(false);
 
   useEffect(() => {
@@ -64,6 +70,10 @@ export function TempsReelProvider({ actif, children }: { actif: boolean; childre
           const position = lirePositionCommande(message.body);
           if (position) ecouteursPositions.current.forEach((fn) => fn(position));
         });
+        client.subscribe(FILE_NOTIFICATIONS, (message) => {
+          const notification = lireNotification(message.body);
+          if (notification) ecouteursNotifications.current.forEach((fn) => fn(notification));
+        });
       },
       // Jeton refuse (souvent expire) : un appel API declenche le renouvellement, la reconnexion suivante l'utilise
       onStompError: () => { void api.me().catch(() => {}); },
@@ -83,7 +93,12 @@ export function TempsReelProvider({ actif, children }: { actif: boolean; childre
     return () => { ecouteursPositions.current.delete(fn); };
   }, []);
 
-  return <TempsReelContext.Provider value={{ connecte, abonner, abonnerPositions }}>{children}</TempsReelContext.Provider>;
+  const abonnerNotifications = useCallback((fn: EcouteurNotification) => {
+    ecouteursNotifications.current.add(fn);
+    return () => { ecouteursNotifications.current.delete(fn); };
+  }, []);
+
+  return <TempsReelContext.Provider value={{ connecte, abonner, abonnerPositions, abonnerNotifications }}>{children}</TempsReelContext.Provider>;
 }
 
 /** Appelle fn a chaque changement de statut d'une commande de l'utilisateur. */
@@ -104,4 +119,12 @@ export function usePositionsLivreur(fn: EcouteurPosition) {
 
 export function useTempsReelConnecte(): boolean {
   return useContext(TempsReelContext).connecte;
+}
+
+/** US-304 : appelle fn a chaque notification recue en temps reel (bandeau). */
+export function useNotificationsTempsReel(fn: EcouteurNotification) {
+  const { abonnerNotifications } = useContext(TempsReelContext);
+  const courant = useRef(fn);
+  useEffect(() => { courant.current = fn; });
+  useEffect(() => abonnerNotifications((n) => courant.current(n)), [abonnerNotifications]);
 }
