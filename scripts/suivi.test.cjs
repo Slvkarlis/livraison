@@ -79,3 +79,11 @@ test('Le client est prévenu quand le livreur arrive', () => {
   assert.equal(sprint2bis.messageDecisionClient({ ...base, statut: 'A_PROXIMITE' }), 'Sami arrive : il est à moins de 300 m.');
   assert.equal(sprint2bis.libelleEtapeClient({ ancien: 'RECUPEREE', nouveau: 'A_PROXIMITE' }), 'Le livreur arrive');
 });
+
+test('Annulation : le client sait qui a annulé', () => {
+  const sprint2bis = charger('sprint2bis');
+  const base = { nomPartenaire: 'Chez Amira', pretePrevueLe: null, motifRefus: null, commentaireRefus: null, statut: 'ANNULEE' };
+  assert.equal(sprint2bis.messageDecisionClient(base), 'Vous avez annulé cette commande. Aucun montant ne vous sera demandé.');
+  assert.equal(sprint2bis.messageDecisionClient({ ...base, annuleeParService: true, motifAnnulation: 'Commerce fermé' }),
+    'Commande annulée par notre service client : Commerce fermé. Aucun montant ne vous sera demandé.');
+});

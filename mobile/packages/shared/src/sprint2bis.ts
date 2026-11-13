@@ -93,6 +93,7 @@ export function libelleMotifRefus(motif: MotifRefus): string {
 export function messageDecisionClient(c: {
   statut: StatutLivraison; nomPartenaire: string | null; pretePrevueLe: string | null;
   motifRefus: MotifRefus | null; commentaireRefus: string | null; livreurPrenom?: string | null;
+  annuleeParService?: boolean; motifAnnulation?: string | null;
 }): string | null {
   const commerce = c.nomPartenaire ?? 'Le commerce';
   const prete = c.pretePrevueLe ? formatHeure(new Date(c.pretePrevueLe)) : null;
@@ -103,6 +104,8 @@ export function messageDecisionClient(c: {
   if (c.statut === 'AFFECTEE') return `${commerce} : ${c.livreurPrenom ?? 'un livreur'} va récupérer votre commande.`;
   if (c.statut === 'RECUPEREE') return `${c.livreurPrenom ?? 'Le livreur'} a récupéré votre commande. Elle est en route vers vous.`;
   if (c.statut === 'A_PROXIMITE') return `${c.livreurPrenom ?? 'Le livreur'} arrive : il est à moins de 300 m.`;
+  if (c.statut === 'ANNULEE' && c.annuleeParService)
+    return `Commande annulée par notre service client${c.motifAnnulation ? ` : ${c.motifAnnulation}` : ''}. Aucun montant ne vous sera demandé.`;
   if (c.statut === 'ANNULEE') return 'Vous avez annulé cette commande. Aucun montant ne vous sera demandé.';
   if (c.statut === 'REFUSEE') {
     const motif = c.motifRefus ? libelleMotifRefus(c.motifRefus) : 'sans motif';

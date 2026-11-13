@@ -179,3 +179,31 @@ Markers: **A** added · **M** modified · **D** deleted · **R** renamed/moved.
 - **M** `S/tempsReel.tsx`: third subscription `/user/queue/notifications`, `useNotificationsTempsReel`.
 - **M** `S/auth.tsx`: `surDeconnexion(fn)`, run (3 s max) while the session is still valid.
 - **M** `S/api.ts`, `S/index.ts`. **A** `scripts/notifications.test.cjs`. **M** `scripts/tempsReel.test.cjs`: stub.
+
+---
+
+## feat(US-311): Responsable cancels an order or validates a pickup or handover manually
+
+**Backend**
+- **A** `B/Service/GestionCommandeService.java` (role `OPERATIONS`). Every action needs a 5–300 character reason, goes through `CommandeWorkflow` (history + notifications) and is audited:
+  - `annuler`: any unfinished order; records the reason, who cancelled, and invalidates the handover QR.
+  - `validerCollecte`: `AFFECTEE → RECUPEREE` without a scan; the client still gets the SMS code.
+  - `validerRemise`: `RECUPEREE / A_PROXIMITE → LIVREE`, mode `MANUELLE`, same amount and gap checks as the courier.
+  - `suivi`: actions allowed at the current status + full history.
+- **A** `B/Controller/GestionCommandeController.java`: `GET /api/admin/commandes/{id}/suivi`, `PUT …/annuler`, `PUT …/collecte`, `PUT …/remise`.
+- **A** `B/Dto/GestionCommandeDto.java`: `MotifRequest`, `RemiseManuelleRequest`, `SuiviResponsable`, `ActionResponsable`.
+- **M** `B/Service/CommandeWorkflow.java`: `ANNULEE` reachable up to the handover (the client stays limited by `CommandeService.ANNULABLES`); the event carries the actor's role.
+- **M** `B/Service/CommandeStatutChange.java`: `acteurRole`.
+- **M** `B/Service/NotificationService.java`: no notification to the client for their own actions. **M** `B/Service/MessagesStatut.java`: cancellation by customer service, with the reason.
+- **M** `B/Service/RemiseLivreurService.java`: amount check and handover recording shared with `validerManuellement`.
+- **M** `B/Model/enums/ActionAudit.java`: `COMMANDE_ANNULEE`, `COLLECTE_VALIDEE_MANUELLEMENT`, `REMISE_VALIDEE_MANUELLEMENT`.
+- **M** `B/Model/Livraison.java`: `annuleeParService`. **M** `B/Dto/LivraisonResponse.java`: `annuleeParService`.
+- **A** `T/Sprint3GestionCommandeTest.java`: cancellation with the parcel on board (reason required, history, audit, client notified with the reason, QR and handover refused afterwards, mission removed); manual pickup then manual handover with a gap; client not notified of their own cancellation; access rules.
+- **M** `T/Service/CommandeWorkflowTest.java`: new transitions and event.
+
+**Web back-office**
+- **A** `W/composants/InterventionsCommande.tsx`: order timeline (status, date, role, reason), handover details (mode, amount, gap), allowed action buttons and reason form (amount + gap reason for the handover). Hidden for sub-roles without access (403).
+- **M** `W/pages/Commandes.tsx`: in the order detail, list refreshed after an action. **M** `W/api.ts`, `W/types.ts`, `W/styles.css` (`.chronologie`). **M** `W/pages/Audit.tsx`: new actions in the filter.
+
+**Shared mobile**
+- **M** `S/types.ts`: `Livraison.annuleeParService`. **M** `S/sprint2bis.ts`: "Commande annulée par notre service client : <reason>". **M** `scripts/suivi.test.cjs`.

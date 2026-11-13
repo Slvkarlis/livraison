@@ -67,6 +67,7 @@ public class Livraison {
     // Sprint 2 bis : annulation par le client (US-2B12)
     private Instant annuleeLe;
     @Column(length = 300) private String motifAnnulation;
+    private Boolean annuleeParService;   // US-311 : annulation par le responsable (null/false : par le client)
 
     /** Heure de fin annoncee ; repli acceptation + temps pour les commandes acceptees avant ce champ. */
     public Instant heurePretePrevue() {

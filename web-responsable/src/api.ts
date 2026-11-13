@@ -1,5 +1,5 @@
 import type {
-  AffectationRequest, AffectationZone, Livraison, Livreur, LivreurRequest, LoginResponse, Profil, Vehicule, VehiculeRequest,
+  AffectationRequest, AffectationZone, Livraison, SuiviResponsable, Livreur, LivreurRequest, LoginResponse, Profil, Vehicule, VehiculeRequest,
 } from './types';
 
 import { creerClientHttp } from '../../mobile/packages/shared/src/http';
@@ -73,6 +73,13 @@ export const api = {
 
   // US-07
   livraisons: () => request<Livraison[]>('GET', '/api/livraisons'),
+
+  // US-311 : interventions du responsable (motif obligatoire, auditees)
+  suiviCommande: (id: number) => request<SuiviResponsable>('GET', `/api/admin/commandes/${id}/suivi`),
+  annulerCommande: (id: number, motif: string) => request<SuiviResponsable>('PUT', `/api/admin/commandes/${id}/annuler`, { motif }),
+  validerCollecte: (id: number, motif: string) => request<SuiviResponsable>('PUT', `/api/admin/commandes/${id}/collecte`, { motif }),
+  validerRemise: (id: number, motif: string, montantEncaisse: number, motifEcart: string | null) =>
+    request<SuiviResponsable>('PUT', `/api/admin/commandes/${id}/remise`, { motif, montantEncaisse, motifEcart }),
 };
 
 export interface Audit { id: number; date: string; acteur: string; action: string; cibleType: string; cibleId: number | null; details: string | null }

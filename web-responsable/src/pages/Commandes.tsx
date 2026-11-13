@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { api } from '../api';
+import { InterventionsCommande } from '../composants/InterventionsCommande';
 import { Badge, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 import {
   formatCreneau, formatDate, formatDistance, formatMontant, MODES_PAIEMENT, STATUTS, STATUTS_PAIEMENT,
@@ -7,7 +8,7 @@ import {
 } from '../format';
 import type { Livraison, StatutLivraison } from '../types';
 
-// US-07 : liste des commandes pour suivre leur etat
+// US-07 : liste des commandes pour suivre leur etat ; US-311 : interventions du responsable depuis le detail
 export default function Commandes() {
   const { donnees, erreur, chargement, recharger } = useDonnees(api.livraisons);
   const [filtre, setFiltre] = useState<StatutLivraison | 'TOUS'>('TOUS');
@@ -88,12 +89,12 @@ export default function Commandes() {
         )}
       </div>
 
-      {detail && <DetailCommande livraison={detail} onFermer={() => setDetail(null)} />}
+      {detail && <DetailCommande livraison={detail} onFermer={() => setDetail(null)} onModifiee={() => void recharger()} />}
     </>
   );
 }
 
-function DetailCommande({ livraison: l, onFermer }: { livraison: Livraison; onFermer: () => void }) {
+function DetailCommande({ livraison: l, onFermer, onModifiee }: { livraison: Livraison; onFermer: () => void; onModifiee: () => void }) {
   const carte = `https://www.openstreetmap.org/?mlat=${l.latitude}&mlon=${l.longitude}#map=16/${l.latitude}/${l.longitude}`;
   return (
     <Modale titre={`Commande ${l.codeSuivi}`} onFermer={onFermer}>
@@ -124,6 +125,7 @@ function DetailCommande({ livraison: l, onFermer }: { livraison: Livraison; onFe
         <dt>Total</dt><dd><strong>{formatMontant(l.montantTotal)}</strong></dd>
         <dt>À collecter</dt><dd>{formatMontant(l.montantACollecter)}</dd>
       </dl>
+      {l.partenaireId && <InterventionsCommande commandeId={l.id} onModifiee={onModifiee} />}
     </Modale>
   );
 }

@@ -24,12 +24,13 @@ public class CommandeWorkflow {
     static {
         TRANSITIONS.put(PENDING_PARTNER, EnumSet.of(ACCEPTEE, REFUSEE, ANNULEE));
         TRANSITIONS.put(ACCEPTEE, EnumSet.of(EN_PREPARATION, PRETE, ANNULEE));
-        TRANSITIONS.put(EN_PREPARATION, EnumSet.of(PRETE));
-        TRANSITIONS.put(PRETE, EnumSet.of(AFFECTEE));
-        TRANSITIONS.put(AFFECTEE, EnumSet.of(RECUPEREE));
+        // ANNULEE apres l'acceptation : seulement le responsable (US-311), le client etant limite par CommandeService.ANNULABLES
+        TRANSITIONS.put(EN_PREPARATION, EnumSet.of(PRETE, ANNULEE));
+        TRANSITIONS.put(PRETE, EnumSet.of(AFFECTEE, ANNULEE));
+        TRANSITIONS.put(AFFECTEE, EnumSet.of(RECUPEREE, ANNULEE));
         // Sprint 3 : Last Mile
-        TRANSITIONS.put(RECUPEREE, EnumSet.of(A_PROXIMITE, LIVREE));
-        TRANSITIONS.put(A_PROXIMITE, EnumSet.of(LIVREE));
+        TRANSITIONS.put(RECUPEREE, EnumSet.of(A_PROXIMITE, LIVREE, ANNULEE));
+        TRANSITIONS.put(A_PROXIMITE, EnumSet.of(LIVREE, ANNULEE));
     }
 
     private final HistoriqueStatutRepository historique;
@@ -42,7 +43,7 @@ public class CommandeWorkflow {
     /** Premiere entree de l'historique, a la creation de la commande. */
     public void creer(Livraison commande, Utilisateur acteur) {
         historique.save(new HistoriqueStatut(commande, null, commande.getStatut(), acteur, null));
-        publier(commande, null);
+        publier(commande, null, acteur);
     }
 
     public void transition(Livraison commande, StatutLivraison cible, Utilisateur acteur, String motif) {
@@ -51,20 +52,20 @@ public class CommandeWorkflow {
             throw MarketplaceException.conflit("Action impossible : la commande est au statut " + ancien + ".");
         commande.setStatut(cible);
         historique.save(new HistoriqueStatut(commande, ancien, cible, acteur, motif));
-        publier(commande, ancien);
+        publier(commande, ancien, acteur);
     }
 
     /** Evenement sans changement de statut (ex. delai ajuste) : trace dans l'historique avec ancien = nouveau. */
     public void noter(Livraison commande, Utilisateur acteur, String motif) {
         historique.save(new HistoriqueStatut(commande, commande.getStatut(), commande.getStatut(), acteur, motif));
-        publier(commande, commande.getStatut());
+        publier(commande, commande.getStatut(), acteur);
     }
 
-    private void publier(Livraison commande, StatutLivraison ancien) {
+    private void publier(Livraison commande, StatutLivraison ancien, Utilisateur acteur) {
         Partenaire p = commande.getPartenaire();
         Livreur livreur = commande.getLivreur();
         evenements.publishEvent(new CommandeStatutChange(commande.getId(), p == null ? null : p.getId(), p == null ? null : p.getEmail(),
                 commande.getClient().getId(), commande.getClient().getEmail(), livreur == null ? null : livreur.getEmail(),
-                ancien, commande.getStatut()));
+                ancien, commande.getStatut(), acteur == null ? null : acteur.getRole()));
     }
 }

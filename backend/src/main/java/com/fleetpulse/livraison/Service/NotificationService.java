@@ -50,6 +50,7 @@ public class NotificationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifier(CommandeStatutChange e) {
         if (e.ancien() == e.nouveau()) return;   // simple note dans l'historique (ex. delai ajuste)
+        if (e.acteurRole() == com.fleetpulse.livraison.Model.enums.Role.CLIENT) return;   // le client sait ce qu'il vient de faire
         try {
             Livraison c = commandes.findById(e.commandeId()).orElse(null);
             if (c == null) return;

@@ -129,3 +129,15 @@ export interface LoginResponse {
   type: string;
   expiresInMs: number;
 }
+
+// Sprint 3 (US-311) : interventions du responsable sur une commande, miroir de GestionCommandeDto.java
+export type ActionResponsable = 'ANNULER' | 'VALIDER_COLLECTE' | 'VALIDER_REMISE';
+export type ModeRemise = 'QR' | 'CODE' | 'MANUELLE';
+export interface EtapeHistorique { ancien: StatutLivraison | null; nouveau: StatutLivraison; acteurRole: string | null; motif: string | null; date: string }
+export interface SuiviResponsable {
+  commandeId: number; codeSuivi: string; statut: StatutLivraison; livreurPrenom: string | null;
+  recupereeLe: string | null; livreeLe: string | null; montantAttendu: number; montantEncaisse: number | null;
+  ecartEncaissement: number | null; motifEcart: string | null; modeRemise: ModeRemise | null;
+  annuleeLe: string | null; motifAnnulation: string | null;
+  actions: ActionResponsable[]; historique: EtapeHistorique[];
+}

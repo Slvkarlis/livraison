@@ -9,6 +9,7 @@ import com.fleetpulse.livraison.Model.*;
 import com.fleetpulse.livraison.Model.enums.Role;
 import com.fleetpulse.livraison.Model.enums.StatutLivraison;
 import com.fleetpulse.livraison.Repository.HistoriqueStatutRepository;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,7 +41,7 @@ class CommandeWorkflowTest {
         assertEquals(REFUSEE, h.getValue().getNouveau());
         assertEquals(Role.PARTENAIRE, h.getValue().getActeurRole());
         assertEquals("RUPTURE", h.getValue().getMotif());
-        verify(evenements).publishEvent(new CommandeStatutChange(1L, 3L, "partenaire3@test", 7L, "client@test", null, PENDING_PARTNER, REFUSEE));
+        verify(evenements).publishEvent(new CommandeStatutChange(1L, 3L, "partenaire3@test", 7L, "client@test", null, PENDING_PARTNER, REFUSEE, Role.PARTENAIRE));
     }
 
     @Test void cheminCompletDuSprint2bis() {
@@ -51,12 +52,15 @@ class CommandeWorkflowTest {
         verify(historique, times(5)).save(any());
         assertTrue(CommandeWorkflow.autorisee(ACCEPTEE, PRETE), "prête sans début de préparation explicite");
         assertTrue(CommandeWorkflow.autorisee(ACCEPTEE, ANNULEE));
+        // US-311 : le responsable peut annuler jusqu'a la remise (le client reste limite par CommandeService.ANNULABLES)
+        for (StatutLivraison s : List.of(EN_PREPARATION, PRETE, AFFECTEE, RECUPEREE, A_PROXIMITE))
+            assertTrue(CommandeWorkflow.autorisee(s, ANNULEE), s.name());
     }
 
     @Test void transitionsInterditesRefuseesSansEffet() {
         StatutLivraison[][] interdites = {
                 { PENDING_PARTNER, PRETE }, { PENDING_PARTNER, RECUPEREE }, { REFUSEE, ACCEPTEE }, { ANNULEE, ACCEPTEE },
-                { EN_PREPARATION, ANNULEE }, { PRETE, ANNULEE }, { AFFECTEE, PRETE }, { LIVREE, ANNULEE }, { RECUPEREE, PENDING_PARTNER } };
+                { AFFECTEE, PRETE }, { LIVREE, ANNULEE }, { ANNULEE, LIVREE }, { AFFECTEE, LIVREE }, { RECUPEREE, PENDING_PARTNER } };
         for (StatutLivraison[] t : interdites) {
             Livraison l = commande(t[0]);
             MarketplaceException e = assertThrows(MarketplaceException.class, () -> workflow.transition(l, t[1], acteur(), null),

@@ -44,7 +44,8 @@ public record LivraisonResponse(
         String livreurPrenom,              // US-2B8 : coursier charge de la collecte
         Instant recupereeLe,               // US-2B9 : colis pris en charge a la boutique
         Instant livreeLe,                  // US-306 : remise validee
-        java.math.BigDecimal montantEncaisse) {
+        java.math.BigDecimal montantEncaisse,
+        boolean annuleeParService) {       // US-311 : annulee par le responsable, pas par le client
 
     public static LivraisonResponse from(Livraison livraison) {
         return new LivraisonResponse(
@@ -73,7 +74,7 @@ public record LivraisonResponse(
                 livraison.heurePretePrevue(), livraison.getPreparationDebutLe(), livraison.getPreteLe(),
                 livraison.getAnnuleeLe(), livraison.getMotifAnnulation(),
                 livraison.getLivreur() == null ? null : livraison.getLivreur().getPrenom(), livraison.getRecupereeLe(),
-                livraison.getLivreeLe(), livraison.getMontantEncaisse());
+                livraison.getLivreeLe(), livraison.getMontantEncaisse(), Boolean.TRUE.equals(livraison.getAnnuleeParService()));
     }
 
     /** Commandes creees avant la tarification automatique : seul montantACollecter etait renseigne. */

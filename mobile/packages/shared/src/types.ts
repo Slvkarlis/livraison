@@ -97,6 +97,8 @@ export interface Livraison {
   /** US-306 : remise validee, montant reellement encaisse. */
   livreeLe: string | null;
   montantEncaisse: number | null;
+  /** US-311 : annulee par le service client (responsable), pas par le client. */
+  annuleeParService: boolean;
 }
 
 export interface LoginResponse {

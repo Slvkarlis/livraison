@@ -41,27 +41,47 @@ public class RemiseLivreurService {
             throw MarketplaceException.conflit("Récupérez d'abord le colis à la boutique.");
         if (r == null) throw new IllegalArgumentException("Indiquez le montant encaissé et la preuve de remise.");
 
+        Encaissement encaissement = encaissement(c, r.montantEncaisse(), r.motifEcart());
+        ModeRemise mode = verifierPreuve(c, r.preuve());
+        enregistrer(c, livreur, encaissement, mode, "Remise validée par " + libelle(mode));
+        return MissionVue.from(c);
+    }
+
+    /**
+     * US-311 : remise validee par le responsable sans preuve du client (telephone du client hors service...).
+     * Meme controle du montant ; le motif est obligatoire et trace dans l'historique.
+     */
+    public void validerManuellement(Livraison c, com.fleetpulse.livraison.Model.Utilisateur responsable, BigDecimal montant,
+                                    String motifEcart, String motif) {
+        if (!AffectationMissionService.EN_ROUTE_VERS_CLIENT.contains(c.getStatut()))
+            throw MarketplaceException.conflit("La remise se valide quand le colis est à bord du livreur.");
+        enregistrer(c, responsable, encaissement(c, montant, motifEcart), ModeRemise.MANUELLE, "Remise validée par le responsable : " + motif);
+    }
+
+    record Encaissement(BigDecimal montant, BigDecimal ecart, String motifEcart) { }
+
+    /** Montant verifie avant la preuve : une erreur de saisie ne consomme pas d'essai de code. */
+    private static Encaissement encaissement(Livraison c, BigDecimal saisi, String motifEcart) {
         BigDecimal attendu = montantAttendu(c);
-        BigDecimal encaisse = montant(r.montantEncaisse());
+        BigDecimal encaisse = montant(saisi);
         BigDecimal ecart = encaisse.subtract(attendu);
-        String motif = r.motifEcart() == null ? null : r.motifEcart().trim();
+        String motif = motifEcart == null ? null : motifEcart.trim();
         if (ecart.signum() != 0 && (motif == null || motif.length() < MOTIF_MIN))
             throw new IllegalArgumentException("Le montant encaissé (" + encaisse.toPlainString() + " DT) diffère du total ("
                     + attendu.toPlainString() + " DT) : indiquez le motif de l'écart.");
+        return new Encaissement(encaisse, ecart, ecart.signum() == 0 ? null : motif);
+    }
 
-        ModeRemise mode = verifierPreuve(c, r.preuve());
-
-        c.setMontantEncaisse(encaisse);
-        c.setEcartEncaissement(ecart);
-        c.setMotifEcart(ecart.signum() == 0 ? null : motif);
+    private void enregistrer(Livraison c, com.fleetpulse.livraison.Model.Utilisateur acteur, Encaissement e, ModeRemise mode, String motif) {
+        c.setMontantEncaisse(e.montant());
+        c.setEcartEncaissement(e.ecart());
+        c.setMotifEcart(e.motifEcart());
         c.setModeRemise(mode);
         c.setLivreeLe(Instant.now().truncatedTo(ChronoUnit.MICROS));
         c.setRemiseNonce(null);   // usage unique : plus aucun QR accepte
         if (c.getModePaiement() == ModePaiement.COD) c.setStatutPaiement(StatutPaiement.ENCAISSE);
-        workflow.transition(c, StatutLivraison.LIVREE, livreur, ecart.signum() == 0
-                ? "Remise validée par " + libelle(mode)
-                : "Remise validée par " + libelle(mode) + ", écart de " + ecart.toPlainString() + " DT : " + motif);
-        return MissionVue.from(c);
+        workflow.transition(c, StatutLivraison.LIVREE, acteur, e.ecart().signum() == 0 ? motif
+                : motif + ", écart de " + e.ecart().toPlainString() + " DT : " + e.motifEcart());
     }
 
     private ModeRemise verifierPreuve(Livraison c, String preuve) {

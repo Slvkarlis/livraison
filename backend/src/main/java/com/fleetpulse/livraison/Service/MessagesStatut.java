@@ -42,7 +42,10 @@ public final class MessagesStatut {
                     + (c.getMotifRefus() == null ? "sans motif" : c.getMotifRefus().libelle())
                     + (c.getCommentaireRefus() == null || c.getCommentaireRefus().isBlank() ? "" : " — " + c.getCommentaireRefus())
                     + ". Aucun montant ne vous sera demandé.");
-            case ANNULEE -> new Message("Commande annulée" + code, "Votre commande a été annulée. Aucun montant ne vous sera demandé.");
+            // Le client n'est pas notifie de sa propre annulation : ici, annulation par le service client (US-311)
+            case ANNULEE -> new Message("Commande annulée" + code, "Votre commande a été annulée par notre service client"
+                    + (c.getMotifAnnulation() == null || c.getMotifAnnulation().isBlank() ? "" : " : " + c.getMotifAnnulation())
+                    + ". Aucun montant ne vous sera demandé.");
             default -> null;
         });
     }
