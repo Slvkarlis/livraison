@@ -24,6 +24,7 @@ public class EspaceLivreurService {
     private final ZoneService zones;
     private final AffectationMissionService affectationMissions;
     private final CommandeWorkflow workflow;
+    private final CodeRemiseService codesRemise;
 
     @Transactional(readOnly = true)
     public DisponibiliteVue disponibilite(String email) {
@@ -88,6 +89,7 @@ public class EspaceLivreurService {
 
         commande.setRecupereeLe(Instant.now().truncatedTo(ChronoUnit.MICROS));
         workflow.transition(commande, StatutLivraison.RECUPEREE, livreur, "Colis scanné à la boutique");
+        codesRemise.creerEtEnvoyer(commande);   // US-310 : code de secours envoye au client des que le colis est en route
         return MissionVue.from(commande);
     }
 

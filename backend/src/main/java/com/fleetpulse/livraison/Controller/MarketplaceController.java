@@ -17,6 +17,7 @@ public class MarketplaceController {
     private final AdresseService adresses;
     private final CommandeService commandes;
     private final SuiviCommandeService suivi;
+    private final RemiseClientService remise;
     @GetMapping("/admin/zones") @PreAuthorize("hasAnyRole('ADMIN','OPERATIONS')")
     public List<ZoneVue> zones() { return zones.lister(); }
     @PostMapping("/admin/zones") @ResponseStatus(HttpStatus.CREATED) @PreAuthorize("hasAnyRole('ADMIN','OPERATIONS')")
@@ -65,5 +66,15 @@ public class MarketplaceController {
     @GetMapping("/commandes/{id}/suivi") @PreAuthorize("hasRole('CLIENT')")
     public com.fleetpulse.livraison.Dto.SuiviDto.SuiviCommandeVue suivi(Authentication a, @PathVariable Long id) {
         return suivi.suivi(a.getName(), id);
+    }
+    // US-305 : QR dynamique a usage unique, a montrer au livreur
+    @GetMapping("/commandes/{id}/qr-remise") @PreAuthorize("hasRole('CLIENT')")
+    public com.fleetpulse.livraison.Dto.RemiseDto.QrRemiseVue qrRemise(Authentication a, @PathVariable Long id) {
+        return remise.qr(a.getName(), id);
+    }
+    // US-310 : nouveau code de remise a 6 chiffres par SMS
+    @PostMapping("/commandes/{id}/code-remise") @PreAuthorize("hasRole('CLIENT')")
+    public com.fleetpulse.livraison.Dto.RemiseDto.CodeRemiseEnvoye codeRemise(Authentication a, @PathVariable Long id) {
+        return remise.renvoyerCode(a.getName(), id);
     }
 }

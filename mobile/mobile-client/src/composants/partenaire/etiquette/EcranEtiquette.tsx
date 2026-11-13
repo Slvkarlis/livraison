@@ -7,7 +7,7 @@ import { SvgXml } from 'react-native-svg';
 import { theme } from '../../../theme';
 import { etiquetteHtml } from './etiquetteHtml';
 import { imprimerEtiquette } from './imprimerEtiquette';
-import { genererQrSvg } from './qrSvg';
+import { genererQrSvg } from '../../qrSvg';
 
 const TAILLE_QR = 240;
 

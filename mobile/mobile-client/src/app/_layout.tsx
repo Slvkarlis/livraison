@@ -57,6 +57,7 @@ function Navigation() {
           options={{ title: 'Adresse de livraison', headerStyle: { backgroundColor: theme.surface } }}
         />
         <Stack.Screen name="commande/[id]" options={{ title: '', headerTransparent: true }} />
+        <Stack.Screen name="commande/remise/[id]" options={{ title: 'Remise du colis' }} />
       </Stack.Protected>
     </Stack></MarcheSession>
     </TempsReelProvider>

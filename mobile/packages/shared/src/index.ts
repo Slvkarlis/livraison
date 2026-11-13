@@ -12,3 +12,4 @@ export * from './sprint2bis';
 export * from './tempsReel';
 export * from './espaceLivreur';
 export * from './suivi';
+export * from './remise';

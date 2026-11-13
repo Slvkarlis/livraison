@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 
 /**
- * Dessine le QR de collecte en SVG (texte).
+ * Dessine un QR en SVG (texte) : etiquette du colis (US-2B10) et QR de remise du client (US-305).
  * Le meme SVG sert a l'affichage (SvgXml) et a l'impression (insere dans le HTML de l'etiquette).
  */
 export function genererQrSvg(contenu: string): Promise<string> {

@@ -83,3 +83,32 @@ Markers: **A** added · **M** modified · **D** deleted · **R** renamed/moved.
 
 **Web back-office**
 - **M** `W/pages/Zones.tsx`: "Vitesse moyenne des livreurs" field and column.
+
+---
+
+## feat(US-305, US-310): single-use handover QR for the client and 6-digit SMS fallback code
+
+**Backend**
+- **A** `B/Service/JetonRemise.java`: QR content `FLEETPULSE-REMISE|<order code>|<nonce>|<expiry>|<HMAC-SHA256>`, valid 2 minutes; `verifier()` refuses a forged, expired, replaced (older nonce) or other order's QR with a readable message.
+- **A** `B/Service/SecretRemise.java`: HMAC key (`app.remise.secret`, defaults to the JWT secret, 32 characters minimum).
+- **A** `B/Model/CodeRemise.java` + **A** `B/Repository/CodeRemiseRepository.java`: one row per order, BCrypt hash of the 6-digit code, attempts, number of sends, last send. Separate table so failed attempts are counted in their own transaction while the order row is locked.
+- **A** `B/Service/CodeRemiseService.java`: `creerEtEnvoyer` (at pickup), `renvoyer` (1 minute apart, 4 sends max, 429 otherwise), `verifier` (`REQUIRES_NEW`, 5 attempts then blocked). The SMS (email if the client has no phone) leaves after commit; a sending failure doesn't cancel the pickup.
+- **A** `B/Service/RemiseClientService.java`: `qr()` gives a new QR each time (only the latest is valid); `renvoyerCode()`. Both only while the parcel is on board (409 otherwise), for the owning client (404 otherwise).
+- **A** `B/Dto/RemiseDto.java`: `QrRemiseVue`, `CodeRemiseEnvoye` (masked destination, next send time).
+- **M** `B/Model/Livraison.java`: `remiseNonce`, `remiseQrExpireLe`.
+- **M** `B/Service/EspaceLivreurService.java`: pickup sends the fallback code.
+- **M** `B/Controller/MarketplaceController.java`: `GET /api/commandes/{id}/qr-remise`, `POST /api/commandes/{id}/code-remise`.
+- **M** `backend/src/main/resources/application.properties`: `app.remise.secret` (env `APP_REMISE_SECRET`).
+- **A** `T/Service/JetonRemiseTest.java`: valid QR, expired, other order, replaced, forged expiry, other key, parcel label.
+- **A** `T/Sprint3RemiseClientTest.java`: QR only while en route, new QR each time, 2-minute validity, SMS at pickup with the code never stored in clear, resend delay and cap, access rules.
+
+**Client app**
+- **A** `C/composants/remise/EcranQrRemise.tsx`: the QR (renewed 20 s before expiry), "Commande livrée" when the handover is validated, and "Recevoir un code par SMS".
+- **A** `C/app/commande/remise/[id].tsx`: route. **M** `C/app/_layout.tsx`: screen "Remise du colis".
+- **M** `C/app/commande/[id].tsx`: "Afficher mon QR de remise" while the parcel is on board.
+- **R** `C/composants/partenaire/etiquette/qrSvg.ts` → `C/composants/qrSvg.ts`: now used by the label and the handover QR. **M** `EcranEtiquette.tsx`: import path.
+
+**Shared mobile**
+- **A** `S/remise.ts`: `QrRemise`, `CodeRemiseEnvoye`, `peutValiderRemise`, `delaiRenouvellementQr`, `creerApiRemiseClient`.
+- **M** `S/api.ts`, `S/index.ts`: export it.
+- **A** `scripts/remise.test.cjs`.

@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {
+  Bouton,
   Chargement,
   Ligne,
   MessageErreur,
@@ -15,11 +16,12 @@ import {
   messageArrivee,
   messageDecisionClient,
   peutAnnuler,
+  peutValiderRemise,
   useEvenementsCommandes,
   type HistoriqueEntree,
   type Livraison,
 } from '@fleetpulse/shared';
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AnnulationCommande } from '../../composants/AnnulationCommande';
@@ -113,6 +115,12 @@ export default function DetailCommande() {
         {livraison.statut === 'ANNULEE' && livraison.motifAnnulation ? (
           <Text style={styles.momentTexte}>Motif : {livraison.motifAnnulation}</Text>
         ) : null}
+        {peutValiderRemise(livraison.statut) ? (
+          <View style={styles.remise}>
+            <Bouton titre="Afficher mon QR de remise" onPress={() => router.push(`/commande/remise/${livraison.id}`)}
+              icone={<Ionicons name="qr-code-outline" size={20} color={theme.surAccent} />} />
+          </View>
+        ) : null}
         {livraison.partenaireId && peutAnnuler(livraison.statut) ? (
           <AnnulationCommande key={livraison.statut} commandeId={livraison.id} onAnnulee={() => void charger()} />
         ) : null}
@@ -167,6 +175,7 @@ const styles = StyleSheet.create({
     padding: 24,
     gap: 6,
   },
+  remise: { marginTop: 14 },
   eta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   etaTexte: { fontSize: 15, fontWeight: '700', color: theme.texte },
   adresse: { fontSize: 22, fontWeight: '800', color: theme.texte, letterSpacing: -0.4, marginTop: 10 },
