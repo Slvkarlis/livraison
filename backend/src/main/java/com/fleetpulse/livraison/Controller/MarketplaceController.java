@@ -16,6 +16,7 @@ public class MarketplaceController {
     private final CatalogueService catalogue;
     private final AdresseService adresses;
     private final CommandeService commandes;
+    private final SuiviCommandeService suivi;
     @GetMapping("/admin/zones") @PreAuthorize("hasAnyRole('ADMIN','OPERATIONS')")
     public List<ZoneVue> zones() { return zones.lister(); }
     @PostMapping("/admin/zones") @ResponseStatus(HttpStatus.CREATED) @PreAuthorize("hasAnyRole('ADMIN','OPERATIONS')")
@@ -59,5 +60,10 @@ public class MarketplaceController {
     @GetMapping("/commandes/{id}/historique") @PreAuthorize("hasRole('CLIENT')")
     public List<com.fleetpulse.livraison.Dto.CommandePartenaireDto.HistoriqueVue> historique(Authentication a, @PathVariable Long id) {
         return commandes.historique(a.getName(), id);
+    }
+    // US-302 / US-303 : position du coursier (colis a bord) et heure d'arrivee estimee
+    @GetMapping("/commandes/{id}/suivi") @PreAuthorize("hasRole('CLIENT')")
+    public com.fleetpulse.livraison.Dto.SuiviDto.SuiviCommandeVue suivi(Authentication a, @PathVariable Long id) {
+        return suivi.suivi(a.getName(), id);
     }
 }

@@ -13,6 +13,7 @@ export type { CarteLeafletRef, Point } from './carteLeafletPage';
 type FenetreCarte = Window & {
   allerA?: (latitude: number, longitude: number, zoom: number | null) => void;
   afficherMaPosition?: (latitude: number, longitude: number) => void;
+  placerLivreur?: (latitude: number, longitude: number) => void;
 };
 
 export const CarteLeaflet = forwardRef<CarteLeafletRef, CarteLeafletProps>(function CarteLeaflet(
@@ -33,6 +34,7 @@ export const CarteLeaflet = forwardRef<CarteLeafletRef, CarteLeafletProps>(funct
   useImperativeHandle(ref, () => ({
     allerA: ({ latitude, longitude }, niveau) => fenetre()?.allerA?.(latitude, longitude, niveau ?? null),
     afficherMaPosition: ({ latitude, longitude }) => fenetre()?.afficherMaPosition?.(latitude, longitude),
+    placerLivreur: ({ latitude, longitude }) => fenetre()?.placerLivreur?.(latitude, longitude),
   }), []);
 
   useEffect(() => {

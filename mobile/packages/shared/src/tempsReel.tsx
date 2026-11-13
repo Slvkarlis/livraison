@@ -4,13 +4,17 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { Platform } from 'react-native';
 import { api, http } from './api';
 import { apiBaseUrl } from './config';
+import { lirePositionCommande, type PositionCommande } from './suivi';
 import type { StatutLivraison } from './types';
 
 /** Miroir de EvenementCommande.java ; ancien null = nouvelle commande. */
 export interface EvenementCommande { commandeId: number; ancien: StatutLivraison | null; nouveau: StatutLivraison }
 type Ecouteur = (evenement: EvenementCommande) => void;
+type EcouteurPosition = (position: PositionCommande) => void;
 
 export const FILE_COMMANDES = '/user/queue/commandes';
+/** US-302 : positions du coursier, recues par le client dont le colis est a bord. */
+export const FILE_POSITIONS = '/user/queue/positions';
 /** http://hote:8083 -> ws://hote:8083/ws (https -> wss). */
 export function urlTempsReel(base: string): string {
   return base.replace(/^http/, 'ws').replace(/\/+$/, '') + '/ws';
@@ -24,12 +28,17 @@ export function lireEvenement(corps: string): EvenementCommande | null {
   }
 }
 
-interface TempsReel { connecte: boolean; abonner: (fn: Ecouteur) => () => void }
-const TempsReelContext = createContext<TempsReel>({ connecte: false, abonner: () => () => {} });
+interface TempsReel {
+  connecte: boolean;
+  abonner: (fn: Ecouteur) => () => void;
+  abonnerPositions: (fn: EcouteurPosition) => () => void;
+}
+const TempsReelContext = createContext<TempsReel>({ connecte: false, abonner: () => () => {}, abonnerPositions: () => () => {} });
 
 /** Une seule connexion par application, ouverte tant que actif (utilisateur connecte et compte actif). */
 export function TempsReelProvider({ actif, children }: { actif: boolean; children: ReactNode }) {
   const ecouteurs = useRef(new Set<Ecouteur>());
+  const ecouteursPositions = useRef(new Set<EcouteurPosition>());
   const [connecte, setConnecte] = useState(false);
 
   useEffect(() => {
@@ -51,6 +60,10 @@ export function TempsReelProvider({ actif, children }: { actif: boolean; childre
           const evenement = lireEvenement(message.body);
           if (evenement) ecouteurs.current.forEach((fn) => fn(evenement));
         });
+        client.subscribe(FILE_POSITIONS, (message) => {
+          const position = lirePositionCommande(message.body);
+          if (position) ecouteursPositions.current.forEach((fn) => fn(position));
+        });
       },
       // Jeton refuse (souvent expire) : un appel API declenche le renouvellement, la reconnexion suivante l'utilise
       onStompError: () => { void api.me().catch(() => {}); },
@@ -65,7 +78,12 @@ export function TempsReelProvider({ actif, children }: { actif: boolean; childre
     return () => { ecouteurs.current.delete(fn); };
   }, []);
 
-  return <TempsReelContext.Provider value={{ connecte, abonner }}>{children}</TempsReelContext.Provider>;
+  const abonnerPositions = useCallback((fn: EcouteurPosition) => {
+    ecouteursPositions.current.add(fn);
+    return () => { ecouteursPositions.current.delete(fn); };
+  }, []);
+
+  return <TempsReelContext.Provider value={{ connecte, abonner, abonnerPositions }}>{children}</TempsReelContext.Provider>;
 }
 
 /** Appelle fn a chaque changement de statut d'une commande de l'utilisateur. */
@@ -74,6 +92,14 @@ export function useEvenementsCommandes(fn: Ecouteur) {
   const courant = useRef(fn);
   useEffect(() => { courant.current = fn; });
   useEffect(() => abonner((e) => courant.current(e)), [abonner]);
+}
+
+/** US-302 : appelle fn a chaque position du coursier transportant un colis de l'utilisateur. */
+export function usePositionsLivreur(fn: EcouteurPosition) {
+  const { abonnerPositions } = useContext(TempsReelContext);
+  const courant = useRef(fn);
+  useEffect(() => { courant.current = fn; });
+  useEffect(() => abonnerPositions((p) => courant.current(p)), [abonnerPositions]);
 }
 
 export function useTempsReelConnecte(): boolean {

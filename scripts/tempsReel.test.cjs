@@ -15,6 +15,7 @@ const factices = {
   'react-native': { Platform: { OS: 'web' } },
   './api': { api: {}, http: {} },
   './config': { apiBaseUrl: () => '' },
+  './suivi': { lirePositionCommande: () => null },
 };
 const m = { exports: {} };
 new Function('module', 'exports', 'require', code)(m, m.exports, (id) => factices[id] ?? require(id));

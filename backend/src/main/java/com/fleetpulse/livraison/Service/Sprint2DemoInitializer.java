@@ -29,7 +29,7 @@ public class Sprint2DemoInitializer implements CommandLineRunner {
         if (!donnees || !mode.estActif()) return;
         // Une base déjà couverte conserve ses zones ; pas de remplacement ni réinitialisation de compte.
         if (zones.count() == 0) zoneService.enregistrer(null, new ZoneRequest("Tunis centre démo", List.of(
-                new Position(36.77, 10.13), new Position(36.77, 10.23), new Position(36.85, 10.23), new Position(36.85, 10.13)), new BigDecimal("3.500")));
+                new Position(36.77, 10.13), new Position(36.77, 10.23), new Position(36.85, 10.23), new Position(36.85, 10.13)), new BigDecimal("3.500"), null));
         creerPartenaire("restaurant@sprint2.demo", "Chez Amira", "Restaurant", 36.805, 10.18,
                 List.of("Couscous", "Salade tunisienne", "Brik", "Sandwich", "Citronnade"));
         creerPartenaire("epicerie@sprint2.demo", "Épicerie du centre", "Épicerie", 36.81, 10.19,

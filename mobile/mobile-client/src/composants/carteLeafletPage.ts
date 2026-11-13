@@ -11,6 +11,8 @@ export type Point = { latitude: number; longitude: number };
 export type CarteLeafletRef = {
   allerA: (point: Point, zoom?: number) => void;
   afficherMaPosition: (point: Point) => void;
+  /** US-302 : place (ou deplace) le coursier et cadre la carte sur lui et le point central. */
+  placerLivreur: (point: Point) => void;
 };
 
 export type CarteLeafletProps = {
@@ -48,6 +50,9 @@ export function pageHtml(centre: Point, zoom: number, interactive: boolean, marq
   .leaflet-control-attribution { font-size: 9px; background: rgba(255,255,255,0.7) !important; }
   .ma-position { width: 16px; height: 16px; border-radius: 50%; background: #2563EB;
     border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(37,99,235,0.2); box-sizing: border-box; }
+  .livreur { width: 34px; height: 34px; border-radius: 50%; background: #111827; border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35); box-sizing: border-box; display: flex; align-items: center;
+    justify-content: center; font-size: 17px; line-height: 1; }
 </style>
 </head><body>
 <div id="carte"></div>
@@ -90,6 +95,15 @@ export function pageHtml(centre: Point, zoom: number, interactive: boolean, marq
       var icone = L.divIcon({ html: '<div class="ma-position"></div>', className: '', iconSize: [16, 16] });
       if (maPosition) maPosition.setLatLng([lat, lng]);
       else maPosition = L.marker([lat, lng], { icon: icone, interactive: false }).addTo(carte);
+    };
+    var livreur = null;
+    window.placerLivreur = function (lat, lng) {
+      if (livreur) livreur.setLatLng([lat, lng]);
+      else livreur = L.marker([lat, lng], {
+        icon: L.divIcon({ html: '<div class="livreur">🛵</div>', className: '', iconSize: [34, 34], iconAnchor: [17, 17] }),
+        interactive: false, zIndexOffset: 1000
+      }).addTo(carte);
+      carte.fitBounds(L.latLngBounds([[cfg.latitude, cfg.longitude], [lat, lng]]), { padding: [48, 48], maxZoom: 16 });
     };
     window.allerA = function (lat, lng, zoom) {
       carte.flyTo([lat, lng], zoom || carte.getZoom(), { duration: 0.6 });

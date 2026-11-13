@@ -27,6 +27,8 @@ public class CommandeWorkflow {
         TRANSITIONS.put(EN_PREPARATION, EnumSet.of(PRETE));
         TRANSITIONS.put(PRETE, EnumSet.of(AFFECTEE));
         TRANSITIONS.put(AFFECTEE, EnumSet.of(RECUPEREE));
+        // Sprint 3 : Last Mile
+        TRANSITIONS.put(RECUPEREE, EnumSet.of(A_PROXIMITE));
     }
 
     private final HistoriqueStatutRepository historique;

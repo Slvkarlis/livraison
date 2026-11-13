@@ -1,7 +1,8 @@
 /** Contrats et validations sans dépendance native, communs au web et au mobile. */
 export interface Position { latitude: number; longitude: number }
 export interface Zone extends ZoneSaisie { id: number; partenaires: number }
-export interface ZoneSaisie { nom: string; polygone: Position[]; fraisLivraison: number }
+/** vitesseMoyenneKmh (US-303) : base de l'ETA par regles ; 20 km/h par defaut. */
+export interface ZoneSaisie { nom: string; polygone: Position[]; fraisLivraison: number; vitesseMoyenneKmh?: number }
 export interface Commerce { id: number; nomCommerce: string; categorie: string; adresse: string; ouvert: boolean; zoneId: number | null; zoneNom: string | null }
 export interface Produit { id: number; partenaireId: number; nom: string; prix: number; disponible: boolean }
 export interface Adresse extends Position { id: number; libelle: string; adresse: string }

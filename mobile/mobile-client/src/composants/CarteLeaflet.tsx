@@ -29,6 +29,8 @@ export const CarteLeaflet = forwardRef<CarteLeafletRef, CarteLeafletProps>(funct
     afficherMaPosition: ({ latitude, longitude }) =>
       vue.current?.injectJavaScript(
         `window.afficherMaPosition && window.afficherMaPosition(${latitude}, ${longitude}); true;`),
+    placerLivreur: ({ latitude, longitude }) =>
+      vue.current?.injectJavaScript(`window.placerLivreur && window.placerLivreur(${latitude}, ${longitude}); true;`),
   }), []);
 
   function surMessage(event: WebViewMessageEvent) {

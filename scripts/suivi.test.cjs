@@ -51,3 +51,31 @@ test('Envoi de la position : route et précision', async () => {
     ['PUT /api/livreur/position', { latitude: 36.8, longitude: 10.18, precision: null }],
   ]);
 });
+
+test('Message d\'arrivée : heure et minutes restantes', () => {
+  const maintenant = new Date(2026, 10, 13, 14, 0, 0);
+  assert.equal(suivi.messageArrivee(null, maintenant), null);
+  assert.equal(suivi.messageArrivee(new Date(2026, 10, 13, 14, 12, 20).toISOString(), maintenant), 'Arrivée estimée vers 14:12 · dans 12 min');
+  assert.equal(suivi.messageArrivee(new Date(2026, 10, 13, 14, 0, 40).toISOString(), maintenant), 'Arrivée imminente (vers 14:00)');
+});
+
+test('Message temps réel de position : lecture tolérante', () => {
+  assert.deepEqual(suivi.lirePositionCommande('{"commandeId":3,"latitude":36.8,"longitude":10.1,"date":"d","arriveeEstimee":null}'),
+    { commandeId: 3, latitude: 36.8, longitude: 10.1, date: 'd', arriveeEstimee: null });
+  assert.equal(suivi.lirePositionCommande('{"commandeId":3}'), null);
+  assert.equal(suivi.lirePositionCommande('pas du json'), null);
+  assert.ok(suivi.STATUTS_SUIVIS.includes('A_PROXIMITE') && !suivi.STATUTS_SUIVIS.includes('LIVREE'));
+});
+
+test('Suivi : route du client', async () => {
+  const appels = [];
+  await suivi.creerApiSuivi(async (m, r) => { appels.push(m + ' ' + r); }).suiviCommande(9);
+  assert.deepEqual(appels, ['GET /api/commandes/9/suivi']);
+});
+
+test('Le client est prévenu quand le livreur arrive', () => {
+  const sprint2bis = charger('sprint2bis');
+  const base = { nomPartenaire: 'Chez Amira', pretePrevueLe: null, motifRefus: null, commentaireRefus: null, livreurPrenom: 'Sami' };
+  assert.equal(sprint2bis.messageDecisionClient({ ...base, statut: 'A_PROXIMITE' }), 'Sami arrive : il est à moins de 300 m.');
+  assert.equal(sprint2bis.libelleEtapeClient({ ancien: 'RECUPEREE', nouveau: 'A_PROXIMITE' }), 'Le livreur arrive');
+});

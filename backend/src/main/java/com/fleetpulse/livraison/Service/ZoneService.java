@@ -21,6 +21,7 @@ public class ZoneService {
     private final jakarta.persistence.EntityManager entityManager;
     private static final GeometryFactory GEOMETRY = new GeometryFactory(new PrecisionModel(), 4326);
 
+    static final double VITESSE_MIN_KMH = 5, VITESSE_MAX_KMH = 80;
     public static void position(Double latitude, Double longitude) {
         if (latitude == null || longitude == null || !Double.isFinite(latitude) || !Double.isFinite(longitude)
                 || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180)
@@ -61,6 +62,9 @@ public class ZoneService {
         if (r == null || r.nom() == null || r.nom().isBlank() || r.nom().trim().length() > 100)
             throw new IllegalArgumentException("Nom de zone obligatoire (100 caractères maximum).");
         BigDecimal frais = argent(r.fraisLivraison(), true);
+        Double vitesse = r.vitesseMoyenneKmh();
+        if (vitesse != null && (!Double.isFinite(vitesse) || vitesse < VITESSE_MIN_KMH || vitesse > VITESSE_MAX_KMH))
+            throw new IllegalArgumentException("Vitesse moyenne : de " + (int) VITESSE_MIN_KMH + " à " + (int) VITESSE_MAX_KMH + " km/h.");
         Polygon poly = polygone(r.polygone());
         for (Zone autre : zones.findAllByOrderByIdAsc()) {
             if (!autre.getId().equals(id) && poly.getEnvelopeInternal().intersects(autre.getPolygone().getEnvelopeInternal())
@@ -70,6 +74,7 @@ public class ZoneService {
         Zone z = id == null ? new Zone() : zones.findById(id).orElseThrow(MarketplaceException::absent);
         BigDecimal anciensFrais = z.getFraisLivraison();
         z.setNom(r.nom().trim()); z.definirPolygone(poly); z.setFraisLivraison(frais);
+        if (vitesse != null) z.setVitesseMoyenneKmh(vitesse);
         zones.saveAndFlush(z);
         // L'emplacement enregistré du commerce détermine son rattachement, jamais une zone arbitraire.
         for (Partenaire p : partenaires.findAll().stream().sorted(Comparator.comparing(Partenaire::getId)).toList()) {

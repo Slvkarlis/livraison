@@ -14,6 +14,10 @@ public class Zone {
     private Polygon polygone;
     @Column(nullable = false, precision = 14, scale = 3) private BigDecimal fraisLivraison;
     private double minLatitude, maxLatitude, minLongitude, maxLongitude;
+    /** US-303 : vitesse moyenne d'un coursier dans la zone (trafic urbain), base de l'ETA par regles. null : valeur par defaut. */
+    private Double vitesseMoyenneKmh;
+    public static final double VITESSE_PAR_DEFAUT_KMH = 20;
+    public double vitesseMoyenne() { return vitesseMoyenneKmh == null ? VITESSE_PAR_DEFAUT_KMH : vitesseMoyenneKmh; }
     public void definirPolygone(Polygon p) {
         polygone = p;
         Envelope e = p.getEnvelopeInternal();

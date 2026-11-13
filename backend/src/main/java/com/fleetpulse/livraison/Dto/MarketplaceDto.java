@@ -8,11 +8,12 @@ import java.util.*;
 public final class MarketplaceDto {
     private MarketplaceDto() { }
     public record Position(Double latitude, Double longitude) { }
-    public record ZoneRequest(String nom, List<Position> polygone, BigDecimal fraisLivraison) { }
-    public record ZoneVue(Long id, String nom, List<Position> polygone, BigDecimal fraisLivraison, long partenaires) {
+    /** vitesseMoyenneKmh (US-303) : facultative, la valeur actuelle (ou 20 km/h) est gardee si absente. */
+    public record ZoneRequest(String nom, List<Position> polygone, BigDecimal fraisLivraison, Double vitesseMoyenneKmh) { }
+    public record ZoneVue(Long id, String nom, List<Position> polygone, BigDecimal fraisLivraison, long partenaires, double vitesseMoyenneKmh) {
         public static ZoneVue from(Zone z, long n) {
             return new ZoneVue(z.getId(), z.getNom(), Arrays.stream(z.getPolygone().getCoordinates())
-                    .map(c -> new Position(c.y, c.x)).toList(), z.getFraisLivraison(), n);
+                    .map(c -> new Position(c.y, c.x)).toList(), z.getFraisLivraison(), n, z.vitesseMoyenne());
         }
     }
     public record ProduitRequest(String nom, BigDecimal prix, Boolean disponible) { }

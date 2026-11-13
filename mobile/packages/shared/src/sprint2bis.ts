@@ -25,6 +25,7 @@ const ETAPES_CLIENT: Partial<Record<StatutLivraison, string>> = {
   REFUSEE: 'Refusée par le commerce',
   PRETE: 'Prête, en attente du livreur',
   RECUPEREE: 'Récupérée par le livreur',
+  A_PROXIMITE: 'Le livreur arrive',
   ANNULEE: 'Annulée',
 };
 export function libelleEtapeClient(entree: Etape): string {
@@ -101,6 +102,7 @@ export function messageDecisionClient(c: {
   if (c.statut === 'PRETE') return `${commerce} : votre commande est prête. Un livreur va la récupérer.`;
   if (c.statut === 'AFFECTEE') return `${commerce} : ${c.livreurPrenom ?? 'un livreur'} va récupérer votre commande.`;
   if (c.statut === 'RECUPEREE') return `${c.livreurPrenom ?? 'Le livreur'} a récupéré votre commande. Elle est en route vers vous.`;
+  if (c.statut === 'A_PROXIMITE') return `${c.livreurPrenom ?? 'Le livreur'} arrive : il est à moins de 300 m.`;
   if (c.statut === 'ANNULEE') return 'Vous avez annulé cette commande. Aucun montant ne vous sera demandé.';
   if (c.statut === 'REFUSEE') {
     const motif = c.motifRefus ? libelleMotifRefus(c.motifRefus) : 'sans motif';

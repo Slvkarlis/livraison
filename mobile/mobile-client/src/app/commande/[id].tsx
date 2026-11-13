@@ -12,6 +12,7 @@ import {
   formatJour,
   formatMontant,
   libelleEtapeClient,
+  messageArrivee,
   messageDecisionClient,
   peutAnnuler,
   useEvenementsCommandes,
@@ -19,11 +20,12 @@ import {
   type Livraison,
 } from '@fleetpulse/shared';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AnnulationCommande } from '../../composants/AnnulationCommande';
-import { CarteLeaflet } from '../../composants/CarteLeaflet';
+import { CarteLeaflet, type CarteLeafletRef } from '../../composants/CarteLeaflet';
 import { FriseHistorique } from '../../composants/FriseHistorique';
+import { useSuiviLivraison } from '../../composants/suivi/useSuiviLivraison';
 import { theme } from '../../theme';
 
 export default function DetailCommande() {
@@ -33,6 +35,14 @@ export default function DetailCommande() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [rafraichissement, setRafraichissement] = useState(false);
   const avis = message ?? null;
+  // US-302 / US-303 : coursier sur la carte (colis a bord) et heure d'arrivee estimee
+  const carte = useRef<CarteLeafletRef>(null);
+  const [cartePrete, setCartePrete] = useState(false);
+  const { suivi, maintenant } = useSuiviLivraison(livraison?.id ?? null, livraison?.statut ?? null);
+  const livreur = suivi?.livreur ?? null;
+  useEffect(() => {
+    if (cartePrete && livreur) carte.current?.placerLivreur({ latitude: livreur.latitude, longitude: livreur.longitude });
+  }, [cartePrete, livreur]);
 
   // Rechargee a chaque retour sur l'ecran, en tirant vers le bas et a chaque evenement temps reel de cette commande
   const charger = useCallback(async () => {
@@ -70,11 +80,18 @@ export default function DetailCommande() {
     >
       {/* Apercu fige : les gestes vont au defilement de la page, pas a la carte. */}
       <View pointerEvents="none">
-        <CarteLeaflet style={styles.carteGeo} centre={position} zoom={16} interactive={false} marqueur />
+        <CarteLeaflet ref={carte} style={styles.carteGeo} centre={position} zoom={16} interactive={false} marqueur
+          onPret={() => setCartePrete(true)} />
       </View>
 
       <View style={styles.feuille}>
         <PastilleStatut statut={livraison.statut} />
+        {suivi?.arriveeEstimee ? (
+          <View style={styles.eta}>
+            <Ionicons name="time-outline" size={18} color={theme.accent} />
+            <Text style={styles.etaTexte}>{messageArrivee(suivi.arriveeEstimee, maintenant)}</Text>
+          </View>
+        ) : null}
         <Text style={styles.adresse}>{livraison.adresse}</Text>
         <Text style={styles.code}>Commande {livraison.codeSuivi}</Text>
         {livraison.nomPartenaire ? <View style={styles.bloc}>
@@ -150,6 +167,8 @@ const styles = StyleSheet.create({
     padding: 24,
     gap: 6,
   },
+  eta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
+  etaTexte: { fontSize: 15, fontWeight: '700', color: theme.texte },
   adresse: { fontSize: 22, fontWeight: '800', color: theme.texte, letterSpacing: -0.4, marginTop: 10 },
   code: { fontSize: 13, color: theme.secondaire },
   moment: {

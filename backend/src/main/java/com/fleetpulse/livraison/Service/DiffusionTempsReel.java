@@ -10,6 +10,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component @RequiredArgsConstructor
 public class DiffusionTempsReel {
     static final String FILE = "/queue/commandes";
+    /** US-302 : positions du coursier, pour le client dont le colis est a bord. */
+    static final String FILE_POSITIONS = "/queue/positions";
     private final SimpMessagingTemplate messages;
 
     // AFTER_COMMIT : jamais de notification pour une modification annulee ; le client recharge des donnees deja visibles.
@@ -19,5 +21,10 @@ public class DiffusionTempsReel {
         if (e.partenaireEmail() != null) messages.convertAndSendToUser(e.partenaireEmail(), FILE, evenement);
         messages.convertAndSendToUser(e.clientEmail(), FILE, evenement);
         if (e.livreurEmail() != null) messages.convertAndSendToUser(e.livreurEmail(), FILE, evenement);
+    }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    public void diffuserPosition(SuiviPositionService.PositionDiffusee e) {
+        messages.convertAndSendToUser(e.clientEmail(), FILE_POSITIONS, e.position());
     }
 }

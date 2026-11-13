@@ -42,3 +42,43 @@ export function pointsTrajet(depart: Position, arrivee: Position, pasMetres = 50
     };
   });
 }
+
+/** Miroir de SuiviCommandeVue.java. livreur : connu seulement une fois le colis a bord. */
+export interface SuiviCommande {
+  commandeId: number; statut: StatutLivraison; livreurPrenom: string | null;
+  livreur: { latitude: number; longitude: number; date: string | null } | null;
+  commerce: Position | null; destination: Position;
+  pretePrevueLe: string | null; arriveeEstimee: string | null;
+}
+/** Message temps reel /user/queue/positions (miroir de PositionCommande.java). */
+export interface PositionCommande { commandeId: number; latitude: number; longitude: number; date: string; arriveeEstimee: string | null }
+
+/** Statuts pour lesquels le client consulte le suivi (ETA et, colis a bord, position du coursier). */
+export const STATUTS_SUIVIS: StatutLivraison[] = ['ACCEPTEE', 'EN_PREPARATION', 'PRETE', 'AFFECTEE', 'RECUPEREE', 'A_PROXIMITE'];
+
+/** US-303 : « Arrivée estimée vers 14:35 · dans 12 min ». */
+export function messageArrivee(arriveeEstimee: string | null, maintenant: Date = new Date()): string | null {
+  if (!arriveeEstimee) return null;
+  const arrivee = new Date(arriveeEstimee);
+  const minutes = Math.round((arrivee.getTime() - maintenant.getTime()) / 60000);
+  const heure = `${String(arrivee.getHours()).padStart(2, '0')}:${String(arrivee.getMinutes()).padStart(2, '0')}`;
+  if (minutes <= 1) return `Arrivée imminente (vers ${heure})`;
+  return `Arrivée estimée vers ${heure} · dans ${minutes} min`;
+}
+
+export function lirePositionCommande(corps: string): PositionCommande | null {
+  try {
+    const p = JSON.parse(corps) as Partial<PositionCommande>;
+    return typeof p.commandeId === 'number' && typeof p.latitude === 'number' && typeof p.longitude === 'number'
+      ? { commandeId: p.commandeId, latitude: p.latitude, longitude: p.longitude, date: p.date ?? '', arriveeEstimee: p.arriveeEstimee ?? null }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function creerApiSuivi(request: <T>(method: string, path: string, body?: unknown) => Promise<T>) {
+  return {
+    suiviCommande: (id: number) => request<SuiviCommande>('GET', '/api/commandes/' + id + '/suivi'),
+  };
+}
