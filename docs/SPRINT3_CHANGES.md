@@ -112,3 +112,9 @@ Markers: **A** added · **M** modified · **D** deleted · **R** renamed/moved.
 - **A** `S/remise.ts`: `QrRemise`, `CodeRemiseEnvoye`, `peutValiderRemise`, `delaiRenouvellementQr`, `creerApiRemiseClient`.
 - **M** `S/api.ts`, `S/index.ts`: export it.
 - **A** `scripts/remise.test.cjs`.
+
+---
+
+## fix(tests): ignore STOMP sessions already closed by the server in teardown
+
+- **M** `T/Sprint2bisTempsReelTest.java`, `T/Sprint3SuiviTest.java`: `@AfterEach` ignores `MessageDeliveryException` when the server closed the session between `isConnected()` and `disconnect()` (seen once in `abonnementHorsDeSesFilesRefuse`, where the refused subscription closes the session).

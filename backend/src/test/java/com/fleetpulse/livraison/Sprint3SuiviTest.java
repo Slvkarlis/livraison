@@ -27,7 +27,10 @@ class Sprint3SuiviTest extends ParcoursSprint3 {
     @Autowired LivreurRepository livreurs;
     final List<StompSession> sessions = new ArrayList<>();
 
-    @AfterEach void fermer() { sessions.forEach(s -> { if (s.isConnected()) s.disconnect(); }); }
+    // Le serveur peut fermer la session entre isConnected() et disconnect() (abonnement refuse) : rien a fermer alors
+    @AfterEach void fermer() {
+        sessions.forEach(s -> { try { if (s.isConnected()) s.disconnect(); } catch (org.springframework.messaging.MessageDeliveryException deja) { } });
+    }
 
     /** Le point precedent date d'une heure : le prochain envoi, meme lointain, n'est pas un saut GPS. */
     void vieillirPosition(Coursier c) {

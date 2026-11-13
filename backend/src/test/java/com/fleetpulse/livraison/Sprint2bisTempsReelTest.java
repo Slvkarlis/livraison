@@ -79,7 +79,10 @@ class Sprint2bisTempsReelTest {
         adresseId = appel(201, "POST", "/adresses", Map.of("libelle", "Maison", "adresse", "Rue", "latitude", lat + .5, "longitude", 10.5), client)
                 .get("id").asLong();
     }
-    @AfterEach void fermer() { sessions.forEach(s -> { if (s.isConnected()) s.disconnect(); }); }
+    // Le serveur peut fermer la session entre isConnected() et disconnect() (abonnement refuse) : rien a fermer alors
+    @AfterEach void fermer() {
+        sessions.forEach(s -> { try { if (s.isConnected()) s.disconnect(); } catch (org.springframework.messaging.MessageDeliveryException deja) { } });
+    }
 
     long commander() throws Exception {
         Map<String, Object> panier = new HashMap<>(Map.of("partenaireId", partenaireId, "adresseId", adresseId,
