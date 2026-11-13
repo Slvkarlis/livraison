@@ -25,15 +25,17 @@ Legend: ✅ done · 🟡 partial (see note) · ⬜ not started · ➖ descoped �
 | 1 | Authentification, rôles et gestion des comptes | 9 | 42 | ✅ Done | 42 |
 | 2 | Catalogue, zones et prise de commande | 9 | 44 | 🟡 Nearly done | ~39 |
 | 2 bis | Interface partenaire et First Mile | 10 (1 descoped) | 43 (40 in scope) | ✅ Done (device pass pending) | 40 |
-| 3 | Tracking temps réel et Last Mile | 8 | 42 | ⬜ **Next** | 0 |
-| 4 | Dispatch IA par lots | 7 | 45 | ⬜ | 0 |
+| 3 | Tracking temps réel et Last Mile | 8 | 42 | ✅ Done (live demo + device pass pending) | 42 |
+| 4 | Dispatch IA par lots | 7 | 45 | ⬜ **Next** | 0 |
 | 5 | Chaîne financière | 7 | 40 | ⬜ | 0 |
 | 6 | Dashboard BI et notation | 8 | 42 | ⬜ | 0 |
 | 7 | Échecs, litiges et pilote | 8 | 37 | ⬜ | 0 |
 | 8 | Prospection automatisée et prévision de la demande | 6 | 37 | ⬜ | 0 |
-| **Total** | | **72 (1 descoped)** | **372 (369 in scope)** | | **~121 (≈ 33 %)** |
+| **Total** | | **72 (1 descoped)** | **372 (369 in scope)** | | **~163 (≈ 44 %)** |
 
-Current verification on branch `sprint-2bis` (2026-11-06): backend `mvn test` **77/77**, Node tests **49/49**, mobile typecheck ✅, mobile ESLint ✅, web build ✅. Runs locally on MySQL 8.4 (Docker); every Sprint 2 bis step demoed in the browser preview. Sprint 2 bis report: [`SPRINT2BIS.md`](SPRINT2BIS.md).
+Current verification on branch `sprint-3` (2026-11-13): backend `mvn test` **106/106**, Node tests **67/67**, mobile typecheck ✅, mobile ESLint ✅, web build ✅. Not yet demoed on MySQL in the browser, no device pass. Sprint 3 report: [`SPRINT3.md`](SPRINT3.md).
+
+_Verification on branch `sprint-2bis` (2026-11-06): backend `mvn test` **77/77**, Node tests **49/49**, mobile typecheck ✅, mobile ESLint ✅, web build ✅. Runs locally on MySQL 8.4 (Docker); every Sprint 2 bis step demoed in the browser preview. Sprint 2 bis report: [`SPRINT2BIS.md`](SPRINT2BIS.md)._
 
 _2026-11-03 baseline on `corrections`: 53/53 backend, 32/32 Node; client app opened on an iPhone through Expo Go._
 
@@ -124,18 +126,18 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 
 ---
 
-## Sprint 3 — Tracking temps réel et Last Mile (42 pts) ⬜
+## Sprint 3 — Tracking temps réel et Last Mile (42 pts) ✅
 
-| ID | User story | Pts | Status |
-|---|---|---|---|
-| US-301 | Courier GPS sent during missions | 5 | ⬜ |
-| US-302 | Client follows the courier live on a map + status | 8 | ⬜ (the Leaflet WebView map already exists in the client app) |
-| US-303 | Rule-based ETA (prep time + distance ÷ zone average speed) | 3 | ⬜ |
-| US-304 | Notification on every status change | 5 | ⬜ (no push infrastructure) |
-| US-305 | Single-use dynamic client QR | 5 | ⬜ |
-| US-306 | Courier confirms the exact cash amount (gap must be justified), scans the client QR → `DELIVERED` | 8 | ⬜ |
-| US-310 | 6-digit SMS fallback code | 3 | ⬜ (reuse `CodeVerificationService`) |
-| US-311 | Responsable cancels / manually validates a pickup or handover, with recorded reason | 5 | ⬜ |
+| ID | User story | Pts | Status | Notes / evidence |
+|---|---|---|---|---|
+| US-301 | Courier GPS sent during missions | 5 | ✅ 🧪 | Every 10 s / 25 m while a mission is open; accuracy > 150 m or speed > 150 km/h rejected; track stored only during missions. Foreground only (background GPS needs a development build). Demo: simulated route. |
+| US-302 | Client follows the courier live on a map + status | 8 | ✅ 🧪 | STOMP `/user/queue/positions`, courier shown only once the parcel is on board; `A_PROXIMITE` at 300 m, once. |
+| US-303 | Rule-based ETA (prep time + distance ÷ zone average speed) | 3 | ✅ 🧪 | Haversine × 1.3, 2 min at the shop, zone speed editable in the back-office (default 20 km/h). |
+| US-304 | Notification on every status change | 5 | ✅ 🧪 | Inbox + live banner + Expo push. Push off by default and needs an EAS development build; no inbox screen in the app yet. |
+| US-305 | Single-use dynamic client QR | 5 | ✅ 🧪 | HMAC-signed, 2 min, only the latest valid, consumed by the handover. |
+| US-306 | Courier confirms the exact cash amount (gap must be justified), scans the client QR → `DELIVERED` | 8 | ✅ 🧪 | Status `LIVREE`, payment `ENCAISSE`; amount, gap, reason and mode recorded. |
+| US-310 | 6-digit SMS fallback code | 3 | ✅ 🧪 | Sent at pickup (email if no phone); BCrypt, 5 attempts; resend after 1 min, 4 sends max. Demo: code in the server log. |
+| US-311 | Responsable cancels / manually validates a pickup or handover, with recorded reason | 5 | ✅ 🧪 | OPERATIONS; reason required; history + audit; client told who cancelled and why. Web order detail shows the timeline. |
 
 ## Sprint 4 — Dispatch IA par lots (45 pts) ⬜
 
@@ -217,7 +219,7 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 
 ## Schedule check
 
-6 sprints (3 → 8, **243 pts**, plus ~5 pts left in Sprint 2) remain, about 12 weeks at 2 weeks per sprint. The team's capacity is 40–45 pts, which roughly matches the plan. Sprints 4 and 8 also need a Python AI service that **doesn't exist yet**, so start setting it up during Sprint 3 at the latest. See `docs/ASSESSMENT.md` for risks and recommendations.
+5 sprints (4 → 8, **201 pts**, plus ~5 pts left in Sprint 2) remain, about 10 weeks at 2 weeks per sprint. The team's capacity is 40–45 pts, which roughly matches the plan. Sprints 4 and 8 also need a Python AI service that **doesn't exist yet**: it was not started during Sprint 3, so it is the first task of Sprint 4. See `docs/ASSESSMENT.md` for risks and recommendations.
 
 ## Change log
 
@@ -228,3 +230,4 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 | 2026-11-03 | Partner decision revised: stays in the mobile app for now. |
 | 2026-11-06 | Sprint 2 bis done on branch `sprint-2bis` (9 US, 40 pts), report in `SPRINT2BIS.md`. Device pass pending. |
 | 2026-11-06 | Added `SPRINT_PLAN.md`: the general structure every sprint follows (plan template, steps, checks, commits, docs). |
+| 2026-11-13 | Sprint 3 done on branch `sprint-3` (8 US, 42 pts), report in `SPRINT3.md`. Live MySQL demo and device pass pending. |

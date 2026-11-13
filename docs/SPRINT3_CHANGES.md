@@ -207,3 +207,12 @@ Markers: **A** added · **M** modified · **D** deleted · **R** renamed/moved.
 
 **Shared mobile**
 - **M** `S/types.ts`: `Livraison.annuleeParService`. **M** `S/sprint2bis.ts`: "Commande annulée par notre service client : <reason>". **M** `scripts/suivi.test.cjs`.
+
+---
+
+## docs(sprint-3): sprint report and tracking update
+
+- **A** `docs/SPRINT3.md`: delivered stories, order lifecycle, API contracts, rules, schema, verification (106 backend / 67 Node tests; live demo and device pass still to do), demo scenario, limits and follow-ups.
+- **M** `docs/SPRINT_TRACKING.md`: Sprint 3 rows filled in, overview and totals (~163 pts done), current verification, schedule check, change log.
+- **M** `README.md`: link to the Sprint 3 report, new environment variables, Node test command for all scripts.
+- **M** `docs/SPRINT3_CHANGES.md`: this entry.

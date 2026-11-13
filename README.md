@@ -38,6 +38,11 @@ Le [rapport Sprint 2](docs/SPRINT2.md) décrit le catalogue, les zones, les adre
 les endpoints, la migration et les vérifications. Les frais viennent de la zone de l’adresse ; une adresse
 sans couverture est refusée. Le paiement se fait **uniquement à la livraison (COD)**.
 
+Le [rapport Sprint 3](docs/SPRINT3.md) couvre le suivi GPS du livreur, la carte et l’heure d’arrivée côté client,
+les notifications, la remise par QR dynamique ou code SMS avec confirmation du montant encaissé, et les interventions
+du responsable. Variables utiles : `APP_REMISE_SECRET` (clé des QR de remise, par défaut le secret JWT),
+`APP_PUSH_EXPO_ACTIF` / `APP_PUSH_EXPO_JETON` (push Expo, désactivé par défaut : notifications visibles dans l’application).
+
 ### Comptes et authentification (sprint 1)
 
 | Endpoint | Rôle |
@@ -115,6 +120,6 @@ Le sous-rôle FINANCE accède au journal ; OPERATIONS et l’administrateur prin
 npm run typecheck --prefix mobile               # TypeScript (apps + shared)
 npm run build --prefix web-responsable          # TypeScript + build de l'app web
 npm run lint --prefix mobile                    # ESLint (apps + shared)
-node --test scripts/sprint1.test.cjs             # refresh, guards et validations
+node --test scripts/*.test.cjs                  # logique partagée (dont suivi, remise, notifications du Sprint 3)
 python scripts/e2e_mobile_api.py                # API (backend lancé)
 ```
