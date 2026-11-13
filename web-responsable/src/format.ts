@@ -21,6 +21,7 @@ export const MODES_PAIEMENT: Record<ModePaiement, string> = { COD: 'Espèces', C
 
 export const STATUTS_PAIEMENT: Record<StatutPaiement, string> = {
   A_LA_LIVRAISON: 'À régler au livreur',
+  ENCAISSE: 'Réglée au livreur',
   EN_ATTENTE: 'Paiement en attente',
   PAYE: 'Payée par carte',
   ECHOUE: 'Paiement échoué',

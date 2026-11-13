@@ -45,7 +45,7 @@ export interface CommandeDetail extends CommandeResume {
   tempsPreparationMinutes: number | null; accepteeLe: string | null; motifRefus: MotifRefus | null; commentaireRefus: string | null;
   pretePrevueLe: string | null; nbAjustementsPreparation: number; preparationDebutLe: string | null; preteLe: string | null;
   annuleeLe: string | null; motifAnnulation: string | null;
-  livreurPrenom: string | null; recupereeLe: string | null;
+  livreurPrenom: string | null; recupereeLe: string | null; livreeLe: string | null;
   historique: HistoriqueEntree[];
 }
 

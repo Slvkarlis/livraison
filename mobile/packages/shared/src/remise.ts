@@ -16,6 +16,18 @@ export function delaiRenouvellementQr(expireLe: string, maintenant: Date = new D
   return Math.max(5_000, new Date(expireLe).getTime() - maintenant.getTime() - MARGE_RENOUVELLEMENT_MS);
 }
 
+/** Montant saisi par le coursier (« 14,5 » accepte) : null si illisible, negatif ou plus de 3 decimales. */
+export function lireMontant(saisie: string): number | null {
+  const texte = saisie.trim().replace(',', '.');
+  if (!/^\d+(\.\d{1,3})?$/.test(texte)) return null;
+  return Number(texte);
+}
+
+/** Ecart encaisse - total, en millimes pour eviter les erreurs d'arrondi ; un ecart non nul exige un motif. */
+export function ecartEncaissement(encaisse: number, attendu: number): number {
+  return (Math.round(encaisse * 1000) - Math.round(attendu * 1000)) / 1000;
+}
+
 export function creerApiRemiseClient(request: <T>(method: string, path: string, body?: unknown) => Promise<T>) {
   return {
     qrRemise: (id: number) => request<QrRemise>('GET', '/api/commandes/' + id + '/qr-remise'),

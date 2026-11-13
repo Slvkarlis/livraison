@@ -21,6 +21,7 @@ export const MODES_PAIEMENT = { COD: 'Paiement à la livraison', CARTE: 'Carte b
 
 export const STATUTS_PAIEMENT = {
   A_LA_LIVRAISON: { libelle: 'À régler au livreur', couleur: '#6E6B85' },
+  ENCAISSE: { libelle: 'Réglée au livreur', couleur: '#16A34A' },
   EN_ATTENTE: { libelle: 'Paiement en attente', couleur: '#B45309' },
   PAYE: { libelle: 'Payée par carte', couleur: '#16A34A' },
   ECHOUE: { libelle: 'Paiement échoué', couleur: '#C2410C' },

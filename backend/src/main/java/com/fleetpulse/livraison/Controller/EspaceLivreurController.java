@@ -2,6 +2,7 @@ package com.fleetpulse.livraison.Controller;
 
 import com.fleetpulse.livraison.Dto.EspaceLivreurDto.*;
 import com.fleetpulse.livraison.Service.EspaceLivreurService;
+import com.fleetpulse.livraison.Service.RemiseLivreurService;
 import com.fleetpulse.livraison.Service.SuiviPositionService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class EspaceLivreurController {
     private final EspaceLivreurService service;
     private final SuiviPositionService suiviPosition;
+    private final RemiseLivreurService remise;
 
     @GetMapping("/disponibilite")
     public DisponibiliteVue disponibilite(Authentication a) { return service.disponibilite(a.getName()); }
@@ -33,6 +35,12 @@ public class EspaceLivreurController {
     @PostMapping("/missions/{id}/collecte")
     public MissionVue confirmerCollecte(Authentication a, @PathVariable Long id, @RequestBody CollecteRequest r) {
         return service.confirmerCollecte(a.getName(), id, r);
+    }
+
+    // US-306 : montant encaisse confirme puis QR du client scanne (ou code SMS saisi) : commande livree
+    @PostMapping("/missions/{id}/remise")
+    public MissionVue validerRemise(Authentication a, @PathVariable Long id, @RequestBody RemiseRequest r) {
+        return remise.valider(a.getName(), id, r);
     }
 
     // US-301 : position GPS envoyee par l'application pendant les missions

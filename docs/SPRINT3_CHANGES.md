@@ -118,3 +118,32 @@ Markers: **A** added · **M** modified · **D** deleted · **R** renamed/moved.
 ## fix(tests): ignore STOMP sessions already closed by the server in teardown
 
 - **M** `T/Sprint2bisTempsReelTest.java`, `T/Sprint3SuiviTest.java`: `@AfterEach` ignores `MessageDeliveryException` when the server closed the session between `isConnected()` and `disconnect()` (seen once in `abonnementHorsDeSesFilesRefuse`, where the refused subscription closes the session).
+
+---
+
+## feat(US-306): courier confirms the cash amount and validates the handover
+
+**Backend**
+- **A** `B/Service/RemiseLivreurService.java`: `valider(email, id, RemiseRequest)` on the locked order:
+  - Amount first: required, ≥ 0, 3 decimals max; a gap with the total needs a reason (5 characters minimum). A typing error doesn't use up a code attempt.
+  - Then the proof: the client's QR (`JetonRemise`, only the latest one, then cleared so it can't be reused) or the 6-digit SMS code (`CodeRemiseService.verifier`, 5 attempts, failed attempts counted even when the request fails).
+  - → `LIVREE` through `CommandeWorkflow`, with `livreeLe`, `montantEncaisse`, `ecartEncaissement`, `motifEcart`, `modeRemise`; COD payment → `ENCAISSE`. The history reason states the mode and any gap.
+  - A replay on an order already delivered returns the mission unchanged.
+- **A** `B/Model/enums/ModeRemise.java`: `QR`, `CODE`, `MANUELLE` (the last is used by US-311).
+- **M** `B/Model/enums/StatutPaiement.java`: `ENCAISSE`.
+- **M** `B/Model/Livraison.java`: handover fields.
+- **M** `B/Service/CommandeWorkflow.java`: `RECUPEREE → LIVREE`, `A_PROXIMITE → LIVREE`.
+- **M** `B/Dto/EspaceLivreurDto.java`: `RemiseRequest`; `MissionVue.livreeLe` / `montantEncaisse`.
+- **M** `B/Dto/LivraisonResponse.java`: `livreeLe`, `montantEncaisse`. **M** `B/Dto/CommandePartenaireDto.java`: `livreeLe`.
+- **M** `B/Controller/EspaceLivreurController.java`: `POST /api/livreur/missions/{id}/remise`.
+- **A** `T/Sprint3RemiseLivreurTest.java`: QR handover with the exact amount (replaced QR refused, replay, QR unusable afterwards, payment collected); gap with reason via the SMS code (attempts counted, gap recorded); code blocked after 5 attempts while the QR still works; access rules (not picked up, other courier, client role, parcel label refused as proof).
+
+**Courier app**
+- **A** `L/composants/missions/PanneauRemise.tsx`: step 1, amount received (gap → reason); step 2, scan the client's QR or type the SMS code.
+- **M** `L/composants/missions/EcranMission.tsx`: "LIVRAISON" block (client, address, directions, "moins de 300 m"), handover panel while the parcel is on board, "Livrée à HH:MM · X DT encaissés".
+
+**Shared mobile / web**
+- **M** `S/espaceLivreur.ts`: `Mission.livreeLe` / `montantEncaisse`, `validerRemise`.
+- **M** `S/remise.ts`: `lireMontant`, `ecartEncaissement` (in millimes).
+- **M** `S/types.ts`, `S/format.ts`, `S/sprint2bis.ts`, `W/types.ts`, `W/format.ts`: `ENCAISSE` "Réglée au livreur", `livreeLe`.
+- **M** `scripts/remise.test.cjs`: amount parsing, gap, courier route.

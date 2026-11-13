@@ -5,14 +5,15 @@ import { useCallback, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
 import { PanneauCollecte } from './PanneauCollecte';
+import { PanneauRemise } from './PanneauRemise';
 
-/** Itineraire vers le commerce dans l'application de cartes du telephone (ou Google Maps dans le navigateur). */
-function lienItineraire(m: Mission): string | null {
-  if (m.latitudeCommerce == null || m.longitudeCommerce == null) return null;
-  return `https://www.google.com/maps/dir/?api=1&destination=${m.latitudeCommerce},${m.longitudeCommerce}`;
+/** Itineraire dans l'application de cartes du telephone (ou Google Maps dans le navigateur). */
+function lienItineraire(latitude: number | null, longitude: number | null): string | null {
+  if (latitude == null || longitude == null) return null;
+  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
 }
 
-// US-2B8 : detail d'une mission de collecte ; US-2B9 : confirmation de la collecte par scan du QR
+// US-2B8 : detail d'une mission ; US-2B9 : collecte par scan du QR ; US-306 : encaissement et remise au client
 export default function EcranMission() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [mission, setMission] = useState<Mission | null>(null);
@@ -32,7 +33,9 @@ export default function EcranMission() {
 
   if (!mission) return erreur ? <View style={styles.page}><View style={styles.contenu}><MessageErreur message={erreur} /></View></View> : <Chargement />;
 
-  const itineraire = lienItineraire(mission);
+  const itineraire = lienItineraire(mission.latitudeCommerce, mission.longitudeCommerce);
+  const itineraireClient = lienItineraire(mission.latitudeLivraison, mission.longitudeLivraison);
+  const enRoute = mission.statut === 'RECUPEREE' || mission.statut === 'A_PROXIMITE';
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.contenu}>
       <Text style={styles.etiquette}>COLLECTE</Text>
@@ -57,10 +60,35 @@ export default function EcranMission() {
       </View>
 
       {mission.statut === 'AFFECTEE' ? <PanneauCollecte missionId={mission.id} onCollectee={setMission} /> : null}
-      {mission.statut === 'RECUPEREE' && mission.recupereeLe ? (
-        <View style={styles.collectee}>
+      {enRoute && mission.recupereeLe ? (
+        <View style={[styles.collectee, styles.espace]}>
           <Ionicons name="checkmark-circle" size={22} color={theme.accent} />
           <Text style={styles.collecteeTexte}>Colis récupéré à {formatHeure(new Date(mission.recupereeLe))}</Text>
+        </View>
+      ) : null}
+      {mission.adresseLivraison && mission.statut !== 'LIVREE' ? (
+        <>
+          <Text style={styles.etiquette}>LIVRAISON</Text>
+          <View style={styles.bloc}>
+            <Text style={styles.commerce}>{mission.clientPrenom}</Text>
+            <Text style={styles.texte}>{mission.adresseLivraison}</Text>
+            {mission.statut === 'A_PROXIMITE' ? <Text style={styles.discret}>Vous êtes à moins de 300 m.</Text> : null}
+            {itineraireClient ? (
+              <Text accessibilityRole="link" style={styles.lien} onPress={() => void Linking.openURL(itineraireClient)}>
+                <Ionicons name="navigate-outline" size={15} color={theme.accent} /> Itinéraire vers le client
+              </Text>
+            ) : null}
+          </View>
+        </>
+      ) : null}
+      {enRoute ? <PanneauRemise mission={mission} onLivree={setMission} /> : null}
+      {mission.statut === 'LIVREE' && mission.livreeLe ? (
+        <View style={styles.collectee}>
+          <Ionicons name="checkmark-done-circle" size={22} color={theme.accent} />
+          <Text style={styles.collecteeTexte}>
+            Livrée à {formatHeure(new Date(mission.livreeLe))}
+            {mission.montantEncaisse != null ? ` · ${formatMontant(mission.montantEncaisse)} encaissés` : ''}
+          </Text>
         </View>
       ) : null}
     </ScrollView>
@@ -103,5 +131,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.rayon,
     backgroundColor: theme.accentDoux,
   },
+  espace: { marginBottom: 20 },
   collecteeTexte: { fontSize: 16, fontWeight: '700', color: theme.texte },
 });

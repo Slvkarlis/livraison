@@ -35,3 +35,23 @@ test('Routes de la remise côté client', async () => {
   await api.demanderCodeRemise(4);
   assert.deepEqual(appels, ['GET /api/commandes/4/qr-remise', 'POST /api/commandes/4/code-remise']);
 });
+
+test('Montant encaissé : saisie tolérante, 3 décimales au plus', () => {
+  assert.equal(remise.lireMontant('15'), 15);
+  assert.equal(remise.lireMontant(' 14,5 '), 14.5);
+  assert.equal(remise.lireMontant('14.125'), 14.125);
+  for (const s of ['', '-1', '14.1234', 'abc', '1,2,3']) assert.equal(remise.lireMontant(s), null, s);
+});
+
+test('Écart d\'encaissement calculé en millimes', () => {
+  assert.equal(remise.ecartEncaissement(15, 15), 0);
+  assert.equal(remise.ecartEncaissement(14.5, 15), -0.5);
+  assert.equal(remise.ecartEncaissement(0.3, 0.1 + 0.2), 0, 'pas d\'écart fantôme dû aux flottants');
+});
+
+test('Route de la remise côté coursier', async () => {
+  const appels = [];
+  const espace = charger('espaceLivreur').creerApiLivreur(async (m, r, b) => { appels.push([m, r, b]); });
+  await espace.validerRemise(7, 14.5, 'Pas de monnaie', '123456');
+  assert.deepEqual(appels, [['POST', '/api/livreur/missions/7/remise', { montantEncaisse: 14.5, motifEcart: 'Pas de monnaie', preuve: '123456' }]]);
+});

@@ -42,7 +42,9 @@ public record LivraisonResponse(
         Instant annuleeLe,                 // US-2B12
         String motifAnnulation,
         String livreurPrenom,              // US-2B8 : coursier charge de la collecte
-        Instant recupereeLe) {             // US-2B9 : colis pris en charge a la boutique
+        Instant recupereeLe,               // US-2B9 : colis pris en charge a la boutique
+        Instant livreeLe,                  // US-306 : remise validee
+        java.math.BigDecimal montantEncaisse) {
 
     public static LivraisonResponse from(Livraison livraison) {
         return new LivraisonResponse(
@@ -70,7 +72,8 @@ public record LivraisonResponse(
                 livraison.getTempsPreparationMinutes(), livraison.getAccepteeLe(), livraison.getMotifRefus(), livraison.getCommentaireRefus(),
                 livraison.heurePretePrevue(), livraison.getPreparationDebutLe(), livraison.getPreteLe(),
                 livraison.getAnnuleeLe(), livraison.getMotifAnnulation(),
-                livraison.getLivreur() == null ? null : livraison.getLivreur().getPrenom(), livraison.getRecupereeLe());
+                livraison.getLivreur() == null ? null : livraison.getLivreur().getPrenom(), livraison.getRecupereeLe(),
+                livraison.getLivreeLe(), livraison.getMontantEncaisse());
     }
 
     /** Commandes creees avant la tarification automatique : seul montantACollecter etait renseigne. */

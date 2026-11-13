@@ -20,7 +20,7 @@ export type StatutLivraison =
   | 'RETOURNEE';
 
 export type ModePaiement = 'COD' | 'CARTE';
-export type StatutPaiement = 'A_LA_LIVRAISON' | 'EN_ATTENTE' | 'PAYE' | 'ECHOUE';
+export type StatutPaiement = 'A_LA_LIVRAISON' | 'ENCAISSE' | 'EN_ATTENTE' | 'PAYE' | 'ECHOUE';
 export type TypeLivraison = 'IMMEDIATE' | 'PLANIFIEE';
 
 export interface Profil {

@@ -21,7 +21,7 @@ export type StatutLivraison =
 
 export type ModePaiement = 'COD' | 'CARTE';
 
-export type StatutPaiement = 'A_LA_LIVRAISON' | 'EN_ATTENTE' | 'PAYE' | 'ECHOUE';
+export type StatutPaiement = 'A_LA_LIVRAISON' | 'ENCAISSE' | 'EN_ATTENTE' | 'PAYE' | 'ECHOUE';
 
 export type TypeLivraison = 'IMMEDIATE' | 'PLANIFIEE';
 
@@ -94,6 +94,9 @@ export interface Livraison {
   livreurPrenom: string | null;
   /** US-2B9 : colis pris en charge a la boutique. */
   recupereeLe: string | null;
+  /** US-306 : remise validee, montant reellement encaisse. */
+  livreeLe: string | null;
+  montantEncaisse: number | null;
 }
 
 export interface LoginResponse {

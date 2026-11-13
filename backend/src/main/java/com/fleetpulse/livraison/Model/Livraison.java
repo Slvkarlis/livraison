@@ -58,6 +58,12 @@ public class Livraison {
     // Sprint 3 : QR de remise du client (US-305) ; seul le dernier genere est valable
     @Column(length = 32) private String remiseNonce;
     private Instant remiseQrExpireLe;
+    // Sprint 3 : remise au client (US-306) : montant reellement encaisse et ecart motive
+    private Instant livreeLe;
+    @Column(precision = 14, scale = 3) private java.math.BigDecimal montantEncaisse;
+    @Column(precision = 14, scale = 3) private java.math.BigDecimal ecartEncaissement;   // encaisse - total
+    @Column(length = 300) private String motifEcart;
+    @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(20)") private ModeRemise modeRemise;
     // Sprint 2 bis : annulation par le client (US-2B12)
     private Instant annuleeLe;
     @Column(length = 300) private String motifAnnulation;

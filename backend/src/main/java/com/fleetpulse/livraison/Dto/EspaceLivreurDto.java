@@ -32,7 +32,8 @@ public final class EspaceLivreurDto {
     public record MissionVue(Long id, String codeSuivi, StatutLivraison statut, String nomCommerce, String adresseCommerce,
                              Double latitudeCommerce, Double longitudeCommerce, String zoneNom, String clientPrenom,
                              int nbArticles, BigDecimal montantACollecter, Instant preteLe, Instant affecteeLe, Instant recupereeLe,
-                             String adresseLivraison, Double latitudeLivraison, Double longitudeLivraison) {
+                             String adresseLivraison, Double latitudeLivraison, Double longitudeLivraison,
+                             Instant livreeLe, BigDecimal montantEncaisse) {
         public static MissionVue from(Livraison c) {
             Partenaire p = c.getPartenaire();
             int nbArticles = c.getLignes().stream().mapToInt(LigneCommande::getQuantite).sum();
@@ -40,9 +41,16 @@ public final class EspaceLivreurDto {
             return new MissionVue(c.getId(), c.getCodeSuivi(), c.getStatut(), p.getNomCommerce(), p.getAdresse(),
                     p.getLatitude(), p.getLongitude(), c.getNomZone(), c.getClient().getPrenom(), nbArticles, c.getTotal(),
                     c.getPreteLe(), c.getAffecteeLe(), c.getRecupereeLe(),
-                    colisABord ? c.getAdresse() : null, colisABord ? c.getLatitude() : null, colisABord ? c.getLongitude() : null);
+                    colisABord ? c.getAdresse() : null, colisABord ? c.getLatitude() : null, colisABord ? c.getLongitude() : null,
+                    c.getLivreeLe(), c.getMontantEncaisse());
         }
     }
+
+    /**
+     * US-306 : montant reellement encaisse (un ecart avec le total exige un motif), puis preuve de remise :
+     * contenu du QR du client, ou code a 6 chiffres recu par SMS.
+     */
+    public record RemiseRequest(BigDecimal montantEncaisse, String motifEcart, String preuve) { }
 
     /** US-301 : position envoyee par l'application pendant les missions. precision : metres (facultatif). */
     public record PositionRequest(Double latitude, Double longitude, Double precision) { }
