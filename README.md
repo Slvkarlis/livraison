@@ -43,6 +43,19 @@ les notifications, la remise par QR dynamique ou code SMS avec confirmation du m
 du responsable. Variables utiles : `APP_REMISE_SECRET` (clé des QR de remise, par défaut le secret JWT),
 `APP_PUSH_EXPO_ACTIF` / `APP_PUSH_EXPO_JETON` (push Expo, désactivé par défaut : notifications visibles dans l’application).
 
+### Tester les API avec Swagger
+
+Une fois le backend lancé, ouvrir [Swagger UI](http://localhost:8083/swagger-ui.html).
+La spécification OpenAPI JSON est disponible sur [api-docs](http://localhost:8083/api-docs).
+
+1. Dans Swagger, ouvrir `POST /api/auth/login`, cliquer sur **Try it out**, saisir
+   `{"email":"admin@fleetpulse.tn","motDePasse":"admin12345"}`, puis **Execute**.
+2. Copier la valeur `token` de la réponse.
+3. Cliquer sur **Authorize**, coller le token seul (sans le préfixe `Bearer`), puis valider.
+4. Tester les routes correspondant au rôle du compte connecté avec **Try it out**.
+
+Les routes `/api/auth/**` sont publiques ; les autres API nécessitent un JWT valide.
+
 ### Comptes et authentification (sprint 1)
 
 | Endpoint | Rôle |

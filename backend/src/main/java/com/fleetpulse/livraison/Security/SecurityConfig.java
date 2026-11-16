@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // /ws : poignee de main WebSocket ouverte, le JWT est verifie au CONNECT STOMP (AuthentificationStomp)
                         .requestMatchers("/api/auth/**", "/error", "/ws").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs/**", "/api-docs.yaml").permitAll()
                         .anyRequest().authenticated())
                 // 401 sans jeton valide (403 reste reserve aux roles insuffisants)
                 .exceptionHandling(exceptions -> exceptions
