@@ -141,3 +141,29 @@ export interface SuiviResponsable {
   annuleeLe: string | null; motifAnnulation: string | null;
   actions: ActionResponsable[]; historique: EtapeHistorique[];
 }
+
+// Sprint 4 (US-407) : supervision du dispatch, miroir de DispatchDto.java
+export type StatutLot = 'PROPOSE' | 'ACCEPTE' | 'ANNULE';
+export type StatutOffre = 'EN_ATTENTE' | 'ACCEPTEE' | 'REFUSEE' | 'EXPIREE' | 'ANNULEE';
+export interface OffreEnCours { offreId: number; livreurPrenom: string; expireLe: string; horsZone: boolean }
+export interface CommandeAttente {
+  id: number; codeSuivi: string; nomCommerce: string | null; zoneNom: string | null; preteLe: string | null;
+  minutesAttente: number; alerte: boolean; lotId: number | null; offre: OffreEnCours | null;
+}
+export interface OffreHistorique {
+  id: number; livreurPrenom: string; statut: StatutOffre; proposeeLe: string; reponduLe: string | null;
+  horsZone: boolean; score: number; motifRefus: string | null;
+}
+export interface LotSupervision {
+  id: number; statut: StatutLot; source: string | null; livreurPrenom: string | null; creeLe: string; accepteLe: string | null;
+  distanceKm: number; dureeMinutes: number; commandes: { id: number; codeSuivi: string; statut: StatutLivraison }[];
+  offres: OffreHistorique[];
+}
+export interface LivreurSupervision {
+  id: number; prenom: string; nom: string; missions: number; offreEnCours: boolean;
+  latitude: number | null; longitude: number | null; dernierePositionLe: string | null;
+}
+export interface Supervision {
+  maintenant: string; parLots: boolean; ia: boolean; delaiOffreSecondes: number; delaiRechercheMaxMinutes: number;
+  enAttente: CommandeAttente[]; lots: LotSupervision[]; livreurs: LivreurSupervision[];
+}

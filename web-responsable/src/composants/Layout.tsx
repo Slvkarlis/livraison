@@ -8,6 +8,7 @@ const LIENS = [
   { vers: '/comptes', libelle: 'Comptes', icone: 'M4 6h16M4 12h16M4 18h10' },
   { vers: '/audit', libelle: 'Journal d’audit', icone: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h4' },
   { vers: '/commandes', libelle: 'Commandes', icone: 'M4 6h16M4 12h16M4 18h10' },
+  { vers: '/dispatch', libelle: 'Dispatch', icone: 'M5 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm14-8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 15l10-8M5 13V5h6' },
   { vers: '/livreurs', libelle: 'Livreurs', icone: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 8a7 7 0 0 1 14 0' },
   { vers: '/vehicules', libelle: 'Véhicules', icone: 'M3 13l2-6h11l3 6v4h-2M3 13v4h2m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m0 0h6m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0M3 13h16' },
 ];

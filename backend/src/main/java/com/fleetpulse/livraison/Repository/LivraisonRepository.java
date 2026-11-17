@@ -28,4 +28,11 @@ public interface LivraisonRepository extends JpaRepository<Livraison, Long> {
     long countByLivreurIdAndStatutIn(Long livreurId, java.util.Collection<com.fleetpulse.livraison.Model.enums.StatutLivraison> statuts);
     List<Livraison> findAllByStatutAndLivreurIsNullAndPartenaireZoneIdInOrderByPreteLeAsc(
             com.fleetpulse.livraison.Model.enums.StatutLivraison statut, java.util.Collection<Long> zoneIds);
+
+    // Sprint 4 : dispatch par lots (US-402 a US-407) et entrepot (US-401)
+    List<Livraison> findAllByLotIdOrderByIdAsc(Long lotId);
+    List<Livraison> findAllByStatutAndLivreurIsNullOrderByPreteLeAscIdAsc(com.fleetpulse.livraison.Model.enums.StatutLivraison statut);
+    List<Livraison> findTop20ByPartenaireIdAndPreteLeIsNotNullAndAccepteeLeIsNotNullOrderByPreteLeDesc(Long partenaireId);
+    List<Livraison> findAllByStatutAndLivreeLeGreaterThanEqualOrderByLivreeLeAsc(
+            com.fleetpulse.livraison.Model.enums.StatutLivraison statut, java.time.Instant depuis);
 }

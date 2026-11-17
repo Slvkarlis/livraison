@@ -14,3 +14,4 @@ export * from './espaceLivreur';
 export * from './suivi';
 export * from './remise';
 export * from './notifications';
+export * from './dispatch';

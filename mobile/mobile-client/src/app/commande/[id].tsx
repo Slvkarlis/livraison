@@ -15,8 +15,10 @@ import {
   libelleEtapeClient,
   messageArrivee,
   messageDecisionClient,
+  messagePromesse,
   peutAnnuler,
   peutValiderRemise,
+  STATUTS_SUIVIS,
   useEvenementsCommandes,
   type HistoriqueEntree,
   type Livraison,
@@ -93,6 +95,9 @@ export default function DetailCommande() {
             <Ionicons name="time-outline" size={18} color={theme.accent} />
             <Text style={styles.etaTexte}>{messageArrivee(suivi.arriveeEstimee, maintenant)}</Text>
           </View>
+        ) : null}
+        {suivi?.promesseLivraison && STATUTS_SUIVIS.includes(livraison.statut) ? (
+          <Text style={styles.promesse}>{messagePromesse(suivi.promesseLivraison)}</Text>
         ) : null}
         <Text style={styles.adresse}>{livraison.adresse}</Text>
         <Text style={styles.code}>Commande {livraison.codeSuivi}</Text>
@@ -178,6 +183,7 @@ const styles = StyleSheet.create({
   remise: { marginTop: 14 },
   eta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   etaTexte: { fontSize: 15, fontWeight: '700', color: theme.texte },
+  promesse: { fontSize: 13, color: theme.secondaire, marginTop: 4 },
   adresse: { fontSize: 22, fontWeight: '800', color: theme.texte, letterSpacing: -0.4, marginTop: 10 },
   code: { fontSize: 13, color: theme.secondaire },
   moment: {

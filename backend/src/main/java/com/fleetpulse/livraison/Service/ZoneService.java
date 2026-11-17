@@ -61,9 +61,24 @@ public class ZoneService {
     /** Voisinage dérivé des contours : toujours cohérent après modification ou suppression, sans table dupliquée. */
     private static List<ZoneVoisine> voisines(Zone zone, List<Zone> toutes) {
         return toutes.stream().filter(autre -> !Objects.equals(zone.getId(), autre.getId()))
-                .filter(autre -> zone.getPolygone().touches(autre.getPolygone())
-                        && zone.getPolygone().intersection(autre.getPolygone()).getLength() > 1e-12)
+                .filter(autre -> adjacentes(zone, autre))
                 .map(autre -> new ZoneVoisine(autre.getId(), autre.getNom())).toList();
+    }
+
+    /** Frontière commune (et pas un simple coin) : base du regroupement en lots et du débordement (Sprint 4). */
+    public static boolean adjacentes(Zone a, Zone b) {
+        return a.getPolygone().touches(b.getPolygone()) && a.getPolygone().intersection(b.getPolygone()).getLength() > 1e-12;
+    }
+
+    /** US-403 : pour chaque zone, les identifiants de ses zones adjacentes. */
+    public static Map<Long, Set<Long>> voisinages(List<Zone> toutes) {
+        Map<Long, Set<Long>> voisinages = new HashMap<>();
+        for (Zone z : toutes) {
+            Set<Long> ids = new HashSet<>();
+            for (Zone autre : toutes) if (!Objects.equals(z.getId(), autre.getId()) && adjacentes(z, autre)) ids.add(autre.getId());
+            voisinages.put(z.getId(), ids);
+        }
+        return voisinages;
     }
     /** SERIALIZABLE protège aussi les insertions concurrentes de zones qui se chevauchent. */
     @Transactional(isolation = Isolation.SERIALIZABLE)

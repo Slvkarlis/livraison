@@ -22,7 +22,7 @@ public class EspaceLivreurService {
     private final AffectationZoneRepository affectations;
     private final LivraisonRepository commandes;
     private final ZoneService zones;
-    private final AffectationMissionService affectationMissions;
+    private final DispatchService dispatch;
     private final CommandeWorkflow workflow;
     private final CodeRemiseService codesRemise;
 
@@ -39,6 +39,7 @@ public class EspaceLivreurService {
         if (!r.disponible()) {
             livreur.setDisponible(false);
             livreur.setDisponibiliteMiseAJourLe(maintenant);
+            dispatch.livreurIndisponible(livreur);   // Sprint 4 : ses offres en attente sont reproposees
             return vue(livreur);
         }
 
@@ -56,7 +57,7 @@ public class EspaceLivreurService {
         livreur.setDisponible(true);
         livreur.placer(r.latitude(), r.longitude(), maintenant);
         livreur.setDisponibiliteMiseAJourLe(maintenant);
-        affectationMissions.affecterCommandesEnAttente(livreur, autorisees.stream().map(a -> a.getZone().getId()).toList());
+        dispatch.livreurDisponible(livreur, autorisees.stream().map(a -> a.getZone().getId()).toList());
         return vue(livreur);
     }
 

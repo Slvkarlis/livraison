@@ -227,3 +227,6 @@ textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outl
 .chronologie li { position: relative; }
 .chronologie li::before { content: ''; position: absolute; left: -20px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .formulaire textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--bordure); border-radius: 8px; resize: vertical; }
+
+/* Sprint 4 : sections de la page Dispatch */
+h2.section { font-size: 15px; margin: 22px 0 10px; color: var(--discret); }

@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CommandePartenaireServiceTest {
     @Mock PartenaireRepository partenaires; @Mock LivraisonRepository commandes; @Mock HistoriqueStatutRepository historique;
-    @Mock CommandeWorkflow workflow; @Mock AffectationMissionService affectationMissions;
+    @Mock CommandeWorkflow workflow; @Mock DispatchService dispatch; @Mock EstimationLivraisonService estimation;
     @InjectMocks CommandePartenaireService service;
     final String email = "partenaire@test.tn";
     Livraison contexte(StatutLivraison statut) {
@@ -35,7 +35,11 @@ class CommandePartenaireServiceTest {
     }
     @Test void acceptationEnregistreDelaiEtRejeuSansTransition() {
         Livraison c = contexte(StatutLivraison.PENDING_PARTNER);
+        java.time.Instant promise = java.time.Instant.parse("2026-11-17T12:30:00Z");
+        when(estimation.promesse(eq(c), any())).thenReturn(new EstimationLivraisonService.Promesse(promise, "REGLES"));
         service.accepter(email, 8L, new TempsPreparationRequest(15)); assertEquals(15, c.getTempsPreparationMinutes());
+        // US-406 : promesse figee a l'acceptation
+        assertEquals(promise, c.getPromesseLivraison()); assertEquals("REGLES", c.getSourcePromesse());
         assertEquals(900, c.getPretePrevueLe().getEpochSecond() - c.getAccepteeLe().getEpochSecond());
         c.setStatut(StatutLivraison.ACCEPTEE); service.accepter(email, 8L, new TempsPreparationRequest(15));
         verify(workflow, times(1)).transition(eq(c), eq(StatutLivraison.ACCEPTEE), any(), anyString());
@@ -43,7 +47,7 @@ class CommandePartenaireServiceTest {
     @Test void preparationPuisPretGenereEtiquetteEtDeclencheAffectation() {
         Livraison c = contexte(StatutLivraison.ACCEPTEE); service.commencerPreparation(email, 8L);
         assertNotNull(c.getPreparationDebutLe()); service.marquerPrete(email, 8L);
-        assertEquals(6, c.getCodeCollecte().length()); verify(affectationMissions).affecterSiPossible(c);
+        assertEquals(6, c.getCodeCollecte().length()); verify(dispatch).commandePrete(c);
     }
     @Test void ajustementLimiteADeuxEtInterditApresPret() {
         Livraison c = contexte(StatutLivraison.EN_PREPARATION);

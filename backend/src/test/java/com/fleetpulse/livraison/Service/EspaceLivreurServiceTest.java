@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class EspaceLivreurServiceTest {
     @Mock LivreurRepository livreurs; @Mock AffectationZoneRepository affectations; @Mock LivraisonRepository commandes;
-    @Mock ZoneService zones; @Mock AffectationMissionService affectationMissions;
+    @Mock ZoneService zones; @Mock DispatchService dispatch;
     @Mock CommandeWorkflow workflow; @Mock CodeRemiseService codesRemise; @InjectMocks EspaceLivreurService service;
     final String email = "livreur@test.tn";
     Livreur compte() { Livreur l = livreur(); when(livreurs.findByEmail(email)).thenReturn(Optional.of(l)); return l; }
@@ -28,18 +28,20 @@ class EspaceLivreurServiceTest {
     @Test void consulterEtSeDeclarerIndisponible() {
         Livreur l = compte(); assertTrue(service.disponibilite(email).disponible());
         assertFalse(service.changerDisponibilite(email, new DisponibiliteRequest(false, null, null)).disponible());
-        assertFalse(l.estDisponible()); verifyNoInteractions(affectationMissions);
+        assertFalse(l.estDisponible());
+        // Sprint 4 : ses offres en attente sont retirees et reproposees ; aucune nouvelle affectation
+        verify(dispatch).livreurIndisponible(l); verify(dispatch, never()).livreurDisponible(any(), any());
     }
     @Test void disponibiliteDansZoneDeclencheLesAffectations() {
         compte(); autorisation(); when(zones.trouver(36.8, 10.18)).thenReturn(Optional.of(zone()));
         assertTrue(service.changerDisponibilite(email, new DisponibiliteRequest(true, 36.8, 10.18)).disponible());
-        verify(affectationMissions).affecterCommandesEnAttente(any(), eq(List.of(2L)));
+        verify(dispatch).livreurDisponible(any(), eq(List.of(2L)));
     }
     @Test void refuseAbsenceDeZoneEtPositionHorsZone() {
         compte(); var r = new DisponibiliteRequest(true, 36.8, 10.18);
         assertThrows(MarketplaceException.class, () -> service.changerDisponibilite(email, r));
         autorisation(); when(zones.trouver(36.8, 10.18)).thenReturn(Optional.empty());
-        assertThrows(MarketplaceException.class, () -> service.changerDisponibilite(email, r)); verifyNoInteractions(affectationMissions);
+        assertThrows(MarketplaceException.class, () -> service.changerDisponibilite(email, r)); verifyNoInteractions(dispatch);
     }
     @Test void requeteOuCompteAbsents() {
         assertThrows(IllegalArgumentException.class, () -> service.changerDisponibilite(email, null));

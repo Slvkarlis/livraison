@@ -1,0 +1,8 @@
+# Service d'IA FleetPulse (Sprint 4). Python 3.11+.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+numpy>=1.26
+scikit-learn>=1.5
+# Facultatifs : utilises s'ils sont installes, sinon le service reste fonctionnel
+# ortools>=9.10      # itineraires de plus de 4 commandes
+# lightgbm>=4.3      # modele d'ETA alternatif

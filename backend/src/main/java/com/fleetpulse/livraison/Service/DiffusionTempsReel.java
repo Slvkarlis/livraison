@@ -1,6 +1,7 @@
 package com.fleetpulse.livraison.Service;
 
 import com.fleetpulse.livraison.Dto.EvenementCommande;
+import com.fleetpulse.livraison.Model.enums.StatutLivraison;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,16 @@ public class DiffusionTempsReel {
         if (e.partenaireEmail() != null) messages.convertAndSendToUser(e.partenaireEmail(), FILE, evenement);
         messages.convertAndSendToUser(e.clientEmail(), FILE, evenement);
         if (e.livreurEmail() != null) messages.convertAndSendToUser(e.livreurEmail(), FILE, evenement);
+    }
+
+    /**
+     * US-405 : une offre de lot attend le coursier. Meme file que les commandes : l'application recharge ses offres
+     * et ses missions a chaque message (statut PRETE inchange, aucune notification client).
+     */
+    @TransactionalEventListener(fallbackExecution = true)
+    public void diffuserOffre(DispatchService.OffreProposee e) {
+        messages.convertAndSendToUser(e.livreurEmail(), FILE,
+                new EvenementCommande(e.commandeId(), StatutLivraison.PRETE, StatutLivraison.PRETE));
     }
 
     @TransactionalEventListener(fallbackExecution = true)

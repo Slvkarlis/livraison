@@ -85,7 +85,7 @@ class MarketplaceControllerTest extends ControleurTestSupport {
         http.perform(put("/api/commandes/8/annuler").principal(utilisateur)).andExpect(jsonPath("$.statut").value("ANNULEE"));
     }
     @Test void suiviQrEtCodeDeRemise() throws Exception {
-        when(suivi.suivi(utilisateur.getName(),8L)).thenReturn(new SuiviCommandeVue(8L,StatutLivraison.RECUPEREE,"Sami",null,new Position(36.8,10.18),new Position(36.81,10.19),null,Instant.now()));
+        when(suivi.suivi(utilisateur.getName(),8L)).thenReturn(new SuiviCommandeVue(8L,StatutLivraison.RECUPEREE,"Sami",null,new Position(36.8,10.18),new Position(36.81,10.19),null,Instant.now(),null,null));
         when(remise.qr(utilisateur.getName(),8L)).thenReturn(new QrRemiseVue("QR-DYNAMIQUE",Instant.now().plusSeconds(120)));
         when(remise.renvoyerCode(utilisateur.getName(),8L)).thenReturn(new CodeRemiseEnvoye("SMS au numéro se terminant par 456",Instant.now().plusSeconds(60)));
         http.perform(get("/api/commandes/8/suivi").principal(utilisateur)).andExpect(jsonPath("$.commandeId").value(8));

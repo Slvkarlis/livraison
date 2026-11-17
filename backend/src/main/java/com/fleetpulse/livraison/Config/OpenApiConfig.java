@@ -23,8 +23,8 @@ public class OpenApiConfig {
     @Bean
     OpenAPI livraisonOpenApi() {
         return new OpenAPI()
-                .info(new Info().title("FleetPulse - API Livraison").version("sprint-3")
-                        .description("API full-stack des sprints 1 à 3. Parcours : catalogue → devis → commande COD → préparation → collecte → remise. "
+                .info(new Info().title("FleetPulse - API Livraison").version("sprint-4")
+                        .description("API full-stack des sprints 1 à 4. Parcours : catalogue → devis → commande COD → préparation → lot et offre au livreur → collecte → remise. "
                                 + "Montants en dinars tunisiens (DT), trois décimales maximum ; coordonnées WGS84 dans l’ordre latitude, longitude. "
                                 + "Utiliser le token retourné par /api/auth/login dans Authorize, sans le préfixe Bearer."))
                 .components(new Components().addSecuritySchemes("bearerAuth", new SecurityScheme()
@@ -71,7 +71,8 @@ public class OpenApiConfig {
                     if (modification && (path.contains("/commandes") || path.contains("/zones")
                             || path.contains("/dossier") || path.contains("/comptes") || path.equals("/api/admin/responsables")
                             || path.equals("/api/partenaire/commerce") || path.endsWith("/disponibilite")
-                            || path.endsWith("/missions/{id}/collecte") || path.endsWith("/missions/{id}/remise")))
+                            || path.endsWith("/missions/{id}/collecte") || path.endsWith("/missions/{id}/remise")
+                            || path.startsWith("/api/livreur/offres/") || path.startsWith("/api/admin/dispatch/")))
                         reponses.addApiResponse("409", erreur("État métier incompatible, doublon ou limite atteinte.", "ETAT_INVALIDE"));
                     if (path.equals("/api/commandes") || path.endsWith("/code-remise"))
                         reponses.addApiResponse("429", erreur("Délai entre deux demandes ou nombre d’envois dépassé.", "TROP_DE_DEMANDES"));
@@ -104,6 +105,8 @@ public class OpenApiConfig {
             case "categorie" -> "Catégorie du commerce, sans distinction de casse.";
             case "limite" -> "Nombre maximal d’événements, plafonné à 500 ; défaut 200.";
             case "acteur" -> "Email de l’auteur de l’événement d’audit.";
+            case "depuis" -> "Date ISO 8601 de début, incluse ; par défaut depuis le début de l’historique.";
+            case "type" -> "Type d’événement facultatif : STATUT, PREPARATION, OFFRE ou AFFECTATION.";
             case "cibleId" -> "Identifiant du compte ou de la ressource visée par l’événement.";
             default -> "Paramètre " + nom + ".";
         };

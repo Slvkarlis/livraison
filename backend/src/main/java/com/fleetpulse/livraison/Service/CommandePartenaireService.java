@@ -20,7 +20,8 @@ public class CommandePartenaireService {
     private final LivraisonRepository commandes;
     private final HistoriqueStatutRepository historique;
     private final CommandeWorkflow workflow;
-    private final AffectationMissionService affectationMissions;
+    private final DispatchService dispatch;
+    private final EstimationLivraisonService estimation;
 
     Partenaire partenaireActif(String email) {
         Partenaire p = partenaires.findByEmail(email).orElseThrow(MarketplaceException::absent);
@@ -54,6 +55,10 @@ public class CommandePartenaireService {
         c.setAccepteeLe(maintenant);
         c.setPretePrevueLe(maintenant.plusSeconds(minutes * 60L));
         c.setNbAjustementsPreparation(0);
+        // US-406 : promesse de livraison figee a l'acceptation (IA, sinon regles)
+        EstimationLivraisonService.Promesse promesse = estimation.promesse(c, maintenant);
+        c.setPromesseLivraison(promesse.heure());
+        c.setSourcePromesse(promesse.source());
         return vue(c);
     }
 
@@ -94,7 +99,7 @@ public class CommandePartenaireService {
         workflow.transition(c, StatutLivraison.PRETE, p, null);
         c.setPreteLe(maintenant());
         c.setCodeCollecte(CodeCollecte.generer());
-        affectationMissions.affecterSiPossible(c);   // US-2B8 : un coursier disponible de la zone, sinon la commande attend
+        dispatch.commandePrete(c);   // Sprint 4 : lot propose a un coursier (US-402 a US-405), sinon la commande attend
         return vue(c);
     }
 

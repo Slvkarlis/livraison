@@ -1,5 +1,6 @@
 import type {
-  AffectationRequest, AffectationZone, Livraison, SuiviResponsable, Livreur, LivreurRequest, LoginResponse, Profil, Vehicule, VehiculeRequest,
+  AffectationRequest, AffectationZone, Livraison, SuiviResponsable, Livreur, LivreurRequest, LoginResponse, Profil, Supervision, Vehicule,
+  VehiculeRequest,
 } from './types';
 
 import { creerClientHttp } from '../../mobile/packages/shared/src/http';
@@ -80,6 +81,12 @@ export const api = {
   validerCollecte: (id: number, motif: string) => request<SuiviResponsable>('PUT', `/api/admin/commandes/${id}/collecte`, { motif }),
   validerRemise: (id: number, motif: string, montantEncaisse: number, motifEcart: string | null) =>
     request<SuiviResponsable>('PUT', `/api/admin/commandes/${id}/remise`, { motif, montantEncaisse, motifEcart }),
+
+  // Sprint 4 (US-407) : supervision du dispatch par lots et affectation forcee (motif obligatoire, auditee)
+  supervision: () => request<Supervision>('GET', '/api/admin/dispatch'),
+  forcerAffectation: (commandeId: number, livreurId: number, motif: string) =>
+    request<Supervision>('PUT', `/api/admin/dispatch/commandes/${commandeId}/forcer`, { livreurId, motif }),
+  cycleDispatch: () => request<{ offresExpirees: number; offresProposees: number }>('POST', '/api/admin/dispatch/cycle'),
 };
 
 export interface Audit { id: number; date: string; acteur: string; action: string; cibleType: string; cibleId: number | null; details: string | null }

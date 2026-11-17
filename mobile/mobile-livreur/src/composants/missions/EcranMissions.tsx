@@ -2,44 +2,79 @@ import {
   EtatVide,
   MessageErreur,
   api,
+  itineraireUtile,
+  offresActives,
   useAuth,
   useEvenementsCommandes,
   useTempsReelConnecte,
   type Disponibilite,
+  type LotLivreur,
   type Mission,
+  type OffreLot,
 } from '@fleetpulse/shared';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
 import { CarteSuiviGps } from '../suivi/CarteSuiviGps';
 import { CarteDisponibilite } from './CarteDisponibilite';
+import { CarteItineraire } from './CarteItineraire';
 import { CarteMission } from './CarteMission';
+import { CarteOffre } from './CarteOffre';
+
+/** Filet de securite si le temps reel est coupe : les offres sont relues periodiquement. */
+const RELECTURE_OFFRES_MS = 10_000;
 
 // US-2B8 : onglet Missions du coursier (disponibilite + missions de collecte affectees, en temps reel)
 export default function EcranMissions() {
   const { profil } = useAuth();
   const [disponibilite, setDisponibilite] = useState<Disponibilite | null>(null);
   const [missions, setMissions] = useState<Mission[] | null>(null);
+  // Sprint 4 : offres de lots en attente de reponse et lots acceptes (itineraire)
+  const [offres, setOffres] = useState<OffreLot[]>([]);
+  const [lots, setLots] = useState<LotLivreur[]>([]);
   const [erreur, setErreur] = useState<string | null>(null);
   const [rafraichissement, setRafraichissement] = useState(false);
   const enDirect = useTempsReelConnecte();
+
+  const chargerOffres = useCallback(async () => {
+    const [o, l] = await Promise.all([api.offres(), api.lotsEnCours()]);
+    setOffres(offresActives(o));
+    setLots(l);
+  }, []);
 
   const charger = useCallback(async () => {
     try {
       const [d, m] = await Promise.all([api.disponibilite(), api.missions()]);
       setDisponibilite(d);
       setMissions(m);
+      await chargerOffres();
       setErreur(null);
     } catch (e) {
       setErreur(e instanceof Error ? e.message : 'Chargement impossible.');
     }
-  }, []);
+  }, [chargerOffres]);
 
   useFocusEffect(useCallback(() => { void charger(); }, [charger]));
-  // Temps reel : nouvelle mission affectee, ou commande modifiee (annulation, collecte...)
-  useEvenementsCommandes(() => { void api.missions().then(setMissions).catch(() => {}); });
+  // Temps reel : offre proposee, mission affectee, ou commande modifiee (annulation, collecte...)
+  useEvenementsCommandes(() => {
+    void api.missions().then(setMissions).catch(() => {});
+    void chargerOffres().catch(() => {});
+  });
+  const disponible = disponibilite?.disponible ?? false;
+  useEffect(() => {
+    if (!disponible) return undefined;
+    const minuterie = setInterval(() => { void chargerOffres().catch(() => {}); }, RELECTURE_OFFRES_MS);
+    return () => clearInterval(minuterie);
+  }, [disponible, chargerOffres]);
+
+  // Offre acceptee, refusee ou expiree : missions, offres et itineraire sont relus
+  const apresOffre = useCallback(() => {
+    void api.missions().then(setMissions).catch(() => {});
+    void chargerOffres().catch(() => {});
+  }, [chargerOffres]);
+  const lotAffiche = itineraireUtile(lots);
 
   async function rafraichir() {
     setRafraichissement(true);
@@ -72,6 +107,8 @@ export default function EcranMissions() {
             <MessageErreur message={erreur} />
             {disponibilite ? <CarteDisponibilite disponibilite={disponibilite} onChange={(d) => void apresChangementDisponibilite(d)} /> : null}
             <CarteSuiviGps />
+            {offres.map((o) => <CarteOffre key={o.id} offre={o} onTraitee={apresOffre} />)}
+            {lotAffiche ? <CarteItineraire lot={lotAffiche} /> : null}
             {missions && missions.length > 0 ? <Text style={styles.section}>EN COURS</Text> : null}
           </View>
         }
@@ -80,7 +117,7 @@ export default function EcranMissions() {
             <EtatVide
               titre="Aucune mission"
               texte={disponibilite?.disponible
-                ? 'Vous serez prévenu dès qu’une commande de vos zones est prête.'
+                ? 'Vous recevrez une offre dès qu’une commande de vos zones est prête.'
                 : 'Déclarez-vous disponible pour recevoir des missions.'}
             />
           ) : (

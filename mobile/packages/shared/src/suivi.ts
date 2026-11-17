@@ -49,6 +49,8 @@ export interface SuiviCommande {
   livreur: { latitude: number; longitude: number; date: string | null } | null;
   commerce: Position | null; destination: Position;
   pretePrevueLe: string | null; arriveeEstimee: string | null;
+  /** US-406 : heure promise, figee a l'acceptation par le commerce ; source IA ou REGLES. */
+  promesseLivraison: string | null; sourcePromesse: string | null;
 }
 /** Message temps reel /user/queue/positions (miroir de PositionCommande.java). */
 export interface PositionCommande { commandeId: number; latitude: number; longitude: number; date: string; arriveeEstimee: string | null }
@@ -81,4 +83,11 @@ export function creerApiSuivi(request: <T>(method: string, path: string, body?: 
   return {
     suiviCommande: (id: number) => request<SuiviCommande>('GET', '/api/commandes/' + id + '/suivi'),
   };
+}
+
+/** US-406 : « Livraison promise avant 12:45 » ; null sans promesse (commande non acceptee ou terminee). */
+export function messagePromesse(promesseLivraison: string | null): string | null {
+  if (!promesseLivraison) return null;
+  const promesse = new Date(promesseLivraison);
+  return `Livraison promise avant ${String(promesse.getHours()).padStart(2, '0')}:${String(promesse.getMinutes()).padStart(2, '0')}`;
 }

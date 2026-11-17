@@ -68,6 +68,10 @@ public class Livraison {
     private Instant annuleeLe;
     @Column(length = 300) private String motifAnnulation;
     private Boolean annuleeParService;   // US-311 : annulation par le responsable (null/false : par le client)
+    // Sprint 4 : lot de collectes confie a un coursier (US-403) et promesse de livraison figee a l'acceptation (US-406)
+    @ManyToOne private Lot lot;
+    private Instant promesseLivraison;
+    @Column(length = 10) private String sourcePromesse;   // IA ou REGLES
 
     /** Heure de fin annoncee ; repli acceptation + temps pour les commandes acceptees avant ce champ. */
     public Instant heurePretePrevue() {
