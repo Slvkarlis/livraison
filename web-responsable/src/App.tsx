@@ -9,13 +9,15 @@ import Vehicules from './pages/Vehicules';
 import Comptes from './pages/Comptes';
 import Audit from './pages/Audit';
 import Dispatch from './pages/Dispatch';
+import Finance from './pages/Finance';
 import MotDePasseOublie from './pages/MotDePasseOublie';
 import { useSession } from './session';
-import { destination, peutAudit, peutOperations } from './sprint1';
+import { destination, peutAudit, peutFinance, peutOperations } from './sprint1';
 import { api } from './api';
-function Guard({ operations = false, children }: { operations?: boolean; children: ReactNode }) {
+function Guard({ operations = false, finance = false, children }: { operations?: boolean; finance?: boolean; children: ReactNode }) {
   const { profil } = useSession();
-  return (operations ? peutOperations(profil) : peutAudit(profil)) ? children : <Navigate to="/acces-refuse" replace />;
+  const autorise = operations ? peutOperations(profil) : finance ? peutFinance(profil) : peutAudit(profil);
+  return autorise ? children : <Navigate to="/acces-refuse" replace />;
 }
 export default function App() {
   const { profil, chargement } = useSession();
@@ -39,6 +41,7 @@ export default function App() {
         <Route path="/audit" element={<Guard><Audit /></Guard>} />
         <Route path="/commandes" element={<Guard operations><Commandes /></Guard>} />
         <Route path="/dispatch" element={<Guard operations><Dispatch /></Guard>} />
+        <Route path="/finance" element={<Guard finance><Finance /></Guard>} />
         <Route path="/zones" element={<Guard operations><Zones /></Guard>} />
         <Route path="/livreurs" element={<Guard operations><Livreurs /></Guard>} />
         <Route path="/vehicules" element={<Guard operations><Vehicules /></Guard>} />

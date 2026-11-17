@@ -1,6 +1,6 @@
 import type {
-  AffectationRequest, AffectationZone, Livraison, SuiviResponsable, Livreur, LivreurRequest, LoginResponse, Profil, Supervision, Vehicule,
-  VehiculeRequest,
+  AffectationRequest, AffectationZone, Bareme, CaisseCoursier, Caisses, Closing, Commissions, Ecriture, Livraison, SuiviResponsable,
+  Livreur, LivreurRequest, LoginResponse, PorteeCommission, Profil, Recu, Supervision, TauxCommission, Vehicule, VehiculeRequest,
 } from './types';
 
 import { creerClientHttp } from '../../mobile/packages/shared/src/http';
@@ -87,6 +87,24 @@ export const api = {
   forcerAffectation: (commandeId: number, livreurId: number, motif: string) =>
     request<Supervision>('PUT', `/api/admin/dispatch/commandes/${commandeId}/forcer`, { livreurId, motif }),
   cycleDispatch: () => request<{ offresExpirees: number; offresProposees: number }>('POST', '/api/admin/dispatch/cycle'),
+
+  // Sprint 5 : chaine financiere (sous-role FINANCE)
+  commissions: () => request<Commissions>('GET', '/api/admin/finance/commissions'),
+  definirCommission: (portee: PorteeCommission, cible: { categorie?: string; partenaireId?: number }, taux: number) =>
+    request<TauxCommission>('PUT', '/api/admin/finance/commissions', { portee, ...cible, taux }),
+  supprimerCommission: (id: number) => request<void>('DELETE', `/api/admin/finance/commissions/${id}`),
+  baremes: () => request<Bareme[]>('GET', '/api/admin/finance/baremes'),
+  definirBareme: (zoneId: number, base: number, parKm: number) =>
+    request<Bareme>('PUT', `/api/admin/finance/baremes/${zoneId}`, { base, parKm }),
+  ledger: (query: string) => request<Ecriture[]>('GET', '/api/admin/finance/ledger?' + query),
+  caisses: () => request<Caisses>('GET', '/api/admin/finance/caisses'),
+  caisse: (livreurId: number) => request<CaisseCoursier>('GET', `/api/admin/finance/caisses/${livreurId}`),
+  deposer: (livreurId: number, montantRecu: number, motifEcart: string | null, cleIdempotence: string) =>
+    request<Recu>('POST', '/api/admin/finance/depots', { livreurId, montantRecu, motifEcart, cleIdempotence }),
+  recus: () => request<Recu[]>('GET', '/api/admin/finance/depots'),
+  apercuClosing: (semaine: string) => request<Closing>('GET', '/api/admin/finance/closings/apercu?semaine=' + semaine),
+  validerClosing: (semaine: string) => request<Closing>('POST', '/api/admin/finance/closings', { semaine }),
+  closings: () => request<Closing[]>('GET', '/api/admin/finance/closings'),
 };
 
 export interface Audit { id: number; date: string; acteur: string; action: string; cibleType: string; cibleId: number | null; details: string | null }

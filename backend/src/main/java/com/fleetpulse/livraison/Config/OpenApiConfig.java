@@ -23,8 +23,8 @@ public class OpenApiConfig {
     @Bean
     OpenAPI livraisonOpenApi() {
         return new OpenAPI()
-                .info(new Info().title("FleetPulse - API Livraison").version("sprint-4")
-                        .description("API full-stack des sprints 1 à 4. Parcours : catalogue → devis → commande COD → préparation → lot et offre au livreur → collecte → remise. "
+                .info(new Info().title("FleetPulse - API Livraison").version("sprint-5")
+                        .description("API full-stack des sprints 1 à 5. Parcours : catalogue → devis → commande COD → préparation → lot et offre au livreur → collecte → remise → dépôt du cash → closing hebdomadaire. "
                                 + "Montants en dinars tunisiens (DT), trois décimales maximum ; coordonnées WGS84 dans l’ordre latitude, longitude. "
                                 + "Utiliser le token retourné par /api/auth/login dans Authorize, sans le préfixe Bearer."))
                 .components(new Components().addSecuritySchemes("bearerAuth", new SecurityScheme()
@@ -72,7 +72,8 @@ public class OpenApiConfig {
                             || path.contains("/dossier") || path.contains("/comptes") || path.equals("/api/admin/responsables")
                             || path.equals("/api/partenaire/commerce") || path.endsWith("/disponibilite")
                             || path.endsWith("/missions/{id}/collecte") || path.endsWith("/missions/{id}/remise")
-                            || path.startsWith("/api/livreur/offres/") || path.startsWith("/api/admin/dispatch/")))
+                            || path.startsWith("/api/livreur/offres/") || path.startsWith("/api/admin/dispatch/")
+                            || path.startsWith("/api/admin/finance/")))
                         reponses.addApiResponse("409", erreur("État métier incompatible, doublon ou limite atteinte.", "ETAT_INVALIDE"));
                     if (path.equals("/api/commandes") || path.endsWith("/code-remise"))
                         reponses.addApiResponse("429", erreur("Délai entre deux demandes ou nombre d’envois dépassé.", "TROP_DE_DEMANDES"));
@@ -103,10 +104,12 @@ public class OpenApiConfig {
             case "statut", "role", "action" -> "Filtre facultatif parmi les valeurs de l’énumération affichées.";
             case "recherche" -> "Recherche facultative dans le nom du commerce, sans distinction de casse.";
             case "categorie" -> "Catégorie du commerce, sans distinction de casse.";
-            case "limite" -> "Nombre maximal d’événements, plafonné à 500 ; défaut 200.";
+            case "limite" -> "Nombre maximal de résultats ; défaut 200, plafond selon la route.";
             case "acteur" -> "Email de l’auteur de l’événement d’audit.";
             case "depuis" -> "Date ISO 8601 de début, incluse ; par défaut depuis le début de l’historique.";
-            case "type" -> "Type d’événement facultatif : STATUT, PREPARATION, OFFRE ou AFFECTATION.";
+            case "type" -> "Type facultatif parmi les valeurs de l’énumération affichées.";
+            case "semaine" -> "Un jour de la semaine visée, au format 2026-11-16 ; ramené au lundi (heure de Tunisie).";
+            case "commandeId", "partenaireId" -> "Identifiant de filtre facultatif.";
             case "cibleId" -> "Identifiant du compte ou de la ressource visée par l’événement.";
             default -> "Paramètre " + nom + ".";
         };

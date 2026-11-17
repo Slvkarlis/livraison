@@ -11,5 +11,7 @@ public enum ActionAudit {
     // Sprint 3 (US-311) : interventions du responsable sur une commande
     COMMANDE_ANNULEE, COLLECTE_VALIDEE_MANUELLEMENT, REMISE_VALIDEE_MANUELLEMENT,
     // Sprint 4 (US-407) : affectation imposee par le responsable
-    AFFECTATION_FORCEE
+    AFFECTATION_FORCEE,
+    // Sprint 5 : chaine financiere (FINANCE)
+    COMMISSION_MODIFIEE, COMMISSION_SUPPRIMEE, BAREME_MODIFIE, DEPOT_CASH_ENREGISTRE, CLOSING_VALIDE
 }

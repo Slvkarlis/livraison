@@ -167,3 +167,31 @@ export interface Supervision {
   maintenant: string; parLots: boolean; ia: boolean; delaiOffreSecondes: number; delaiRechercheMaxMinutes: number;
   enAttente: CommandeAttente[]; lots: LotSupervision[]; livreurs: LivreurSupervision[];
 }
+
+// Sprint 5 : chaine financiere, miroir de FinanceDto.java (montants en DT)
+export type PorteeCommission = 'GLOBAL' | 'CATEGORIE' | 'PARTENAIRE';
+export interface TauxCommission {
+  id: number; portee: PorteeCommission; categorie: string | null; partenaireId: number | null; nomCommerce: string | null;
+  taux: number; modifieLe: string | null; modifiePar: string | null;
+}
+export interface Commissions { tauxGlobal: number; taux: TauxCommission[] }
+export interface Bareme { zoneId: number; zoneNom: string; base: number; parKm: number; parDefaut: boolean; modifieLe: string | null }
+export interface Ecriture {
+  id: number; type: string; montant: number; commandeId: number | null; partenaireId: number | null; livreurId: number | null;
+  depotId: number | null; closingId: number | null; libelle: string | null; date: string;
+}
+export interface CommandeEncaissee { commandeId: number; codeSuivi: string; nomCommerce: string | null; livreeLe: string; montantEncaisse: number; ecartEncaissement: number }
+export interface SoldeCoursier { livreurId: number; prenom: string; nom: string; solde: number; nbCommandes: number; plusAncienne: string | null }
+export interface Caisses { cashEnCirculation: number; coursiers: SoldeCoursier[] }
+export interface Recu {
+  id: number; numeroRecu: string; livreurId: number; livreurNom: string; montantAttendu: number; montantRecu: number; ecart: number;
+  motifEcart: string | null; statut: 'RAPPROCHE' | 'ECART'; nbCommandes: number; date: string; enregistrePar: string; commandes: CommandeEncaissee[];
+}
+export interface CaisseCoursier { livreurId: number; prenom: string; nom: string; solde: number; commandes: CommandeEncaissee[]; recus: Recu[] }
+export interface ReleveReversement { partenaireId: number; nomCommerce: string; nbCommandes: number; ventes: number; commission: number; net: number }
+export interface ReleveCoursier { livreurId: number; prenom: string; nom: string; nbMissions: number; distanceKm: number; remuneration: number }
+export interface Closing {
+  id: number | null; semaine: string; debut: string; fin: string; valideLe: string | null; validePar: string | null;
+  totalReversements: number; totalRemunerations: number; nbCommandesPartenaires: number; nbMissions: number;
+  commandesNonRapprochees: number; cashNonRapproche: number; partenaires: ReleveReversement[]; coursiers: ReleveCoursier[];
+}

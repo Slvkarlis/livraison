@@ -15,3 +15,4 @@ export * from './suivi';
 export * from './remise';
 export * from './notifications';
 export * from './dispatch';
+export * from './finance';

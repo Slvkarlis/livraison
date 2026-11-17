@@ -25,6 +25,15 @@ export default function OngletsLivreurLayout() {
         }}
       />
       <Tabs.Screen
+        name="caisse"
+        options={{
+          title: 'Caisse',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={size} color={couleurIcone(color)} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profil"
         options={{
           title: 'Profil',

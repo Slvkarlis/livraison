@@ -20,6 +20,10 @@ export const ROLES_COMPTE: Record<RoleCompte, string> = {
 export function peutOperations(p: Droits | null): boolean {
   return p?.statut === 'ACTIF' && p.role === 'RESPONSABLE' && p.sousRole !== 'FINANCE';
 }
+/** Sprint 5 : chaine financiere, pour le sous-role FINANCE et l'administrateur principal. */
+export function peutFinance(p: Droits | null): boolean {
+  return p?.statut === 'ACTIF' && p.role === 'RESPONSABLE' && p.sousRole !== 'OPERATIONS';
+}
 export function peutAudit(p: Droits | null): boolean {
   return p?.statut === 'ACTIF' && p.role === 'RESPONSABLE';
 }
