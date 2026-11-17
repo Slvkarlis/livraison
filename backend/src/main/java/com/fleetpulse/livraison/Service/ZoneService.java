@@ -53,8 +53,17 @@ public class ZoneService {
     @Transactional(readOnly = true)
     public List<ZoneVue> lister() {
         var commerces = partenaires.findAll();
-        return zones.findAllByOrderByIdAsc().stream().map(z -> ZoneVue.from(z, commerces.stream()
-                .filter(p -> p.getZone() != null && p.getZone().getId().equals(z.getId())).count())).toList();
+        var toutes = zones.findAllByOrderByIdAsc();
+        return toutes.stream().map(z -> ZoneVue.from(z, commerces.stream()
+                .filter(p -> p.getZone() != null && p.getZone().getId().equals(z.getId())).count(), voisines(z, toutes))).toList();
+    }
+
+    /** Voisinage dérivé des contours : toujours cohérent après modification ou suppression, sans table dupliquée. */
+    private static List<ZoneVoisine> voisines(Zone zone, List<Zone> toutes) {
+        return toutes.stream().filter(autre -> !Objects.equals(zone.getId(), autre.getId()))
+                .filter(autre -> zone.getPolygone().touches(autre.getPolygone())
+                        && zone.getPolygone().intersection(autre.getPolygone()).getLength() > 1e-12)
+                .map(autre -> new ZoneVoisine(autre.getId(), autre.getNom())).toList();
     }
     /** SERIALIZABLE protège aussi les insertions concurrentes de zones qui se chevauchent. */
     @Transactional(isolation = Isolation.SERIALIZABLE)
@@ -84,7 +93,8 @@ public class ZoneService {
         audit.enregistrer(id == null ? ActionAudit.ZONE_CREEE : ActionAudit.ZONE_MODIFIEE, "ZONE", z.getId(), z.getNom());
         if (anciensFrais != null && anciensFrais.compareTo(frais) != 0)
             audit.enregistrer(ActionAudit.FRAIS_ZONE_MODIFIES, "ZONE", z.getId(), anciensFrais + " → " + frais + " DT");
-        return ZoneVue.from(z, partenaires.findAll().stream().filter(p -> p.getZone() != null && p.getZone().getId().equals(z.getId())).count());
+        return ZoneVue.from(z, partenaires.findAll().stream().filter(p -> p.getZone() != null && p.getZone().getId().equals(z.getId())).count(),
+                voisines(z, zones.findAllByOrderByIdAsc()));
     }
     public void rattacher(Partenaire p) {
         p.setZone(p.getLatitude() == null || p.getLongitude() == null ? null : trouver(p.getLatitude(), p.getLongitude()).orElse(null));

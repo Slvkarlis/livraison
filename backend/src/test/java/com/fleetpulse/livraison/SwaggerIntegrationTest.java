@@ -65,4 +65,31 @@ class SwaggerIntegrationTest {
                 .header("Authorization", "Bearer " + token).GET().build();
         assertEquals(200, http.send(protectedRequest, HttpResponse.BodyHandlers.ofString()).statusCode());
     }
+
+    @Test void toutesLesOperationsMetierOntUneDocumentationExploitable() throws Exception {
+        var api = json.readTree(get("/api-docs").body());
+        for (var path : api.get("paths").properties()) {
+            if (!path.getKey().startsWith("/api/") || path.getKey().startsWith("/api/auth/")) continue;
+            for (String verbe : java.util.List.of("get", "post", "put", "delete", "patch")) {
+                var operation = path.getValue().get(verbe);
+                if (operation == null) continue;
+                String contexte = verbe + " " + path.getKey();
+                assertFalse(operation.path("summary").asText("").isBlank(), contexte);
+                assertFalse(operation.path("description").asText("").isBlank(), contexte);
+                assertFalse(operation.path("tags").isEmpty(), contexte);
+                assertTrue(operation.get("responses").has("401"), contexte);
+                assertTrue(operation.get("responses").has("403"), contexte);
+                assertTrue(operation.get("responses").has("500"), contexte);
+            }
+        }
+        var vehicule = api.get("paths").get("/api/admin/vehicules/{id}").get("get");
+        assertTrue(vehicule.get("responses").has("404"));
+        assertTrue(api.get("paths").get("/api/admin/vehicules").get("post").get("responses").has("409"));
+        var commande = api.get("paths").get("/api/commandes").get("post");
+        assertTrue(commande.get("responses").has("201"));
+        assertTrue(commande.get("responses").has("409"));
+        assertTrue(commande.get("responses").has("429"));
+        assertEquals(16, api.at("/components/schemas/PanierRequest/properties/cleIdempotence/minLength").asInt());
+        assertEquals("Scooter", api.at("/components/schemas/CreateVehiculeRequest/properties/type/example").asText());
+    }
 }

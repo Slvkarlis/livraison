@@ -129,6 +129,16 @@ Le sous-rôle FINANCE accède au journal ; OPERATIONS et l’administrateur prin
 
 ## Vérifications
 
+Le [guide du TP 5](docs/TP5_TESTS_ET_SWAGGER.md) explique le CRUD testé,
+les annotations JUnit/Mockito/Spring/Swagger et la différence entre tests unitaires et intégration.
+La [validation du TP 5](docs/TP5_VALIDATION.md) présente les résultats et le périmètre contrôlé.
+
+```powershell
+cd backend
+.\mvnw.cmd -Punit-tests verify   # tests isolés + target/site/jacoco-unit/index.html
+.\mvnw.cmd verify               # suite complète + target/site/jacoco/index.html
+```
+
 ```bash
 npm run typecheck --prefix mobile               # TypeScript (apps + shared)
 npm run build --prefix web-responsable          # TypeScript + build de l'app web

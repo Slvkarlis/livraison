@@ -29,7 +29,12 @@ class Sprint3SuiviTest extends ParcoursSprint3 {
 
     // Le serveur peut fermer la session entre isConnected() et disconnect() (abonnement refuse) : rien a fermer alors
     @AfterEach void fermer() {
-        sessions.forEach(s -> { try { if (s.isConnected()) s.disconnect(); } catch (org.springframework.messaging.MessageDeliveryException deja) { } });
+        sessions.forEach(s -> {
+            try { if (s.isConnected()) s.disconnect(); }
+            catch (IllegalStateException | org.springframework.messaging.MessageDeliveryException dejaFermee) {
+                // Une connexion déjà fermée ne doit pas faire échouer le nettoyage du test.
+            }
+        });
     }
 
     /** Le point precedent date d'une heure : le prochain envoi, meme lointain, n'est pas un saut GPS. */

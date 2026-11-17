@@ -19,6 +19,14 @@ class CommandeWorkflowTest {
     final ApplicationEventPublisher evenements = mock(ApplicationEventPublisher.class);
     final CommandeWorkflow workflow = new CommandeWorkflow(historique, evenements);
 
+    @Test void noteConserveLeStatutEtPublieUnEvenementSansTransition() {
+        Livraison l = commande(PRETE);
+        workflow.noter(l, acteur(), "Délai ajusté");
+        assertEquals(PRETE, l.getStatut());
+        verify(historique).save(argThat(h -> h.getAncien() == PRETE && h.getNouveau() == PRETE && h.getMotif().equals("Délai ajusté")));
+        verify(evenements).publishEvent(any(CommandeStatutChange.class));
+    }
+
     static Livraison commande(StatutLivraison statut) {
         Client client = new Client(); client.setId(7L); client.setEmail("client@test"); client.setRole(Role.CLIENT);
         Partenaire partenaire = new Partenaire(); partenaire.setId(3L); partenaire.setEmail("partenaire3@test");

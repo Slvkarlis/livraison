@@ -123,6 +123,11 @@ public class AdminService {
         return vehiculeRepository.findAllByOrderByImmatriculationAsc().stream().map(VehiculeResponse::from).toList();
     }
 
+    @Transactional(readOnly = true)
+    public Optional<VehiculeResponse> findVehicule(Long id) {
+        return vehiculeRepository.findById(id).map(VehiculeResponse::from);
+    }
+
     @Transactional
     public VehiculeResponse createVehicule(CreateVehiculeRequest request) {
         if (request == null || request.immatriculation() == null || request.immatriculation().isBlank()) {

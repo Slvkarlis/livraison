@@ -81,7 +81,12 @@ class Sprint2bisTempsReelTest {
     }
     // Le serveur peut fermer la session entre isConnected() et disconnect() (abonnement refuse) : rien a fermer alors
     @AfterEach void fermer() {
-        sessions.forEach(s -> { try { if (s.isConnected()) s.disconnect(); } catch (org.springframework.messaging.MessageDeliveryException deja) { } });
+        sessions.forEach(s -> {
+            try { if (s.isConnected()) s.disconnect(); }
+            catch (IllegalStateException | org.springframework.messaging.MessageDeliveryException dejaFermee) {
+                // Le serveur peut fermer la connexion entre isConnected() et disconnect().
+            }
+        });
     }
 
     long commander() throws Exception {
