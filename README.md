@@ -126,6 +126,20 @@ Pages : **Commandes** (US-07, filtre par statut, recherche, détail), **Livreurs
 choix du véhicule), **Véhicules** (US-03 création/modification/activation, affectation à un livreur).
 Le Sprint 1 ajoute **Dossiers**, **Comptes**, **Journal d’audit** et **Mot de passe oublié**.
 Le sous-rôle FINANCE accède au journal ; OPERATIONS et l’administrateur principal accèdent à la gestion.
+Le Sprint 4 ajoute **Dispatch** : commandes prêtes en attente, offres de lots, livreurs disponibles, affectation forcée.
+
+## Lancer le service d'IA (Sprint 4, facultatif)
+
+Regroupement en lots et ETA prédictive (`ia/`, Python 3.11+). Sans lui, le backend applique ses règles Java.
+
+```bash
+cd ia
+pip install -r requirements.txt
+uvicorn fleetpulse_ia.app:app --port 8090
+# puis lancer le backend avec APP_IA_URL=http://localhost:8090
+```
+
+Détails, entraînement sur l'export de l'entrepôt et tests : [`ia/README.md`](ia/README.md). Rapport : [`docs/SPRINT4.md`](docs/SPRINT4.md).
 
 ## Vérifications
 

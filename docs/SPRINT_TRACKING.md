@@ -26,14 +26,16 @@ Legend: ✅ done · 🟡 partial (see note) · ⬜ not started · ➖ descoped �
 | 2 | Catalogue, zones et prise de commande | 9 | 44 | 🟡 Nearly done | ~39 |
 | 2 bis | Interface partenaire et First Mile | 10 (1 descoped) | 43 (40 in scope) | ✅ Done (device pass pending) | 40 |
 | 3 | Tracking temps réel et Last Mile | 8 | 42 | ✅ Done (live demo + device pass pending) | 42 |
-| 4 | Dispatch IA par lots | 7 | 45 | ⬜ **Next** | 0 |
-| 5 | Chaîne financière | 7 | 40 | ⬜ | 0 |
+| 4 | Dispatch IA par lots | 7 | 45 | ✅ Done (tests written, run pending) | 45 |
+| 5 | Chaîne financière | 7 | 40 | ⬜ **Next** | 0 |
 | 6 | Dashboard BI et notation | 8 | 42 | ⬜ | 0 |
 | 7 | Échecs, litiges et pilote | 8 | 37 | ⬜ | 0 |
 | 8 | Prospection automatisée et prévision de la demande | 6 | 37 | ⬜ | 0 |
-| **Total** | | **72 (1 descoped)** | **372 (369 in scope)** | | **~163 (≈ 44 %)** |
+| **Total** | | **72 (1 descoped)** | **372 (369 in scope)** | | **~208 (≈ 56 %)** |
 
-Current verification on branch `sprint-3` (2026-11-13): backend `mvn test` **106/106**, Node tests **67/67**, mobile typecheck ✅, mobile ESLint ✅, web build ✅. Not yet demoed on MySQL in the browser, no device pass. Sprint 3 report: [`SPRINT3.md`](SPRINT3.md).
+Branch `sprint-4` (2026-11-17): all 7 stories implemented with unit and HTTP tests, Python AI service in `ia/` (17 tests run). **`mvn test`, mobile typecheck/lint, Node tests and the web build still have to be run** (the code was written without access to Maven Central). Sprint 4 report: [`SPRINT4.md`](SPRINT4.md).
+
+_Verification on branch `sprint-3` (2026-11-13): backend `mvn test` **106/106**, Node tests **67/67**, mobile typecheck ✅, mobile ESLint ✅, web build ✅. Not yet demoed on MySQL in the browser, no device pass. Sprint 3 report: [`SPRINT3.md`](SPRINT3.md)._
 
 _Verification on branch `sprint-2bis` (2026-11-06): backend `mvn test` **77/77**, Node tests **49/49**, mobile typecheck ✅, mobile ESLint ✅, web build ✅. Runs locally on MySQL 8.4 (Docker); every Sprint 2 bis step demoed in the browser preview. Sprint 2 bis report: [`SPRINT2BIS.md`](SPRINT2BIS.md)._
 
@@ -70,14 +72,14 @@ Known limits carried forward: no real SMS/email gateway (`NotificationSender` on
 | US-205 | Save a geolocated delivery address | 5 | ✅ 🧪 | Up to 20 addresses, Leaflet map + GPS. |
 | US-206 | See delivery fee + total before confirming | 5 | ✅ 🧪 | Server quote with a SHA-256 fingerprint, fee taken from the zone. |
 | US-207 | Confirm a COD order with anti-abuse checks | 5 | ✅ 🧪 | Idempotency key, min/max, 3 active orders max, 30 s interval, pessimistic locks. Status `PENDING_PARTNER`. |
-| US-208 | Draw zones (polygons, **adjacent zones**, partner coverage) + fee per zone | 5 | 🟡 🧪 | Polygon CRUD, fees and overlap checks are done (JTS, stored as WKT). Shared borders are allowed, but **zone adjacency is not modelled**, although Sprint 4 batching (US-403) will need it. A partner serves only its own zone. |
+| US-208 | Draw zones (polygons, **adjacent zones**, partner coverage) + fee per zone | 5 | ✅ 🧪 | Polygon CRUD, fees and overlap checks (JTS, stored as WKT). Adjacent zones are derived from shared borders (`ZoneService.voisinages`) and used by Sprint 4 batching and overflow. A partner serves only its own zone. |
 | US-209 | Order history | 3 | ✅ 🧪 📱 | `GET /livraisons/mes`, enriched detail. |
 
 ### To close Sprint 2
 
 **Missing scope (from the backlog):**
 - [x] ~~**US-202, product options**~~: **not implemented for now** (decision 2026-11-04). US-202 is accepted without options and can be revisited later.
-- [ ] **US-208, adjacent zones:** shared borders are accepted but not recorded. Store each zone's adjacent zones (computed with JTS `touches` when a zone is saved) and show them on the web zones page. Estimated ~1–2 pts. Sprint 4 batching (US-403) needs it.
+- [x] **US-208, adjacent zones:** computed from the shared borders (`ZoneService.voisinages`), shown on the zones page and used by Sprint 4 batching and overflow.
 
 **Clean-up (decided 2026-11-03, COD only):**
 - [x] Remove Stripe and the old depot/slot order flow: groups A and the mobile part of B done in Sprint 2 bis step 0. **Left:** group C (entity fields + migration).
@@ -139,17 +141,19 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 | US-310 | 6-digit SMS fallback code | 3 | ✅ 🧪 | Sent at pickup (email if no phone); BCrypt, 5 attempts; resend after 1 min, 4 sends max. Demo: code in the server log. |
 | US-311 | Responsable cancels / manually validates a pickup or handover, with recorded reason | 5 | ✅ 🧪 | OPERATIONS; reason required; history + audit; client told who cancelled and why. Web order detail shows the timeline. |
 
-## Sprint 4 — Dispatch IA par lots (45 pts) ⬜
+## Sprint 4 — Dispatch IA par lots (45 pts) ✅
 
-| ID | User story | Pts | Status |
-|---|---|---|---|
-| US-401 | Event history into the data warehouse (statuses, GPS, prep, offers, zones) | 3 | ⬜ |
-| US-402 | Auto-assign by proximity / load / availability / zones | 8 | ⬜ |
-| US-403 | Batch 2–3 nearby pickups (same or adjacent zones) | 8 | ⬜ (depends on zone adjacency from US-208) |
-| US-404 | Optimise pickup/drop order under a max in-vehicle time | 8 | ⬜ (OR-Tools in the Python service) |
-| US-405 | Courier accepts/refuses a batch offer with a time limit, re-offer on refusal | 5 | ⬜ |
-| US-406 | AI ETA + promised time frozen at acceptance | 8 | ⬜ |
-| US-407 | Responsable supervises dispatch live, forces an assignment | 5 | ⬜ |
+Branch `sprint-4`. 🧪* = unit and HTTP tests written, to be run (`mvnw test`). Report: [`SPRINT4.md`](SPRINT4.md).
+
+| ID | User story | Pts | Status | Notes / evidence |
+|---|---|---|---|---|
+| US-401 | Event history into the data warehouse (statuses, GPS, prep, offers, zones) | 3 | ✅ 🧪* | `EvenementEntrepot` (after commit, own transaction); GPS stays in `position_livreur`; `/api/admin/entrepot/export` adds traces and zones with neighbours. |
+| US-402 | Auto-assign by proximity / load / availability / zones | 8 | ✅ 🧪* | `ChoixLivreur` score; secondary zone penalised; overflow to adjacent zones flagged *hors zone*; alert after 10 min without courier. |
+| US-403 | Batch 2–3 nearby pickups (same or adjacent zones) | 8 | ✅ 🧪* | Rules: `RegroupementLots`; AI: Clarke–Wright savings in `ia/`. Zone adjacency comes from the shared-border rule of `ZoneService` (closes the US-208 gap). |
+| US-404 | Optimise pickup/drop order under a max in-vehicle time | 8 | ✅ 🧪* | Exhaustive search (≤ 3 orders), 35 min on board max; same results in Java and Python. OR-Tools left for larger batches. |
+| US-405 | Courier accepts/refuses a batch offer with a time limit, re-offer on refusal | 5 | ✅ 🧪* 📱 | 60 s countdown in the courier app; refusal / expiry / unavailability → next courier, never the same one. |
+| US-406 | AI ETA + promised time frozen at acceptance | 8 | ✅ 🧪* | Promise at partner acceptance (AI or punctuality rule + 15 % margin); live ETA along the batch route. Model trained on simulated data until real history exists. |
+| US-407 | Responsable supervises dispatch live, forces an assignment | 5 | ✅ 🧪* | Back-office *Dispatch* page (10 s refresh), forced assignment audited `AFFECTATION_FORCEE`, manual cycle. |
 
 ## Sprint 5 — Chaîne financière (40 pts) ⬜
 
@@ -207,8 +211,8 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 | # | Criterion | Status |
 |---|---|---|
 | 1 | Client can place a COD order ~~; it expires at 2 min without a partner answer~~ | ✅ (expiry descoped 2026-11-03) |
-| 2 | Accepted order auto-assigned to an authorised courier, in a batch of 2–3 when possible | 🟡 Simple single-order assignment done (Sprint 2 bis); batching is Sprint 4 |
-| 3 | Live tracking + updated ETA + promised time | ⬜ |
+| 2 | Accepted order auto-assigned to an authorised courier, in a batch of 2–3 when possible | ✅ Sprint 4 batch dispatch (tests to run) |
+| 3 | Live tracking + updated ETA + promised time | ✅ Sprint 3 tracking + Sprint 4 promise frozen at acceptance |
 | 4 | Delivery validated only after amount confirmation + valid QR (or fallback code) | ⬜ |
 | 5 | Cash traced per courier and reconcilable | ⬜ |
 | 6 | Weekly closing produces partner payout + courier pay statements | ⬜ |
@@ -219,7 +223,7 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 
 ## Schedule check
 
-5 sprints (4 → 8, **201 pts**, plus ~5 pts left in Sprint 2) remain, about 10 weeks at 2 weeks per sprint. The team's capacity is 40–45 pts, which roughly matches the plan. Sprints 4 and 8 also need a Python AI service that **doesn't exist yet**: it was not started during Sprint 3, so it is the first task of Sprint 4. See `docs/ASSESSMENT.md` for risks and recommendations.
+4 sprints (5 → 8, **156 pts**) remain, about 8 weeks at 2 weeks per sprint. The team's capacity is 40–45 pts, which roughly matches the plan. The Python AI service now exists (`ia/`, Sprint 4); Sprint 8 adds the prospection and demand-forecast models to it. See `docs/ASSESSMENT.md` for risks and recommendations.
 
 ## Change log
 
@@ -231,3 +235,4 @@ All partner stories are built in the **mobile app** (partner screens inside `mob
 | 2026-11-06 | Sprint 2 bis done on branch `sprint-2bis` (9 US, 40 pts), report in `SPRINT2BIS.md`. Device pass pending. |
 | 2026-11-06 | Added `SPRINT_PLAN.md`: the general structure every sprint follows (plan template, steps, checks, commits, docs). |
 | 2026-11-13 | Sprint 3 done on branch `sprint-3` (8 US, 42 pts), report in `SPRINT3.md`. Live MySQL demo and device pass pending. |
+| 2026-11-17 | Sprint 4 done on branch `sprint-4` (7 US, 45 pts), report in `SPRINT4.md`; AI service in `ia/`. Test run pending (no Maven access when written). US-208 adjacency closed. |
