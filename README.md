@@ -127,6 +127,8 @@ choix du véhicule), **Véhicules** (US-03 création/modification/activation, af
 Le Sprint 1 ajoute **Dossiers**, **Comptes**, **Journal d’audit** et **Mot de passe oublié**.
 Le sous-rôle FINANCE accède au journal ; OPERATIONS et l’administrateur principal accèdent à la gestion.
 Le Sprint 4 ajoute **Dispatch** : commandes prêtes en attente, offres de lots, livreurs disponibles, affectation forcée.
+Le Sprint 5 ajoute **Finance** (sous-rôle FINANCE et administrateur principal) : cash des livreurs et dépôts avec reçu,
+closing hebdomadaire, commissions, barèmes de rémunération et ledger. Rapport : [`docs/SPRINT5.md`](docs/SPRINT5.md).
 
 ## Lancer le service d'IA (Sprint 4, facultatif)
 

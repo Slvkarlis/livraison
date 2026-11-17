@@ -27,11 +27,13 @@ Legend: ✅ done · 🟡 partial (see note) · ⬜ not started · ➖ descoped �
 | 2 bis | Interface partenaire et First Mile | 10 (1 descoped) | 43 (40 in scope) | ✅ Done (device pass pending) | 40 |
 | 3 | Tracking temps réel et Last Mile | 8 | 42 | ✅ Done (live demo + device pass pending) | 42 |
 | 4 | Dispatch IA par lots | 7 | 45 | ✅ Done (tests written, run pending) | 45 |
-| 5 | Chaîne financière | 7 | 40 | ⬜ **Next** | 0 |
-| 6 | Dashboard BI et notation | 8 | 42 | ⬜ | 0 |
+| 5 | Chaîne financière | 7 | 40 | ✅ Done (tests written, run pending) | 40 |
+| 6 | Dashboard BI et notation | 8 | 42 | ⬜ **Next** | 0 |
 | 7 | Échecs, litiges et pilote | 8 | 37 | ⬜ | 0 |
 | 8 | Prospection automatisée et prévision de la demande | 6 | 37 | ⬜ | 0 |
-| **Total** | | **72 (1 descoped)** | **372 (369 in scope)** | | **~208 (≈ 56 %)** |
+| **Total** | | **72 (1 descoped)** | **372 (369 in scope)** | | **~248 (≈ 67 %)** |
+
+Branch `sprint-5` (2026-11-17, from `sprint-4`): financial chain, 7 stories implemented with unit and HTTP tests; same pending test run as Sprint 4. Sprint 5 report: [`SPRINT5.md`](SPRINT5.md).
 
 Branch `sprint-4` (2026-11-17): all 7 stories implemented with unit and HTTP tests, Python AI service in `ia/` (17 tests run). **`mvn test`, mobile typecheck/lint, Node tests and the web build still have to be run** (the code was written without access to Maven Central). Sprint 4 report: [`SPRINT4.md`](SPRINT4.md).
 
@@ -155,17 +157,19 @@ Branch `sprint-4`. 🧪* = unit and HTTP tests written, to be run (`mvnw test`).
 | US-406 | AI ETA + promised time frozen at acceptance | 8 | ✅ 🧪* | Promise at partner acceptance (AI or punctuality rule + 15 % margin); live ETA along the batch route. Model trained on simulated data until real history exists. |
 | US-407 | Responsable supervises dispatch live, forces an assignment | 5 | ✅ 🧪* | Back-office *Dispatch* page (10 s refresh), forced assignment audited `AFFECTATION_FORCEE`, manual cycle. |
 
-## Sprint 5 — Chaîne financière (40 pts) ⬜
+## Sprint 5 — Chaîne financière (40 pts) ✅
 
-| ID | User story | Pts | Status |
-|---|---|---|---|
-| US-501 | Auto commission (12 % default) + partner net at delivery | 5 | ⬜ |
-| US-502 | Commission rates global / category / partner (most specific wins) | 3 | ⬜ |
-| US-503 | Immutable financial ledger per order | 8 | ⬜ |
-| US-504 | Courier sees cash balance, collected orders, deposit receipts | 3 | ⬜ |
-| US-505 | FINANCE records the full cash deposit, receipt, reconciliation | 5 | ⬜ |
-| US-506 | Weekly closing with payout statement per partner (reconciled cash only) | 8 | ⬜ |
-| US-512 | Pay scale per zone, pay per mission, weekly courier statement | 8 | ⬜ |
+Branch `sprint-5`. 🧪* = unit and HTTP tests written, to be run. Report: [`SPRINT5.md`](SPRINT5.md).
+
+| ID | User story | Pts | Status | Notes / evidence |
+|---|---|---|---|---|
+| US-501 | Auto commission (12 % default) + partner net at delivery | 5 | ✅ 🧪* | Booked in the handover transaction, once per order (`FinanceCommande` unique). Delivery fees stay with the platform. |
+| US-502 | Commission rates global / category / partner (most specific wins) | 3 | ✅ 🧪* | Rate frozen on each delivered order; changes audited. |
+| US-503 | Immutable financial ledger per order | 8 | ✅ 🧪* | `EcritureLedger` (`@Immutable`): GMV, commission, net, fees, cash, pay, gaps, deposits, payouts, payments; compensation/refund reserved for Sprint 7. |
+| US-504 | Courier sees cash balance, collected orders, deposit receipts | 3 | ✅ 🧪* 📱 | *Caisse* tab in the courier app (also pending pay and weekly statements). |
+| US-505 | FINANCE records the full cash deposit, receipt, reconciliation | 5 | ✅ 🧪* | Full deposit, gap only with a reason, receipt `RC-AAAA-NNNNNN`, idempotency key, lock per courier. |
+| US-506 | Weekly closing with payout statement per partner (reconciled cash only) | 8 | ✅ 🧪* | Finished weeks only, once per week, carry-over of unreconciled orders; payouts recorded, not executed. |
+| US-512 | Pay scale per zone, pay per mission, weekly courier statement | 8 | ✅ 🧪* | Default 3 DT + 0.5 DT/km; pay frozen at delivery; statement per courier in each closing. |
 
 ## Sprint 6 — Dashboard BI et notation (42 pts) ⬜
 
@@ -214,8 +218,8 @@ Branch `sprint-4`. 🧪* = unit and HTTP tests written, to be run (`mvnw test`).
 | 2 | Accepted order auto-assigned to an authorised courier, in a batch of 2–3 when possible | ✅ Sprint 4 batch dispatch (tests to run) |
 | 3 | Live tracking + updated ETA + promised time | ✅ Sprint 3 tracking + Sprint 4 promise frozen at acceptance |
 | 4 | Delivery validated only after amount confirmation + valid QR (or fallback code) | ⬜ |
-| 5 | Cash traced per courier and reconcilable | ⬜ |
-| 6 | Weekly closing produces partner payout + courier pay statements | ⬜ |
+| 5 | Cash traced per courier and reconcilable | ✅ Sprint 5 (tests to run) |
+| 6 | Weekly closing produces partner payout + courier pay statements | ✅ Sprint 5 (tests to run) |
 | 7 | Failed delivery declared with a reason and resolved by the Responsable | ⬜ |
 | 8 | BI dashboard with financial, operational and performance indicators | ⬜ |
 | 9 | Prospection model gives a scored merchant list with status tracking | ⬜ |
@@ -223,7 +227,7 @@ Branch `sprint-4`. 🧪* = unit and HTTP tests written, to be run (`mvnw test`).
 
 ## Schedule check
 
-4 sprints (5 → 8, **156 pts**) remain, about 8 weeks at 2 weeks per sprint. The team's capacity is 40–45 pts, which roughly matches the plan. The Python AI service now exists (`ia/`, Sprint 4); Sprint 8 adds the prospection and demand-forecast models to it. See `docs/ASSESSMENT.md` for risks and recommendations.
+3 sprints (6 → 8, **116 pts**) remain, about 6 weeks at 2 weeks per sprint. The team's capacity is 40–45 pts, which roughly matches the plan. The Python AI service now exists (`ia/`, Sprint 4); Sprint 8 adds the prospection and demand-forecast models to it. See `docs/ASSESSMENT.md` for risks and recommendations.
 
 ## Change log
 
@@ -236,3 +240,4 @@ Branch `sprint-4`. 🧪* = unit and HTTP tests written, to be run (`mvnw test`).
 | 2026-11-06 | Added `SPRINT_PLAN.md`: the general structure every sprint follows (plan template, steps, checks, commits, docs). |
 | 2026-11-13 | Sprint 3 done on branch `sprint-3` (8 US, 42 pts), report in `SPRINT3.md`. Live MySQL demo and device pass pending. |
 | 2026-11-17 | Sprint 4 done on branch `sprint-4` (7 US, 45 pts), report in `SPRINT4.md`; AI service in `ia/`. Test run pending (no Maven access when written). US-208 adjacency closed. |
+| 2026-11-17 | Sprint 5 done on branch `sprint-5` (7 US, 40 pts), report in `SPRINT5.md`. Test run pending. |
