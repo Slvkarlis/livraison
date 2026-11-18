@@ -84,3 +84,18 @@ L'ajout Actuator déjà présent dans `backend/pom.xml` est conservé hors des c
 - **M** tests `Sprint6BiTest.java`, `Sprint6OperationsTest.java` : minutes/km calculées,
   ETA 100 %, moyenne 4,5/5, dépôt après 2 h, un écart, productivité et permissions.
 - Vérification : 4 tests HTTP verts ; build web vert.
+
+## feat(US-514): seuils auditables et alertes actives dédupliquées
+
+- **A** main `Model/SeuilAlerte.java`, `Alerte.java`, `Model/enums/TypeAlerte.java`,
+  `Repository/SeuilAlerteRepository.java`, `AlerteRepository.java`, `Dto/AlerteDto.java`.
+- **A** main `Service/DetectionAlertes.java`, `AlerteService.java`, `Config/PlanificateurBi.java`,
+  `Controller/AlerteController.java`, `AlertesFinanceController.java` : cinq types de seuils,
+  verrou par type, unicité objet/type, résolution/réactivation, cloisonnement Finance/Opérations.
+- **M** main `Model/enums/ActionAudit.java` : `SEUIL_ALERTE_MODIFIE`.
+- **A** `web-responsable/src/composants/CockpitAlertes.tsx` ; **M** `pages/BiFinance.tsx`,
+  `BiOperations.tsx`, `Audit.tsx` : alertes, valeurs/seuils, date Tunis et formulaires validés.
+- **A** test `Sprint6AlertesTest.java` ; **M** `Sprint6OperationsTest.java`,
+  `backend/src/test/resources/application.properties` (planificateur désactivé).
+- Vérification : 2 parcours HTTP verts couvrant cinq déclencheurs, absence de doublon,
+  résolution, réactivation, égalité, désactivation, validation et audit ; build web vert.

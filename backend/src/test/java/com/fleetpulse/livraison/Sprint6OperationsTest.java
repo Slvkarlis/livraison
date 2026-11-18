@@ -70,6 +70,10 @@ class Sprint6OperationsTest extends ParcoursSprint3 {
         assertEquals(403, appel("GET", "/admin/bi/partenaires", null, finance).status());
         assertEquals(403, appel("GET", "/admin/bi/coursiers", null, finance).status());
         assertEquals(403, appel("GET", "/admin/finance/bi", null, operations).status());
+        assertEquals(403, appel("GET", "/admin/finance/bi/alertes", null, operations).status());
+        assertEquals(403, appel("GET", "/admin/finance/bi/seuils", null, operations).status());
+        assertEquals(403, appel("GET", "/admin/bi/alertes", null, finance).status());
+        assertEquals(403, appel("GET", "/admin/bi/seuils", null, finance).status());
         assertEquals(200, appel("GET", "/admin/bi/operations", null, operations).status());
         assertEquals(200, appel("GET", "/admin/finance/bi", null, finance).status());
         assertEquals(403, appel("GET", "/admin/bi/operations", null, partenaire).status());

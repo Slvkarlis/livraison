@@ -4,6 +4,7 @@ import { biApi } from '../biApi';
 import { EnTete, EtatTableau, useDonnees } from '../composants/ui';
 import { FiltresBi, Indicateur } from '../composants/BiCommun';
 import CarteDensite from '../composants/CarteDensite';
+import CockpitAlertes from '../composants/CockpitAlertes';
 import { filtreBi, periodeParDefaut, valeurBi } from '../../../mobile/packages/shared/src/bi';
 import { STATUTS } from '../../../mobile/packages/shared/src/format';
 
@@ -15,6 +16,7 @@ export default function BiOperations() {
   const charger = useCallback(() => biApi.operations(query), [query]);
   const { donnees: d, erreur, chargement, recharger } = useDonnees(charger);
   return <div className="bi-page"><EnTete titre="BI Opérations" sousTitre="Volume, densité et couverture actuelle des zones." />
+    <CockpitAlertes />
     <FiltresBi debut={debut} fin={fin} onDebut={setDebut} onFin={setFin} chargement={chargement} onValider={() => {
       const q = filtreBi(debut, fin, zone); if (q === query) void recharger(); else setQuery(q);
     }}><label className="champ">Zone<select value={zone} onChange={e => setZone(e.target.value)}><option value="">Toutes les zones</option>{zones?.map(z => <option key={z.id} value={z.id}>{z.nom}</option>)}</select></label></FiltresBi>

@@ -3,6 +3,7 @@ import { biApi } from '../biApi';
 import { EnTete, EtatTableau, useDonnees } from '../composants/ui';
 import { FiltresBi, Indicateur } from '../composants/BiCommun';
 import { filtreBi, periodeParDefaut } from '../../../mobile/packages/shared/src/bi';
+import CockpitAlertes from '../composants/CockpitAlertes';
 
 export default function BiFinance() {
   const initial = periodeParDefaut();
@@ -11,6 +12,7 @@ export default function BiFinance() {
   const charger = useCallback(() => biApi.finance(query), [query]);
   const { donnees: d, erreur, chargement, recharger } = useDonnees(charger);
   return <div className="bi-page"><EnTete titre="BI Finance" sousTitre="Les flux du ledger et l’état actuel des encaissements et des paiements." />
+    <CockpitAlertes finance />
     <FiltresBi debut={debut} fin={fin} onDebut={setDebut} onFin={setFin} chargement={chargement} onValider={() => {
       const q = filtreBi(debut, fin); if (q === query) void recharger(); else setQuery(q);
     }} />
