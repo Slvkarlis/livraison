@@ -99,3 +99,15 @@ L'ajout Actuator déjà présent dans `backend/pom.xml` est conservé hors des c
   `backend/src/test/resources/application.properties` (planificateur désactivé).
 - Vérification : 2 parcours HTTP verts couvrant cinq déclencheurs, absence de doublon,
   résolution, réactivation, égalité, désactivation, validation et audit ; build web vert.
+
+## feat(US-2B7): ventes privées du partenaire dans l'app client
+
+- **M** main `Dto/BiDto.java`, `Repository/BiRepository.java` ; **A**
+  `Service/VentesPartenaireService.java`, `Controller/VentesPartenaireController.java` :
+  partenaire actif déduit de l'authentification, CA/commandes livrées et top 20 SQL.
+- **M** `mobile/packages/shared/src/bi.ts`, `api.ts`, `index.ts` : API privée et validation des périodes.
+- **A** `mobile/mobile-client/src/composants/partenaire/EcranVentes.tsx`,
+  `src/app/partenaire/(onglets)/ventes.tsx` ; **M** `_layout.tsx` : onglet Ventes et tous les états.
+- **M** test `Sprint6BiTest.java` ; **A** `scripts/bi.test.cjs` : CA 12 DT, 2 articles,
+  borne minuit Tunis, isolement entre partenaires, mauvais rôles et affichage d'indisponibilités.
+- Vérification : scénario HTTP vert, 4 tests Node verts, typecheck mobile vert.

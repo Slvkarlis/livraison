@@ -42,6 +42,7 @@ export default function OngletsPartenaireLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="ventes" options={{ title: 'Ventes', tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart-outline" size={size} color={couleurIcone(color)} /> }} />
     </Tabs>
   );
 }

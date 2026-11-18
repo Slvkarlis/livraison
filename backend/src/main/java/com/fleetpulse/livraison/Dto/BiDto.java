@@ -30,4 +30,6 @@ public final class BiDto {
     public record ProductiviteZoneVue(Long id, String nom, long livraisons, long coursiers, double distanceEstimeeKm,
             double livraisonsParJour, Double missionsParCoursier) { }
     public record CoursiersVue(PeriodeBi periode, List<CoursierVue> coursiers, List<ProductiviteZoneVue> zones) { }
+    public record ProduitVenduVue(Long id, String nom, long quantite, BigDecimal chiffreAffaires) { }
+    public record VentesVue(PeriodeBi periode, BigDecimal chiffreAffaires, long commandes, List<ProduitVenduVue> meilleursProduits) { }
 }

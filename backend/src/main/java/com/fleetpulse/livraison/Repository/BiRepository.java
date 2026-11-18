@@ -112,6 +112,20 @@ public class BiRepository {
                 + zone("f.zoneId", zoneId) + " group by f.zoneId, z.nom order by f.zoneId", p, filtreZone(zoneId));
     }
 
+    public Object[] ventesPartenaire(PeriodeBi p, Long partenaireId) {
+        return periode("select sum(c.montantArticles), count(c.id) from Livraison c where c.partenaire.id = :partenaireId and c.statut = 'LIVREE' and c.livreeLe >= :depuis and c.livreeLe < :jusqua",
+                p, Map.of("partenaireId", partenaireId)).getFirst();
+    }
+    public List<Object[]> meilleursProduits(PeriodeBi p, Long partenaireId) {
+        return em.createQuery("""
+            select produit.id, produit.nom, sum(l.quantite), sum(l.sousTotal) from LigneCommande l join l.produit produit
+            where l.commande.partenaire.id = :partenaireId and l.commande.statut = 'LIVREE'
+              and l.commande.livreeLe >= :depuis and l.commande.livreeLe < :jusqua
+            group by produit.id, produit.nom order by sum(l.quantite) desc, sum(l.sousTotal) desc, produit.id
+            """, Object[].class).setParameter("partenaireId", partenaireId).setParameter("depuis", p.depuis())
+                .setParameter("jusqua", p.jusqua()).setMaxResults(20).getResultList();
+    }
+
     public List<Object[]> periode(String hql, PeriodeBi periode, Map<String, Object> parametres) {
         Map<String, Object> valeurs = new LinkedHashMap<>(parametres);
         valeurs.put("depuis", periode.depuis()); valeurs.put("jusqua", periode.jusqua());

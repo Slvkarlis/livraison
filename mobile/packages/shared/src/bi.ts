@@ -23,6 +23,17 @@ export interface CoursierBi {
 }
 export interface ProductiviteZoneBi { id: number | null; nom: string; livraisons: number; coursiers: number; distanceEstimeeKm: number; livraisonsParJour: number; missionsParCoursier: number | null }
 export interface CoursiersBi { periode: PeriodeBi; coursiers: CoursierBi[]; zones: ProductiviteZoneBi[] }
+export interface ProduitVendu { id: number; nom: string; quantite: number; chiffreAffaires: number }
+export interface VentesPartenaire { periode: PeriodeBi; chiffreAffaires: number; commandes: number; meilleursProduits: ProduitVendu[] }
+export function creerApiVentes(request: <T>(method: string, path: string, body?: unknown) => Promise<T>) {
+  return { ventesPartenaire: (debut: string, fin: string) => request<VentesPartenaire>('GET', '/api/partenaire/ventes?' + filtreBi(debut, fin)) };
+}
+export function verifierPeriodeBi(debut: string, fin: string): string | null {
+  const valide = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s + 'T12:00:00Z')) && new Date(s + 'T12:00:00Z').toISOString().slice(0, 10) === s;
+  if (!valide(debut) || !valide(fin)) return 'Saisissez les dates au format AAAA-MM-JJ.';
+  const jours = (Date.parse(fin + 'T12:00:00Z') - Date.parse(debut + 'T12:00:00Z')) / 86400000;
+  return jours < 0 || jours > 365 ? 'Choisissez une période de 1 à 366 jours, début avant fin.' : null;
+}
 export function jourTunis(date = new Date()): string {
   const parties = new Intl.DateTimeFormat('fr', { timeZone: 'Africa/Tunis', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
   const lire = (type: string) => parties.find(p => p.type === type)?.value ?? '';

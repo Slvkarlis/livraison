@@ -18,3 +18,4 @@ export * from './dispatch';
 export * from './finance';
 export * from './notation';
 export * from './PanneauNotation';
+export * from './bi';

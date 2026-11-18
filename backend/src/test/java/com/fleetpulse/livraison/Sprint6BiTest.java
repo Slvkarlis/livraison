@@ -89,5 +89,22 @@ class Sprint6BiTest extends ParcoursSprint3 {
         assertEquals(400, appel("GET", "/admin/finance/bi?debut=2026-02-01&fin=2026-01-01", null, admin).status());
         assertEquals(400, appel("GET", "/admin/finance/bi?debut=2000-01-01&fin=2026-01-01", null, admin).status());
         assertEquals(403, appel("GET", "/admin/finance/bi", null, client).status());
+        var ventes = succes(200, appel("GET", "/partenaire/ventes" + periode(), null, partenaire));
+        assertEquals(12, ventes.get("chiffreAffaires").asDouble()); assertEquals(1, ventes.get("commandes").asInt());
+        assertEquals(2, ventes.get("meilleursProduits").get(0).get("quantite").asInt());
+        assertEquals(12, ventes.get("meilleursProduits").get(0).get("chiffreAffaires").asDouble());
+        Instant hier = LocalDate.now(ZoneId.of("Africa/Tunis")).atStartOfDay(ZoneId.of("Africa/Tunis")).toInstant().minusSeconds(1);
+        livree(coursier, hier);
+        assertEquals(1, succes(200, appel("GET", "/partenaire/ventes" + periode(), null, partenaire)).get("commandes").asInt(), "borne Tunis exclusive");
+        Partenaire autre = new Partenaire(); autre.setNom("Test"); autre.setPrenom("Autre"); autre.setNomCommerce("Autre commerce");
+        autre.setEmail(UUID.randomUUID() + "@bi.test"); autre.setRole(Role.PARTENAIRE); autre.setMotDePasseHash(encoder.encode("autre-partenaire-password"));
+        utilisateurs.save(autre);
+        String autreToken = login(autre.getEmail(), "autre-partenaire-password");
+        var isolement = succes(200, appel("GET", "/partenaire/ventes" + periode() + "&partenaireId=" + partenaireId, null, autreToken));
+        assertEquals(0, isolement.get("chiffreAffaires").asDouble(), "un paramètre forgé n'élargit pas le périmètre serveur");
+        assertEquals(0, isolement.get("meilleursProduits").size());
+        assertEquals(403, appel("GET", "/partenaire/ventes", null, client).status());
+        assertEquals(403, appel("GET", "/partenaire/ventes", null, coursier.token()).status());
+        assertEquals(403, appel("GET", "/partenaire/ventes", null, admin).status());
     }
 }
