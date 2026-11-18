@@ -5,6 +5,7 @@ import { peutFinance, peutOperations } from '../sprint1';
 const LIENS = [
   { vers: '/bi-finance', libelle: 'BI Finance', icone: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
   { vers: '/bi-operations', libelle: 'BI Opérations', icone: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
+  { vers: '/bi-partenaires', libelle: 'BI Partenaires', icone: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
   { vers: '/zones', libelle: 'Zones et frais', icone: 'M3 3l6 3 6-3 6 3v15l-6-3-6 3-6-3zM9 6v15M15 3v15' },
   { vers: '/dossiers', libelle: 'Dossiers', icone: 'M4 4h16v16H4zM8 8h8M8 12h8' },
   { vers: '/comptes', libelle: 'Comptes', icone: 'M4 6h16M4 12h16M4 18h10' },

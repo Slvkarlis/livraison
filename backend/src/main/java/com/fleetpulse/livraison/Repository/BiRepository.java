@@ -61,6 +61,28 @@ public class BiRepository {
     public static String zone(String champ, Long id) { return id == null ? "" : " and " + champ + " = :zoneId"; }
     public static Map<String, Object> filtreZone(Long id) { return id == null ? Map.of() : Map.of("zoneId", id); }
 
+    public List<Object[]> partenaires(PeriodeBi p, Long zoneId) {
+        return periode("""
+            select p.id, p.nomCommerce, count(c.id),
+              sum(case when c.accepteeLe is not null then 1 else 0 end),
+              sum(case when c.motifRefus is not null then 1 else 0 end),
+              avg(case when c.tempsPreparationMinutes is not null and c.preteLe >= c.accepteeLe then c.tempsPreparationMinutes else null end),
+              avg(case when c.tempsPreparationMinutes is not null and c.preteLe >= c.accepteeLe then timestampdiff(second, c.accepteeLe, c.preteLe) / 60.0 else null end),
+              sum(case when c.tempsPreparationMinutes is not null and c.preteLe >= c.accepteeLe then 1 else 0 end)
+            from Livraison c join c.partenaire p where c.dateCreation >= :depuis and c.dateCreation < :jusqua
+            """ + zone("p.zone.id", zoneId) + " group by p.id, p.nomCommerce", p, filtreZone(zoneId));
+    }
+    public List<Object[]> notesPartenaires(PeriodeBi p, Long zoneId) {
+        return periode("""
+            select n.cible.id, avg(n.note), count(n.id) from Notation n
+            where n.cible.role = 'PARTENAIRE' and n.commande.dateCreation >= :depuis and n.commande.dateCreation < :jusqua
+            """ + zone("n.commande.partenaire.zone.id", zoneId) + " group by n.cible.id", p, filtreZone(zoneId));
+    }
+    public List<Object[]> motifs(PeriodeBi p, Long zoneId) {
+        return periode("select c.partenaire.id, c.motifRefus, count(c.id) from Livraison c where c.motifRefus is not null and c.dateCreation >= :depuis and c.dateCreation < :jusqua"
+                + zone("c.partenaire.zone.id", zoneId) + " group by c.partenaire.id, c.motifRefus", p, filtreZone(zoneId));
+    }
+
     public List<Object[]> periode(String hql, PeriodeBi periode, Map<String, Object> parametres) {
         Map<String, Object> valeurs = new LinkedHashMap<>(parametres);
         valeurs.put("depuis", periode.depuis()); valeurs.put("jusqua", periode.jusqua());

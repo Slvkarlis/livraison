@@ -12,6 +12,7 @@ import Dispatch from './pages/Dispatch';
 import Finance from './pages/Finance';
 import BiFinance from './pages/BiFinance';
 import BiOperations from './pages/BiOperations';
+import BiPartenaires from './pages/BiPartenaires';
 import MotDePasseOublie from './pages/MotDePasseOublie';
 import { useSession } from './session';
 import { destination, peutAudit, peutFinance, peutOperations } from './sprint1';
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/finance" element={<Guard finance><Finance /></Guard>} />
         <Route path="/bi-finance" element={<Guard finance><BiFinance /></Guard>} />
         <Route path="/bi-operations" element={<Guard operations><BiOperations /></Guard>} />
+        <Route path="/bi-partenaires" element={<Guard operations><BiPartenaires /></Guard>} />
         <Route path="/zones" element={<Guard operations><Zones /></Guard>} />
         <Route path="/livreurs" element={<Guard operations><Livreurs /></Guard>} />
         <Route path="/vehicules" element={<Guard operations><Vehicules /></Guard>} />

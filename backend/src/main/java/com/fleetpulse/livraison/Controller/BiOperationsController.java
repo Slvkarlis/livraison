@@ -10,8 +10,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController @RequiredArgsConstructor @RequestMapping("/api/admin/bi") @PreAuthorize("hasRole('OPERATIONS')")
 public class BiOperationsController {
     private final BiOperationsService operations;
+    private final BiPartenaireService partenaires;
     @GetMapping("/operations") public OperationsVue operations(@RequestParam(required = false) LocalDate debut,
             @RequestParam(required = false) LocalDate fin, @RequestParam(required = false) Long zoneId) {
         return operations.dashboard(PeriodeBi.de(debut, fin), zoneId);
+    }
+    @GetMapping("/partenaires") public PartenairesVue partenaires(@RequestParam(required = false) LocalDate debut,
+            @RequestParam(required = false) LocalDate fin, @RequestParam(required = false) Long zoneId) {
+        return partenaires.dashboard(PeriodeBi.de(debut, fin), zoneId);
     }
 }

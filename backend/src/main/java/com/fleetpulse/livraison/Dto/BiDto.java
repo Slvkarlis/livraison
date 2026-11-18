@@ -18,4 +18,10 @@ public final class BiDto {
             long commandesActives, long coursiersDisponibles, Double couverturePourcent) { }
     public record OperationsVue(PeriodeBi periode, Instant observeLe, List<StatutVue> statuts, List<ZoneVue> zones,
             Double gainDistanceKm, Double gainTempsMinutes, String indisponibiliteGains) { }
+    public record MotifVue(String motif, long commandes) { }
+    public record PartenaireVue(Long id, String nomCommerce, long commandes, long acceptees, long refusees,
+            Double tauxAcceptation, Double tauxRefus, Double preparationEstimeeMinutes, Double preparationReelleMinutes,
+            long preparationsMesurees, Double noteMoyenne, long nombreNotes, Integer classement, List<MotifVue> motifs,
+            Double tauxExpiration, Long reclamations) { }
+    public record PartenairesVue(PeriodeBi periode, List<PartenaireVue> partenaires) { }
 }

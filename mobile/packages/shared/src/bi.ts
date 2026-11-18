@@ -9,6 +9,13 @@ export interface OperationsBi {
   periode: PeriodeBi; observeLe: string; statuts: { statut: string; commandes: number }[]; zones: ZoneBi[];
   gainDistanceKm: number | null; gainTempsMinutes: number | null; indisponibiliteGains: string;
 }
+export interface PartenaireBi {
+  id: number; nomCommerce: string; commandes: number; acceptees: number; refusees: number; tauxAcceptation: number | null; tauxRefus: number | null;
+  preparationEstimeeMinutes: number | null; preparationReelleMinutes: number | null; preparationsMesurees: number;
+  noteMoyenne: number | null; nombreNotes: number; classement: number | null; motifs: { motif: string; commandes: number }[];
+  tauxExpiration: number | null; reclamations: number | null;
+}
+export interface PartenairesBi { periode: PeriodeBi; partenaires: PartenaireBi[] }
 export function jourTunis(date = new Date()): string {
   const parties = new Intl.DateTimeFormat('fr', { timeZone: 'Africa/Tunis', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
   const lire = (type: string) => parties.find(p => p.type === type)?.value ?? '';

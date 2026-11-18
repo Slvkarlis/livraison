@@ -64,3 +64,12 @@ L'ajout Actuator déjà présent dans `backend/pom.xml` est conservé hors des c
   `public/carte-bi.html` : filtres, carte de densité, tableau accessible et gains indisponibles.
 - **A** test `Sprint6OperationsTest.java` : volumes connus, couverture 0 puis 100 %, périodes,
   zone absente/invalide et droits croisés. 2 tests HTTP verts ; build web vert.
+
+## feat(US-509): préparation, décisions et classement partenaires
+
+- **M** main `Dto/BiDto.java`, `Repository/BiRepository.java`, `Controller/BiOperationsController.java` ;
+  **A** `Service/BiPartenaireService.java` : moyennes avec échantillons, motifs et classement stable.
+- **M** `mobile/packages/shared/src/bi.ts`, `web-responsable/src/biApi.ts`, `App.tsx`, `composants/Layout.tsx` ;
+  **A** `composants/useBi.ts`, `pages/BiPartenaires.tsx` : tableau avec légendes et indisponibilités explicites.
+- **M** test `Sprint6OperationsTest.java` : préparation 10/12 min, décisions 50/50 %, motif RUPTURE,
+  note 5 et classement ; filtre vide et accès FINANCE refusé. 3 tests HTTP verts ; build web vert.
