@@ -15,6 +15,7 @@ import { creerApiRemiseClient } from './remise';
 import { creerApiNotifications } from './notifications';
 import { creerApiDispatchLivreur } from './dispatch';
 import { creerApiCaisseLivreur } from './finance';
+import { creerApiNotation } from './notation';
 import type { Compte } from './sprint1';
 export { ApiError } from './http';
 export const http = creerClientHttp(apiBaseUrl, () => `Serveur injoignable (${apiBaseUrl()}). Vérifiez votre connexion et le backend.`);
@@ -40,6 +41,7 @@ export const api = {
   ...creerApiNotifications(request),
   ...creerApiDispatchLivreur(request),
   ...creerApiCaisseLivreur(request),
+  ...creerApiNotation(request),
   demo: async () => {
     const config = await request<unknown>('GET', '/api/auth/config');
     if (!estConfigurationAuth(config)) {

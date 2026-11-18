@@ -20,6 +20,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GestionErreurs {
     private static final Logger log = LoggerFactory.getLogger(GestionErreurs.class);
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    ResponseEntity<ErreurResponse> methodeNonPermise(Exception e) {
+        return ResponseEntity.status(405).body(new ErreurResponse("METHODE_NON_PERMISE", "Cette action n'est pas modifiable."));
+    }
     @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
     ResponseEntity<ErreurResponse> parametreManquant(Exception e) {
         return ResponseEntity.badRequest().body(new ErreurResponse("DONNEES_INVALIDES", "Paramètre obligatoire manquant."));

@@ -5,6 +5,7 @@ import {
   Ligne,
   MessageErreur,
   PastilleStatut,
+  PanneauNotation,
   STATUTS_PAIEMENT,
   api,
   formatCreneau,
@@ -130,6 +131,7 @@ export default function DetailCommande() {
           <AnnulationCommande key={livraison.statut} commandeId={livraison.id} onAnnulee={() => void charger()} />
         ) : null}
 
+        {livraison.statut === 'LIVREE' ? <PanneauNotation commandeId={livraison.id} /> : null}
         {etapes.length ? (
           <>
             <Text style={styles.section}>Suivi</Text>
