@@ -24,7 +24,7 @@ class EntrepotServiceTest {
     final Instant accepte = Instant.parse("2026-11-17T11:00:00Z");
 
     Livraison commande() {
-        Livraison c = commande(StatutLivraison.PRETE);
+        Livraison c = com.fleetpulse.livraison.support.DonneesTest.commande(StatutLivraison.PRETE);
         c.setAccepteeLe(accepte); c.setPreteLe(accepte.plusSeconds(12 * 60)); c.setTempsPreparationMinutes(10);
         return c;
     }

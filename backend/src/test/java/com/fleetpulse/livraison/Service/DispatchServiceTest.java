@@ -174,7 +174,8 @@ class DispatchServiceTest {
         when(lots.findAllByStatutOrderByIdAsc(StatutLot.PROPOSE)).thenReturn(List.of(lot));
         when(commandes.findAllByLotIdOrderByIdAsc(50L)).thenReturn(List.of(commande));
         when(zones.findAllByOrderByIdAsc()).thenReturn(List.of(zone(), voisine));
-        when(affectations.findAllByZoneId(3L)).thenReturn(List.of(renfort));
+        doReturn(List.of()).when(affectations).findAllByZoneId(2L);
+        doReturn(List.of(renfort)).when(affectations).findAllByZoneId(3L);
         when(offres.save(any())).thenAnswer(i -> i.getArgument(0));
 
         service.cycle();
