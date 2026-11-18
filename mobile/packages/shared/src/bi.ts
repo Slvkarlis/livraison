@@ -4,6 +4,11 @@ export interface FinanceBi {
   cashEnCirculation: number; reversementsAEffectuer: number; remunerationsAEffectuer: number;
   reversementsEffectues: number; remunerationsEffectuees: number; articlesVendus: number;
 }
+export interface ZoneBi { id: number; nom: string; latitude: number; longitude: number; commandes: number; livrees: number; commandesActives: number; coursiersDisponibles: number; couverturePourcent: number | null }
+export interface OperationsBi {
+  periode: PeriodeBi; observeLe: string; statuts: { statut: string; commandes: number }[]; zones: ZoneBi[];
+  gainDistanceKm: number | null; gainTempsMinutes: number | null; indisponibiliteGains: string;
+}
 export function jourTunis(date = new Date()): string {
   const parties = new Intl.DateTimeFormat('fr', { timeZone: 'Africa/Tunis', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
   const lire = (type: string) => parties.find(p => p.type === type)?.value ?? '';

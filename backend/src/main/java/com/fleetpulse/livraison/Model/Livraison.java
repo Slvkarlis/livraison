@@ -6,6 +6,10 @@ import java.time.Instant;
 import com.fleetpulse.livraison.Model.enums.*;
 
 @Entity @Getter @Setter @NoArgsConstructor
+@Table(indexes = { @Index(name = "idx_bi_commande_creation", columnList = "dateCreation"),
+    @Index(name = "idx_bi_commande_partenaire", columnList = "partenaire_id,dateCreation"),
+    @Index(name = "idx_bi_commande_livree", columnList = "livreeLe"),
+    @Index(name = "idx_bi_commande_coursier", columnList = "livreur_id,livreeLe") })
 public class Livraison {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Column(nullable = false, unique = true) private String codeSuivi;   // reference de la commande

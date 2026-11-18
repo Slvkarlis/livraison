@@ -1,0 +1,23 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin"><title>Densité par zone</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"><style>html,body,#map{height:100%;margin:0}</style></head>
+<body><div id="map" aria-label="Carte thermique par zone"></div>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" onerror="parent.postMessage({type:'densite-erreur'},location.origin)"></script>
+<script>
+if(window.L){
+  const map=L.map('map').setView([36.8065,10.1815],12), couche=L.layerGroup().addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'})
+    .on('tileerror',()=>parent.postMessage({type:'densite-erreur'},location.origin)).addTo(map);
+  window.addEventListener('message',e=>{
+    if(e.source!==parent||e.origin!==location.origin||e.data?.type!=='densite')return;
+    const zones=e.data.zones; couche.clearLayers(); const max=Math.max(1,...zones.map(z=>z.commandes));
+    zones.forEach(z=>{
+      const intensite=z.commandes/max;
+      L.circleMarker([z.latitude,z.longitude],{radius:8+30*Math.sqrt(intensite),color:intensite>.66?'#b91c1c':intensite>.33?'#ea580c':'#2563eb',fillOpacity:.55,weight:2})
+        .bindTooltip(document.createTextNode(z.nom+' : '+z.commandes+' commandes')).addTo(couche);
+    });
+    const bornes=L.featureGroup(couche.getLayers()).getBounds(); if(bornes.isValid())map.fitBounds(bornes,{padding:[45,45],maxZoom:13});
+  });
+  parent.postMessage({type:'densite-prete'},location.origin);
+}
+</script></body></html>

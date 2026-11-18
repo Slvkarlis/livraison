@@ -53,3 +53,14 @@ L'ajout Actuator déjà présent dans `backend/pom.xml` est conservé hors des c
 - **A** tests `Sprint6BiTest.java`, `Service/PeriodeBiTest.java` : jeu de 12 DT d'articles,
   1,440 DT de commission, marge −1 DT, cash 15 DT puis dépôt et net éligible 10,560 DT.
 - Vérification : 2 méthodes de test backend vertes, build web vert.
+
+## feat(US-508): volumes, densité Leaflet et couverture des zones
+
+- **M** main `Dto/BiDto.java`, `Repository/BiRepository.java`, `Model/Livraison.java` :
+  projections de statuts/zones/disponibilités et index de période, partenaire et coursier.
+- **A** main `Service/BiOperationsService.java`, `Controller/BiOperationsController.java`.
+- **M** `mobile/packages/shared/src/bi.ts`, `web-responsable/src/biApi.ts`, `App.tsx`,
+  `composants/Layout.tsx` ; **A** `pages/BiOperations.tsx`, `composants/CarteDensite.tsx`,
+  `public/carte-bi.html` : filtres, carte de densité, tableau accessible et gains indisponibles.
+- **A** test `Sprint6OperationsTest.java` : volumes connus, couverture 0 puis 100 %, périodes,
+  zone absente/invalide et droits croisés. 2 tests HTTP verts ; build web vert.
