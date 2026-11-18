@@ -33,6 +33,12 @@ public class CaisseService {
     private final ComptabiliteService comptabilite;
     private final AuditService audit;
 
+    /** État actuel du cash pour la cohorte de livraisons choisie, agrégé en base. */
+    @Transactional(readOnly = true)
+    public BigDecimal soldeBi(PeriodeBi periode) {
+        return CalculsFinanciers.argent(finances.soldeBi(periode.depuis(), periode.jusqua()));
+    }
+
     /** Cash en circulation, par coursier, du plus gros solde au plus petit. */
     @Transactional(readOnly = true)
     public CaissesVue caisses() {

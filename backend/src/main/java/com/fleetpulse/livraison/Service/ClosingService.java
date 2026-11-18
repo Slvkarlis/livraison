@@ -36,6 +36,15 @@ public class ClosingService {
     private final ComptabiliteService comptabilite;
     private final AuditService audit;
 
+    @org.springframework.beans.factory.annotation.Autowired private BiRepository agregatsBi;
+
+    /** Les mêmes conditions d'éligibilité que le closing, sans charger les missions. */
+    @Transactional(readOnly = true)
+    public com.fleetpulse.livraison.Dto.BiDto.Attentes attentesBi(PeriodeBi periode) {
+        Object[] ligne = agregatsBi.attentes(periode);
+        return new com.fleetpulse.livraison.Dto.BiDto.Attentes(BiFinanceService.argent(ligne[0]), BiFinanceService.argent(ligne[1]));
+    }
+
     /** Ce que donnerait le closing de la semaine (ou le closing deja valide de cette semaine). */
     @Transactional(readOnly = true)
     public ClosingVue apercu(LocalDate jour) {

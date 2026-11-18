@@ -39,3 +39,17 @@ L'ajout Actuator déjà présent dans `backend/pom.xml` est conservé hors des c
 - **M** `mobile/mobile-livreur/src/composants/caisse/EcranCaisse.tsx` : accès au détail livré.
 - **M** test `Sprint6NotationTest.java` : avis croisés, doublon, tiers, isolement des avis.
 - Typecheck mobile vert ; scénarios HTTP ajoutés au parcours de notation.
+
+## feat(US-507): dashboard Finance réconciliable avec le ledger
+
+- **A** main `Service/PeriodeBi.java`, `BiFinanceService.java`, `Repository/BiRepository.java`,
+  `Dto/BiDto.java`, `Controller/BiFinanceController.java` : périodes Tunis, agrégations SQL/JPA.
+- **M** main `Repository/FinanceCommandeRepository.java`, `Service/CaisseService.java`,
+  `ClosingService.java` : synthèses agrégées des soldes et des paiements éligibles.
+- **A** `mobile/packages/shared/src/bi.ts` : types et règles de période/affichage.
+- **A** `web-responsable/src/biApi.ts`, `composants/BiCommun.tsx`, `pages/BiFinance.tsx`.
+- **M** `web-responsable/src/App.tsx`, `composants/Layout.tsx`, `styles.css` : navigation
+  FINANCE, cartes et filtres adaptables à 390 px, légendes par indicateur.
+- **A** tests `Sprint6BiTest.java`, `Service/PeriodeBiTest.java` : jeu de 12 DT d'articles,
+  1,440 DT de commission, marge −1 DT, cash 15 DT puis dépôt et net éligible 10,560 DT.
+- Vérification : 2 méthodes de test backend vertes, build web vert.

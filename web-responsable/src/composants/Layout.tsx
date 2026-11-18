@@ -3,6 +3,7 @@ import { useSession } from '../session';
 import { peutFinance, peutOperations } from '../sprint1';
 
 const LIENS = [
+  { vers: '/bi-finance', libelle: 'BI Finance', icone: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
   { vers: '/zones', libelle: 'Zones et frais', icone: 'M3 3l6 3 6-3 6 3v15l-6-3-6 3-6-3zM9 6v15M15 3v15' },
   { vers: '/dossiers', libelle: 'Dossiers', icone: 'M4 4h16v16H4zM8 8h8M8 12h8' },
   { vers: '/comptes', libelle: 'Comptes', icone: 'M4 6h16M4 12h16M4 18h10' },
@@ -28,7 +29,7 @@ export default function Layout() {
           </div>
         </div>
         <nav>
-          {LIENS.filter(lien => lien.vers === '/audit' || (lien.vers === '/finance' ? peutFinance(profil) : peutOperations(profil))).map((lien) => (
+          {LIENS.filter(lien => lien.vers === '/audit' || (['/finance', '/bi-finance'].includes(lien.vers) ? peutFinance(profil) : peutOperations(profil))).map((lien) => (
             <NavLink key={lien.vers} to={lien.vers} className={({ isActive }) => (isActive ? 'actif' : '')}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d={lien.icone} /></svg>
               {lien.libelle}

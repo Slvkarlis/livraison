@@ -230,3 +230,16 @@ textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outl
 
 /* Sprint 4 : sections de la page Dispatch */
 h2.section { font-size: 15px; margin: 22px 0 10px; color: var(--discret); }
+
+/* Sprint 6 : cartes BI et filtres accessibles sur téléphone. */
+.bi-page { min-width: 0; }
+.bi-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; margin: 20px 0; }
+.bi-indicateur { padding: 20px; border: 1px solid var(--bordure); background: var(--surface); border-radius: 14px; min-width: 0; }
+.bi-indicateur h2 { margin: 0 0 12px; font-size: 15px; color: var(--discret); }
+.bi-indicateur strong { font-size: 28px; overflow-wrap: anywhere; }
+.bi-indicateur p, .bi-legende { color: var(--discret); font-size: 13px; line-height: 1.6; }
+.bi-filtres { flex-wrap: wrap; }
+.bi-legende { flex-basis: 100%; margin: 4px 0; }
+.bi-table { width: 100%; overflow-x: auto; margin: 16px 0; }
+.bi-table caption { text-align: left; padding: 12px 0; font-weight: 700; }
+@media (max-width: 450px) { .bi-filtres .champ { min-width: 100%; } .bi-filtres .bouton { width: 100%; } }
