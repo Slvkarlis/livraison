@@ -16,6 +16,13 @@ export interface PartenaireBi {
   tauxExpiration: number | null; reclamations: number | null;
 }
 export interface PartenairesBi { periode: PeriodeBi; partenaires: PartenaireBi[] }
+export interface CoursierBi {
+  id: number; missions: number; minutesParKm: number | null; trajetsMesures: number; etaMesurables: number; etaRespectes: number;
+  respectEtaPourcent: number | null; delaiDepotHeures: number | null; depotsMesures: number; missionsNonDeposees: number;
+  ecartsDepot: number; noteMoyenne: number | null; nombreNotes: number;
+}
+export interface ProductiviteZoneBi { id: number | null; nom: string; livraisons: number; coursiers: number; distanceEstimeeKm: number; livraisonsParJour: number; missionsParCoursier: number | null }
+export interface CoursiersBi { periode: PeriodeBi; coursiers: CoursierBi[]; zones: ProductiviteZoneBi[] }
 export function jourTunis(date = new Date()): string {
   const parties = new Intl.DateTimeFormat('fr', { timeZone: 'Africa/Tunis', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
   const lire = (type: string) => parties.find(p => p.type === type)?.value ?? '';

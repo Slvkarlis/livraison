@@ -73,3 +73,14 @@ L'ajout Actuator déjà présent dans `backend/pom.xml` est conservé hors des c
   **A** `composants/useBi.ts`, `pages/BiPartenaires.tsx` : tableau avec légendes et indisponibilités explicites.
 - **M** test `Sprint6OperationsTest.java` : préparation 10/12 min, décisions 50/50 %, motif RUPTURE,
   note 5 et classement ; filtre vide et accès FINANCE refusé. 3 tests HTTP verts ; build web vert.
+
+## feat(US-510): trajets, ETA, dépôts et productivité des zones
+
+- **M** main `Dto/BiDto.java`, `Repository/BiRepository.java`, `Controller/BiOperationsController.java`,
+  `Model/FinanceCommande.java` ; **A** `Service/BiCoursierService.java` : agrégations avec dénominateurs,
+  zone financière figée, index zone/période et partenaire/période.
+- **M** `mobile/packages/shared/src/bi.ts`, `web-responsable/src/biApi.ts`, `App.tsx`,
+  `composants/Layout.tsx` ; **A** `pages/BiCoursiers.tsx` : filtres période/zone, tableaux et définitions.
+- **M** tests `Sprint6BiTest.java`, `Sprint6OperationsTest.java` : minutes/km calculées,
+  ETA 100 %, moyenne 4,5/5, dépôt après 2 h, un écart, productivité et permissions.
+- Vérification : 4 tests HTTP verts ; build web vert.

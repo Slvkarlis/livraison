@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 public class BiOperationsController {
     private final BiOperationsService operations;
     private final BiPartenaireService partenaires;
+    private final BiCoursierService coursiers;
     @GetMapping("/operations") public OperationsVue operations(@RequestParam(required = false) LocalDate debut,
             @RequestParam(required = false) LocalDate fin, @RequestParam(required = false) Long zoneId) {
         return operations.dashboard(PeriodeBi.de(debut, fin), zoneId);
@@ -18,5 +19,9 @@ public class BiOperationsController {
     @GetMapping("/partenaires") public PartenairesVue partenaires(@RequestParam(required = false) LocalDate debut,
             @RequestParam(required = false) LocalDate fin, @RequestParam(required = false) Long zoneId) {
         return partenaires.dashboard(PeriodeBi.de(debut, fin), zoneId);
+    }
+    @GetMapping("/coursiers") public CoursiersVue coursiers(@RequestParam(required = false) LocalDate debut,
+            @RequestParam(required = false) LocalDate fin, @RequestParam(required = false) Long zoneId) {
+        return coursiers.dashboard(PeriodeBi.de(debut, fin), zoneId);
     }
 }

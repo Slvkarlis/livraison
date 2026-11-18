@@ -83,6 +83,35 @@ public class BiRepository {
                 + zone("c.partenaire.zone.id", zoneId) + " group by c.partenaire.id, c.motifRefus", p, filtreZone(zoneId));
     }
 
+    public List<Object[]> coursiers(PeriodeBi p, Long zoneId) {
+        return periode("""
+            select f.livreur.id, count(f.id),
+              sum(case when f.distanceKm > 0 and c.livreeLe >= c.recupereeLe then timestampdiff(second,c.recupereeLe,c.livreeLe) / 60.0 else 0 end),
+              sum(case when f.distanceKm > 0 and c.livreeLe >= c.recupereeLe then f.distanceKm else 0 end),
+              sum(case when f.distanceKm > 0 and c.livreeLe >= c.recupereeLe then 1 else 0 end),
+              sum(case when c.promesseLivraison is not null then 1 else 0 end),
+              sum(case when c.livreeLe <= c.promesseLivraison then 1 else 0 end),
+              avg(case when d.date >= f.livreeLe then timestampdiff(second,f.livreeLe,d.date) / 3600.0 else null end),
+              sum(case when d.date >= f.livreeLe then 1 else 0 end),
+              sum(case when f.depot is null then 1 else 0 end)
+            from FinanceCommande f join f.commande c left join f.depot d
+            where f.livreur is not null and c.statut = 'LIVREE' and f.livreeLe >= :depuis and f.livreeLe < :jusqua
+            """ + zone("f.zoneId", zoneId) + " group by f.livreur.id order by f.livreur.id", p, filtreZone(zoneId));
+    }
+    public List<Object[]> ecartsDepot(PeriodeBi p, Long zoneId) {
+        return periode("select e.livreurId, count(e.id) from EcritureLedger e where e.type = 'ECART_DEPOT' and e.date >= :depuis and e.date < :jusqua"
+                + (zoneId == null ? "" : " and exists (select f.id from FinanceCommande f where f.depot.id = e.depotId and f.zoneId = :zoneId)")
+                + " group by e.livreurId", p, filtreZone(zoneId));
+    }
+    public List<Object[]> notesCoursiers(PeriodeBi p, Long zoneId) {
+        return periode("select n.cible.id, avg(n.note), count(n.id) from Notation n join FinanceCommande f on f.commande = n.commande where n.cible.role = 'LIVREUR' and f.livreeLe >= :depuis and f.livreeLe < :jusqua"
+                + zone("f.zoneId", zoneId) + " group by n.cible.id", p, filtreZone(zoneId));
+    }
+    public List<Object[]> productivite(PeriodeBi p, Long zoneId) {
+        return periode("select f.zoneId, z.nom, count(f.id), count(distinct f.livreur.id), sum(f.distanceKm) from FinanceCommande f left join Zone z on z.id = f.zoneId where f.commande.statut = 'LIVREE' and f.livreeLe >= :depuis and f.livreeLe < :jusqua"
+                + zone("f.zoneId", zoneId) + " group by f.zoneId, z.nom order by f.zoneId", p, filtreZone(zoneId));
+    }
+
     public List<Object[]> periode(String hql, PeriodeBi periode, Map<String, Object> parametres) {
         Map<String, Object> valeurs = new LinkedHashMap<>(parametres);
         valeurs.put("depuis", periode.depuis()); valeurs.put("jusqua", periode.jusqua());

@@ -21,6 +21,8 @@ class Sprint6BiTest extends ParcoursSprint3 {
     @Autowired LivreurRepository livreurs;
     @Autowired ComptabiliteService comptabilite;
     @Autowired BiRepository agregats;
+    @Autowired FinanceCommandeRepository finances;
+    @Autowired DepotCashRepository depots;
 
     Livraison livree(Coursier coursier, Instant date) {
         Livraison c = new Livraison();
@@ -45,7 +47,7 @@ class Sprint6BiTest extends ParcoursSprint3 {
     @Test void financeSeRecoupeAvecLeLedgerEtLesDepots() throws Exception {
         Coursier coursier = coursier("BI");
         succes(200, appel("PUT", "/admin/finance/baremes/" + zoneA, Map.of("base", 4, "parKm", 0), admin));
-        livree(coursier, Instant.now());
+        var commande = livree(coursier, Instant.now());
         var d = succes(200, appel("GET", "/admin/finance/bi" + periode(), null, admin));
         // Les tests partagent la base : comparer le delta n'est pas nécessaire ici, la finance est le premier et seul jeu comptabilisé par ce test.
         assertEquals(12, d.get("gmv").asDouble(), 1e-9);
@@ -60,7 +62,25 @@ class Sprint6BiTest extends ParcoursSprint3 {
         for (Object[] r : agregats.ledger(p)) sommes.put((TypeEcriture) r[0], (BigDecimal) r[1]);
         assertEquals(sommes.get(TypeEcriture.GMV).doubleValue(), d.get("gmv").asDouble());
         assertEquals(sommes.get(TypeEcriture.COMMISSION).doubleValue(), d.get("commissionsNettes").asDouble());
-        succes(201, appel("POST", "/admin/finance/depots", Map.of("livreurId", coursier.id(), "montantRecu", 15, "cleIdempotence", UUID.randomUUID().toString()), admin));
+        succes(201, appel("POST", "/commandes/" + commande.getId() + "/notations", Map.of("cible", "LIVREUR", "note", 4), client));
+        succes(201, appel("POST", "/commandes/" + commande.getId() + "/notations", Map.of("cible", "LIVREUR", "note", 5), partenaire));
+        var coursiers = succes(200, appel("GET", "/admin/bi/coursiers" + periode() + "&zoneId=" + zoneA, null, admin));
+        var coursierBi = coursiers.get("coursiers").get(0);
+        assertEquals(1, coursierBi.get("missions").asInt());
+        double km = finances.findByCommandeId(commande.getId()).orElseThrow().getDistanceKm();
+        assertEquals(Math.round(15.0 / km * 1000) / 1000.0, coursierBi.get("minutesParKm").asDouble(), 1e-6);
+        assertEquals(100, coursierBi.get("respectEtaPourcent").asDouble()); assertEquals(1, coursierBi.get("etaMesurables").asInt());
+        assertTrue(coursierBi.get("delaiDepotHeures").isNull()); assertEquals(1, coursierBi.get("missionsNonDeposees").asInt());
+        assertEquals(4.5, coursierBi.get("noteMoyenne").asDouble());
+        assertEquals(1, coursiers.get("zones").get(0).get("livraisonsParJour").asDouble());
+        assertEquals(1, coursiers.get("zones").get(0).get("missionsParCoursier").asDouble());
+        succes(201, appel("POST", "/admin/finance/depots", Map.of("livreurId", coursier.id(), "montantRecu", 14,
+                "motifEcart", "Manque de monnaie", "cleIdempotence", UUID.randomUUID().toString()), admin));
+        var depot = finances.findByCommandeId(commande.getId()).orElseThrow().getDepot();
+        depot.setDate(commande.getLivreeLe().plusSeconds(7200)); depots.save(depot);
+        coursierBi = succes(200, appel("GET", "/admin/bi/coursiers" + periode() + "&zoneId=" + zoneA, null, admin)).get("coursiers").get(0);
+        assertEquals(2, coursierBi.get("delaiDepotHeures").asDouble()); assertEquals(1, coursierBi.get("depotsMesures").asInt());
+        assertEquals(1, coursierBi.get("ecartsDepot").asInt()); assertEquals(0, coursierBi.get("missionsNonDeposees").asInt());
         d = succes(200, appel("GET", "/admin/finance/bi" + periode(), null, admin));
         assertEquals(0, d.get("cashEnCirculation").asDouble());
         assertEquals(10.56, d.get("reversementsAEffectuer").asDouble(), 1e-9);

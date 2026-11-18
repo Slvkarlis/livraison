@@ -11,7 +11,8 @@ import lombok.*;
  * et aux closings (US-506, US-512) evoluent.
  */
 @Entity @Getter @Setter @NoArgsConstructor
-@Table(indexes = { @Index(name = "idx_finance_livreur_depot", columnList = "livreur_id,depot_id"), @Index(name = "idx_finance_livree", columnList = "livreeLe") })
+@Table(indexes = { @Index(name = "idx_finance_livreur_depot", columnList = "livreur_id,depot_id"), @Index(name = "idx_finance_livree", columnList = "livreeLe"),
+        @Index(name = "idx_bi_finance_zone", columnList = "zoneId,livreeLe"), @Index(name = "idx_bi_finance_partenaire", columnList = "partenaire_id,livreeLe") })
 public class FinanceCommande {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @OneToOne(optional = false) @JoinColumn(name = "commande_id", unique = true) private Livraison commande;

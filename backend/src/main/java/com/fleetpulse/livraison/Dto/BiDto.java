@@ -24,4 +24,10 @@ public final class BiDto {
             long preparationsMesurees, Double noteMoyenne, long nombreNotes, Integer classement, List<MotifVue> motifs,
             Double tauxExpiration, Long reclamations) { }
     public record PartenairesVue(PeriodeBi periode, List<PartenaireVue> partenaires) { }
+    public record CoursierVue(Long id, long missions, Double minutesParKm, long trajetsMesures, long etaMesurables,
+            long etaRespectes, Double respectEtaPourcent, Double delaiDepotHeures, long depotsMesures,
+            long missionsNonDeposees, long ecartsDepot, Double noteMoyenne, long nombreNotes) { }
+    public record ProductiviteZoneVue(Long id, String nom, long livraisons, long coursiers, double distanceEstimeeKm,
+            double livraisonsParJour, Double missionsParCoursier) { }
+    public record CoursiersVue(PeriodeBi periode, List<CoursierVue> coursiers, List<ProductiviteZoneVue> zones) { }
 }
