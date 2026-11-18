@@ -52,6 +52,10 @@ public class NotationService {
     private List<Utilisateur> cibles(Livraison c, Utilisateur auteur) {
         if (auteur.getRole() == Role.CLIENT && c.getClient().getId().equals(auteur.getId()))
             return java.util.stream.Stream.of(c.getPartenaire(), c.getLivreur()).filter(Objects::nonNull).map(u -> (Utilisateur) u).toList();
+        if (auteur.getRole() == Role.LIVREUR && c.getLivreur() != null && c.getLivreur().getId().equals(auteur.getId()))
+            return List.of(c.getClient());
+        if (auteur.getRole() == Role.PARTENAIRE && c.getPartenaire() != null && c.getPartenaire().getId().equals(auteur.getId()))
+            return c.getLivreur() == null ? List.of() : List.of(c.getLivreur());
         throw new AccessDeniedException("Seuls les participants réels peuvent noter cette commande.");
     }
 

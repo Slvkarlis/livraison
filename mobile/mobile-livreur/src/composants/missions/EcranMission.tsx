@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Chargement, MessageErreur, api, formatHeure, formatMontant, useEvenementsCommandes, type Mission } from '@fleetpulse/shared';
+import { Chargement, MessageErreur, PanneauNotation, api, formatHeure, formatMontant, useEvenementsCommandes, type Mission } from '@fleetpulse/shared';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -91,6 +91,7 @@ export default function EcranMission() {
           </Text>
         </View>
       ) : null}
+      {mission.statut === 'LIVREE' ? <PanneauNotation commandeId={mission.id} /> : null}
     </ScrollView>
   );
 }

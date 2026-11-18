@@ -29,3 +29,13 @@ L'ajout Actuator déjà présent dans `backend/pom.xml` est conservé hors des c
 - **A** test `Sprint6NotationTest.java`, `scripts/notation.test.cjs`.
 - Vérification : parcours HTTP H2 vert (livraison réelle, refus, doublon, moyenne),
   3 tests Node verts, typecheck mobile vert. Une méthode HTTP de test couvre plusieurs assertions.
+
+## feat(US-511): avis croisés des coursiers et des partenaires
+
+- **M** main `Service/NotationService.java` : coursier participant → client ; partenaire
+  participant → coursier ; toutes les autres combinaisons interdites.
+- **M** `mobile/mobile-client/src/composants/partenaire/DetailCommandeRecue.tsx`,
+  `mobile/mobile-livreur/src/composants/missions/EcranMission.tsx` : formulaire partagé.
+- **M** `mobile/mobile-livreur/src/composants/caisse/EcranCaisse.tsx` : accès au détail livré.
+- **M** test `Sprint6NotationTest.java` : avis croisés, doublon, tiers, isolement des avis.
+- Typecheck mobile vert ; scénarios HTTP ajoutés au parcours de notation.

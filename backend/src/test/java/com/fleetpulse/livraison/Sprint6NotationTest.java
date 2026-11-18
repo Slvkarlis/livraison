@@ -44,4 +44,20 @@ class Sprint6NotationTest extends ParcoursSprint3 {
         succes(201, appel("POST", "/commandes/" + autre + "/notations", Map.of("cible", "PARTENAIRE", "note", 2), client));
         assertEquals(3.0, notes.moyenne(partenaireId));
     }
+
+    @Test void notesCroiseesEtConfidentialiteDesAvis() throws Exception {
+        Coursier coursier = coursierDisponible("Nour");
+        long id = livrer(coursier);
+        String route = "/commandes/" + id + "/notations";
+        succes(201, appel("POST", route, Map.of("cible", "CLIENT", "note", 3), coursier.token()));
+        assertEquals(409, appel("POST", route, Map.of("cible", "CLIENT", "note", 4), coursier.token()).status());
+        succes(201, appel("POST", route, Map.of("cible", "LIVREUR", "note", 4), partenaire));
+        assertEquals(403, appel("POST", route, Map.of("cible", "CLIENT", "note", 4), partenaire).status());
+        assertEquals(403, appel("POST", route, Map.of("cible", "PARTENAIRE", "note", 4), coursier.token()).status());
+        Coursier autre = coursier("Autre");
+        assertEquals(403, appel("POST", route, Map.of("cible", "CLIENT", "note", 1), autre.token()).status());
+        assertEquals(403, appel("GET", route, null, admin).status());
+        assertEquals(0, succes(200, appel("GET", route, null, client)).get("notes").size());
+        assertEquals(1, succes(200, appel("GET", route, null, partenaire)).get("notes").size());
+    }
 }

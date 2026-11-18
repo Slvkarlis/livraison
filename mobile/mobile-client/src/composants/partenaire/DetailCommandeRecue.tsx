@@ -6,6 +6,7 @@ import {
   Ligne,
   MessageErreur,
   PastilleStatut,
+  PanneauNotation,
   ROLES_ACTEUR,
   api,
   formatHeure,
@@ -160,6 +161,7 @@ export default function DetailCommandeRecue() {
         </View>
       ) : null}
 
+      {commande.statut === 'LIVREE' ? <PanneauNotation commandeId={commande.id} /> : null}
       <Text style={styles.section}>Historique</Text>
       <FriseHistorique etapes={commande.historique} libelle={libelleEtapePartenaire} />
     </ScrollView>

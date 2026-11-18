@@ -10,7 +10,7 @@ import {
   useEvenementsCommandes,
   type CaisseLivreur,
 } from '@fleetpulse/shared';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -71,7 +71,7 @@ export default function EcranCaisse() {
                 {caisse.commandes.map((c) => (
                   <View key={c.commandeId} style={styles.ligne}>
                     <View style={styles.flex}>
-                      <Text style={styles.texte}>{c.nomCommerce ?? c.codeSuivi}</Text>
+                      <Text accessibilityRole="link" onPress={() => router.push(`/mission/${c.commandeId}`)} style={styles.texte}>{c.nomCommerce ?? c.codeSuivi} · Noter le client</Text>
                       <Text style={styles.discret}>{c.codeSuivi} · {jourHeure(c.livreeLe)}</Text>
                     </View>
                     <Text style={styles.texteFort}>{formatMontant(c.montantEncaisse)}</Text>
