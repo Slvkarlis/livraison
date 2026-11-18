@@ -7,6 +7,7 @@ import org.hibernate.annotations.Immutable;
 
 /** Une cible réelle de la commande ; aucune cible polymorphe sans clé étrangère. */
 @Entity @Immutable @Getter @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@org.hibernate.annotations.Check(constraints = "note between 1 and 5")
 @Table(uniqueConstraints = @UniqueConstraint(name = "uk_notation_participant", columnNames = {"commande_id", "auteur_id", "cible_id"}),
         indexes = @Index(name = "idx_notation_cible_date", columnList = "cible_id,date"))
 public class Notation {

@@ -31,6 +31,7 @@ export default function EcranMissions() {
   const { profil } = useAuth();
   const [disponibilite, setDisponibilite] = useState<Disponibilite | null>(null);
   const [missions, setMissions] = useState<Mission[] | null>(null);
+  const [livrees, setLivrees] = useState<Mission[]>([]);
   // Sprint 4 : offres de lots en attente de reponse et lots acceptes (itineraire)
   const [offres, setOffres] = useState<OffreLot[]>([]);
   const [lots, setLots] = useState<LotLivreur[]>([]);
@@ -46,9 +47,10 @@ export default function EcranMissions() {
 
   const charger = useCallback(async () => {
     try {
-      const [d, m] = await Promise.all([api.disponibilite(), api.missions()]);
+      const [d, m, h] = await Promise.all([api.disponibilite(), api.missions(), api.missionsLivrees()]);
       setDisponibilite(d);
       setMissions(m);
+      setLivrees(h);
       await chargerOffres();
       setErreur(null);
     } catch (e) {
@@ -60,6 +62,7 @@ export default function EcranMissions() {
   // Temps reel : offre proposee, mission affectee, ou commande modifiee (annulation, collecte...)
   useEvenementsCommandes(() => {
     void api.missions().then(setMissions).catch(() => {});
+    void api.missionsLivrees().then(setLivrees).catch(() => {});
     void chargerOffres().catch(() => {});
   });
   const disponible = disponibilite?.disponible ?? false;
@@ -125,6 +128,10 @@ export default function EcranMissions() {
           )
         }
         ItemSeparatorComponent={() => <View style={styles.separateur} />}
+        ListFooterComponent={<View style={{ gap: 12, marginTop: 24 }}><Text style={styles.section}>50 DERNIÈRES LIVRAISONS · NOTER LE CLIENT</Text>
+          {livrees.map(m => <CarteMission key={m.id} mission={m} />)}
+          {!livrees.length && <Text style={{ color: theme.secondaire }}>Aucune mission livrée.</Text>}
+        </View>}
         renderItem={({ item }) => <CarteMission mission={item} />}
       />
     </SafeAreaView>

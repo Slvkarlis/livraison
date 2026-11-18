@@ -31,6 +31,7 @@ class Sprint6NotationTest extends ParcoursSprint3 {
         succes(200, appel("POST", "/livreur/missions/" + id + "/remise", Map.of("montantEncaisse", 15, "preuve", qr), coursier.token()));
         for (int invalide : new int[]{0, 6})
             assertEquals(400, appel("POST", route, Map.of("cible", "PARTENAIRE", "note", invalide), client).status());
+        assertEquals(400, appel("POST", route, Map.of("cible", "PARTENAIRE", "note", 2.5), client).status());
         assertEquals(400, appel("POST", route, Map.of("cible", "PARTENAIRE", "note", 4, "commentaire", "x".repeat(501)), client).status());
         assertEquals(403, appel("POST", route, Map.of("cible", "CLIENT", "note", 4), client).status());
         succes(201, appel("POST", route, Map.of("cible", "PARTENAIRE", "note", 4, "commentaire", "Très bien"), client));
@@ -55,6 +56,8 @@ class Sprint6NotationTest extends ParcoursSprint3 {
         assertEquals(403, appel("POST", route, Map.of("cible", "CLIENT", "note", 4), partenaire).status());
         assertEquals(403, appel("POST", route, Map.of("cible", "PARTENAIRE", "note", 4), coursier.token()).status());
         Coursier autre = coursier("Autre");
+        assertEquals(1, succes(200, appel("GET", "/livreur/missions/livrees", null, coursier.token())).size());
+        assertEquals(0, succes(200, appel("GET", "/livreur/missions/livrees", null, autre.token())).size());
         assertEquals(403, appel("POST", route, Map.of("cible", "CLIENT", "note", 1), autre.token()).status());
         assertEquals(403, appel("GET", route, null, admin).status());
         assertEquals(0, succes(200, appel("GET", route, null, client)).get("notes").size());

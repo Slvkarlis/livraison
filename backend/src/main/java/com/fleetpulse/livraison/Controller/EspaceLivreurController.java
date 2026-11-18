@@ -41,6 +41,10 @@ public class EspaceLivreurController {
     @Operation(summary = "Lister ses missions", description = "Retourne les commandes AFFECTEE, RECUPEREE ou A_PROXIMITE attribuées à ce livreur. Maximum trois missions simultanées.")
     public List<MissionVue> missions(Authentication a) { return service.missions(a.getName()); }
 
+    @GetMapping("/missions/livrees")
+    @Operation(summary = "Retrouver ses 50 dernières livraisons", description = "Historique borné au coursier connecté, du plus récent au plus ancien ; permet de noter le client après livraison même lorsque le cash a été déposé.")
+    public List<MissionVue> missionsLivrees(Authentication a) { return service.missionsLivrees(a.getName()); }
+
     @GetMapping("/missions/{id}")
     @Operation(summary = "Consulter une mission", description = "L’adresse exacte du client est masquée avant collecte. Une mission d’un autre livreur retourne 404.")
     public MissionVue mission(Authentication a, @PathVariable Long id) { return service.mission(a.getName(), id); }

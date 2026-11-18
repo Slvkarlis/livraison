@@ -12,6 +12,8 @@ public interface LivraisonRepository extends JpaRepository<Livraison, Long> {
     List<Livraison> findAllByOrderByDateCreationDesc();
 
     List<Livraison> findAllByClientEmailOrderByDateCreationDesc(String email);
+    List<Livraison> findTop50ByLivreurIdAndStatutOrderByLivreeLeDescIdDesc(Long livreurId,
+            com.fleetpulse.livraison.Model.enums.StatutLivraison statut);
 
     // Serialise les decisions concurrentes sur une meme commande (double clic, deux appareils)
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)

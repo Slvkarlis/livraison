@@ -7,6 +7,7 @@ interface Seuil { type: string; libelle: string; unite: string; valeur: number; 
 interface Alerte { id: number; type: string; objet: string; valeur: number; seuil: number; unite: string; declencheeLe: string; observeeLe: string }
 
 export default function CockpitAlertes({ finance = false }: { finance?: boolean }) {
+  const [succes, setSucces] = useState('');
   const chemin = finance ? '/api/admin/finance/bi' : '/api/admin/bi';
   const charger = useCallback(async () => {
     const [seuils, alertes] = await Promise.all([http.request<Seuil[]>('GET', chemin + '/seuils'), http.request<Alerte[]>('GET', chemin + '/alertes')]);
@@ -19,12 +20,17 @@ export default function CockpitAlertes({ finance = false }: { finance?: boolean 
     <p className="bi-legende">État actuel, indépendant du filtre de dates. Actualisé toutes les 30 secondes. Une alerte reste unique tant que la condition persiste.</p>
     {chargement && !d && <p role="status">Chargement des alertes…</p>}
     {erreur && <p role="alert">{erreur} <button onClick={() => void recharger()}>Réessayer</button></p>}
+    {succes && <p role="status">{succes}</p>}
     {d && <>
-      {!d.alertes.length ? <p role="status">Aucune alerte active.</p> : <div className="bi-table"><table><caption>Valeurs et seuils dépassés</caption><thead><tr><th>Début (Tunis)</th><th>Alerte</th><th>Objet</th><th>Valeur</th><th>Seuil</th></tr></thead><tbody>
-        {d.alertes.map(a => <tr key={a.id}><td>{new Intl.DateTimeFormat('fr-TN', { timeZone: 'Africa/Tunis', dateStyle: 'short', timeStyle: 'short' }).format(new Date(a.declencheeLe))}</td><td>{d.seuils.find(s => s.type === a.type)?.libelle ?? a.type}</td><td>{a.objet}</td><td>{valeurBi(a.valeur, ' ' + a.unite)}</td><td>{a.type === 'COUVERTURE_ZONE' ? 'minimum ' : 'maximum '}{valeurBi(a.seuil, ' ' + a.unite)}</td></tr>)}
-      </tbody></table></div>}
+      {!d.alertes.length ? <p role="status">Aucune alerte active.</p> : <div className="bi-alertes" aria-label="Valeurs et seuils dépassés">
+        {d.alertes.map(a => <article className="bi-alerte" key={a.id}>
+          <small>{new Intl.DateTimeFormat('fr-FR', { timeZone: 'Africa/Tunis', dateStyle: 'short', timeStyle: 'short', hourCycle: 'h23' }).format(new Date(a.declencheeLe))} · Tunis</small>
+          <strong>{d.seuils.find(s => s.type === a.type)?.libelle ?? a.type}</strong><span>{a.objet}</span>
+          <p><strong>{valeurBi(a.valeur, ' ' + a.unite)}</strong> · seuil {a.type === 'COUVERTURE_ZONE' ? 'minimum ' : 'maximum '}{valeurBi(a.seuil, ' ' + a.unite)}</p>
+        </article>)}
+      </div>}
       <details><summary>Configurer les seuils d’alerte</summary><p className="bi-legende">Déclenchement strictement au-dessus du seuil ; couverture strictement en dessous du minimum. La désactivation résout les alertes de ce type. Chaque modification est inscrite au journal d’audit.</p>
-        <div className="bi-grille">{d.seuils.map(s => <FormulaireSeuil key={`${s.type}-${s.valeur}-${s.actif}`} seuil={s} chemin={chemin} onSauve={() => void recharger()} />)}</div>
+        <div className="bi-grille">{d.seuils.map(s => <FormulaireSeuil key={`${s.type}-${s.valeur}-${s.actif}`} seuil={s} chemin={chemin} onSauve={() => { setSucces('Seuil enregistré ; alertes actualisées.'); void recharger(); }} />)}</div>
       </details>
     </>}
   </section>;

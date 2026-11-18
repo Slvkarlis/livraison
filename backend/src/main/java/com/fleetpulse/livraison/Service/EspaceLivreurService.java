@@ -69,6 +69,12 @@ public class EspaceLivreurService {
     }
 
     @Transactional(readOnly = true)
+    public List<MissionVue> missionsLivrees(String email) {
+        return commandes.findTop50ByLivreurIdAndStatutOrderByLivreeLeDescIdDesc(livreur(email).getId(), StatutLivraison.LIVREE)
+                .stream().map(MissionVue::from).toList();
+    }
+
+    @Transactional(readOnly = true)
     public MissionVue mission(String email, Long id) {
         return MissionVue.from(mission(livreur(email), id, false));
     }

@@ -9,11 +9,16 @@ export function PanneauNotation({ commandeId }: { commandeId: number }) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [succes, setSucces] = useState('');
   const theme = useTheme();
-  const charger = useCallback(() => {
-    setErreur(null);
-    return api.notations(commandeId).then(setVue).catch(e => setErreur((e as Error).message));
+  const charger = useCallback(async () => {
+    try { const notes = await api.notations(commandeId); setVue(notes); setErreur(null); }
+    catch (e) { setErreur((e as Error).message); }
   }, [commandeId]);
-  useEffect(() => { void charger(); }, [charger]);
+  useEffect(() => {
+    let actif = true;
+    api.notations(commandeId).then(notes => { if (actif) { setVue(notes); setErreur(null); } })
+      .catch(e => { if (actif) setErreur((e as Error).message); });
+    return () => { actif = false; };
+  }, [commandeId]);
   return <View style={{ gap: 12, marginVertical: 16 }}>
     <Text accessibilityRole="header" style={{ color: theme.texte, fontSize: 18, fontWeight: '700' }}>Votre avis après livraison</Text>
     <Text style={{ color: theme.secondaire }}>De 1 à 5. Chaque avis est définitif, avec un commentaire facultatif de 500 caractères maximum.</Text>

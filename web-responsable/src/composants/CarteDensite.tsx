@@ -7,7 +7,7 @@ export default function CarteDensite({ zones }: { zones: ZoneBi[] }) {
   useEffect(() => {
     const recevoir = (e: MessageEvent) => {
       if (e.source !== cadre.current?.contentWindow) return;
-      if (e.data?.type === 'densite-prete') setPrete(true);
+      if (e.data?.type === 'densite-prete') { window.clearTimeout(delai); setPrete(true); }
       if (e.data?.type === 'densite-erreur') setErreur(true);
     };
     window.addEventListener('message', recevoir);

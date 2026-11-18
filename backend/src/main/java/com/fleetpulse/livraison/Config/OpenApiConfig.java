@@ -23,8 +23,8 @@ public class OpenApiConfig {
     @Bean
     OpenAPI livraisonOpenApi() {
         return new OpenAPI()
-                .info(new Info().title("FleetPulse - API Livraison").version("sprint-5")
-                        .description("API full-stack des sprints 1 à 5. Parcours : catalogue → devis → commande COD → préparation → lot et offre au livreur → collecte → remise → dépôt du cash → closing hebdomadaire. "
+                .info(new Info().title("FleetPulse - API Livraison").version("sprint-6")
+                        .description("API full-stack des sprints 1 à 6. Parcours : catalogue → devis → commande COD → préparation → lot et offre au livreur → collecte → remise → dépôt du cash → closing hebdomadaire → notation et tableaux de bord BI. "
                                 + "Montants en dinars tunisiens (DT), trois décimales maximum ; coordonnées WGS84 dans l’ordre latitude, longitude. "
                                 + "Utiliser le token retourné par /api/auth/login dans Authorize, sans le préfixe Bearer."))
                 .components(new Components().addSecuritySchemes("bearerAuth", new SecurityScheme()
@@ -80,7 +80,10 @@ public class OpenApiConfig {
                     if (path.endsWith("/code-remise"))
                         reponses.addApiResponse("503", erreur("Passerelle SMS/email non configurée ou indisponible.", "SERVICE_INDISPONIBLE"));
                     if (operation.getParameters() != null) operation.getParameters().forEach(parametre -> {
-                        if (parametre.getDescription() == null) parametre.setDescription(descriptionParametre(parametre.getName()));
+                        boolean periodeBi = (path.contains("/bi") || path.equals("/api/partenaire/ventes"))
+                                && ("debut".equals(parametre.getName()) || "fin".equals(parametre.getName()));
+                        if (periodeBi) parametre.setDescription("Date civile YYYY-MM-DD incluse, fuseau Africa/Tunis ; 366 jours maximum. Par défaut : les 30 derniers jours.");
+                        else if (parametre.getDescription() == null) parametre.setDescription(descriptionParametre(parametre.getName()));
                         if ("path".equals(parametre.getIn())) parametre.setExample(1);
                     });
                 });

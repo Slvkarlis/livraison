@@ -32,7 +32,9 @@ public class NotationService {
         List<Utilisateur> cibles = cibles(c, auteur);
         if (c.getStatut() != StatutLivraison.LIVREE)
             throw MarketplaceException.conflit("Vous pourrez noter après la livraison.");
-        if (demande == null || demande.cible() == null || demande.note() == null || demande.note() < 1 || demande.note() > 5)
+        if (demande == null || demande.cible() == null || demande.note() == null
+                || demande.note().compareTo(java.math.BigDecimal.ONE) < 0 || demande.note().compareTo(java.math.BigDecimal.valueOf(5)) > 0
+                || demande.note().stripTrailingZeros().scale() > 0)
             throw new IllegalArgumentException("Choisissez une cible et une note entière de 1 à 5.");
         if (demande.commentaire() != null && demande.commentaire().length() > 500)
             throw new IllegalArgumentException("Commentaire : 500 caractères maximum.");
@@ -40,7 +42,7 @@ public class NotationService {
                 .orElseThrow(() -> new AccessDeniedException("Cette cible ne peut pas être notée par ce participant."));
         if (notes.existsByCommandeIdAndAuteurIdAndCibleId(id, auteur.getId(), cible.getId()))
             throw MarketplaceException.conflit("Cette note est déjà enregistrée et ne peut pas être modifiée.");
-        notes.saveAndFlush(new Notation(demande.note(), demande.commentaire() == null ? null : demande.commentaire().trim(),
+        notes.saveAndFlush(new Notation(demande.note().intValueExact(), demande.commentaire() == null ? null : demande.commentaire().trim(),
                 auteur, cible, c, Instant.now()));
         return vue(c, auteur, cibles);
     }

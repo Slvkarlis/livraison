@@ -242,4 +242,8 @@ h2.section { font-size: 15px; margin: 22px 0 10px; color: var(--discret); }
 .bi-legende { flex-basis: 100%; margin: 4px 0; }
 .bi-table { width: 100%; overflow-x: auto; margin: 16px 0; }
 .bi-table caption { text-align: left; padding: 12px 0; font-weight: 700; }
+.bi-alertes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; margin: 16px 0; }
+.bi-alerte { display: flex; flex-direction: column; gap: 6px; padding: 14px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px; overflow-wrap: anywhere; }
+.bi-alerte small { color: var(--discret); }
+.bi-alerte p { margin: 0; }
 @media (max-width: 450px) { .bi-filtres .champ { min-width: 100%; } .bi-filtres .bouton { width: 100%; } }

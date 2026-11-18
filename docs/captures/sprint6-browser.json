@@ -1,0 +1,69 @@
+{
+  "resultats": [
+    {
+      "route": "/bi-finance",
+      "width": 390,
+      "scrollWidth": 375,
+      "h1": "BI Finance",
+      "alertes": [],
+      "capture": ".tmp/sprint6-bi-finance-390.png"
+    },
+    {
+      "route": "/bi-operations",
+      "width": 390,
+      "scrollWidth": 375,
+      "h1": "BI Opérations",
+      "alertes": [],
+      "capture": ".tmp/sprint6-bi-operations-390.png"
+    },
+    {
+      "route": "/bi-partenaires",
+      "width": 390,
+      "scrollWidth": 375,
+      "h1": "BI Partenaires",
+      "alertes": [],
+      "capture": ".tmp/sprint6-bi-partenaires-390.png"
+    },
+    {
+      "route": "/bi-coursiers",
+      "width": 390,
+      "scrollWidth": 375,
+      "h1": "BI Coursiers et zones",
+      "alertes": [],
+      "capture": ".tmp/sprint6-bi-coursiers-390.png"
+    },
+    {
+      "route": "/bi-finance",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "h1": "BI Finance",
+      "alertes": [],
+      "capture": ".tmp/sprint6-bi-finance-1440.png"
+    },
+    {
+      "route": "/bi-operations",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "h1": "BI Opérations",
+      "alertes": [],
+      "capture": ".tmp/sprint6-bi-operations-1440.png"
+    },
+    {
+      "route": "/bi-partenaires",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "h1": "BI Partenaires",
+      "alertes": [],
+      "capture": ".tmp/sprint6-bi-partenaires-1440.png"
+    },
+    {
+      "route": "/bi-coursiers",
+      "width": 1440,
+      "scrollWidth": 1425,
+      "h1": "BI Coursiers et zones",
+      "alertes": [],
+      "capture": ".tmp/sprint6-bi-coursiers-1440.png"
+    }
+  ],
+  "erreurs": []
+}
