@@ -409,3 +409,7 @@ tbody tr:hover td { background: var(--accent-doux); }
   .app { grid-template-columns: 1fr; }
   .barre { padding: 14px 18px; }
 }
+
+/* Barre laterale fixe : le bloc utilisateur reste visible, son texte ne coupe plus au milieu */
+.sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.utilisateur-infos small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
