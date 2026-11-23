@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { formatHeure, formatMontant, type Mission } from '@fleetpulse/shared';
+import { Pressionnable, formatHeure, formatMontant, type Mission } from '@fleetpulse/shared';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
 
 /** Ou en est la collecte : colis deja recupere, ou pret depuis quelle heure. */
@@ -14,14 +14,14 @@ function etatCollecte(m: Mission): string {
 /** Une mission de collecte dans la liste : commerce, adresse, client et montant a encaisser. */
 export function CarteMission({ mission }: { mission: Mission }) {
   return (
-    <Pressable
+    <Pressionnable
       accessibilityRole="button"
       accessibilityLabel={`Mission ${mission.codeSuivi}, ${mission.nomCommerce}`}
       onPress={() => router.push(`/mission/${mission.id}`)}
-      style={({ pressed }) => [styles.carte, pressed && { opacity: 0.85 }]}
+      style={styles.carte}
     >
       <View style={styles.icone}>
-        <Ionicons name="storefront-outline" size={20} color={theme.accent} />
+        <Ionicons name="storefront" size={20} color={theme.accent} />
       </View>
       <View style={styles.corps}>
         <Text style={styles.commerce}>{mission.nomCommerce}</Text>
@@ -32,7 +32,7 @@ export function CarteMission({ mission }: { mission: Mission }) {
         </Text>
       </View>
       <Text style={styles.montant}>{formatMontant(mission.montantACollecter)}</Text>
-    </Pressable>
+    </Pressionnable>
   );
 }
 
@@ -42,15 +42,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 16,
-    borderRadius: theme.rayon,
+    borderRadius: 24,
     backgroundColor: theme.surface,
     borderWidth: 1,
     borderColor: theme.bordure,
   },
   icone: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 46,
+    height: 46,
+    borderRadius: 16,
     backgroundColor: theme.accentDoux,
     alignItems: 'center',
     justifyContent: 'center',

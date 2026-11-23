@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import {
   Bouton,
   Chargement,
+  FriseTrajet,
   Ligne,
   MessageErreur,
   PastilleStatut,
@@ -91,7 +92,17 @@ export default function DetailCommande() {
       </View>
 
       <View style={styles.feuille}>
+        <View style={styles.encoche}><View style={styles.poignee} /></View>
         <PastilleStatut statut={livraison.statut} />
+        {STATUTS_SUIVIS.includes(livraison.statut) || livraison.statut === 'LIVREE' ? (
+          <View style={styles.trajet}>
+            <FriseTrajet depart={formatHeure(new Date(livraison.creneauDebut))} arrivee={formatHeure(new Date(livraison.creneauFin))}
+              duree={livraison.statut === 'LIVREE' ? 'Livrée' : 'En route'} de={livraison.nomPartenaire ?? 'Départ'}
+              vers="Chez vous" distance={livraison.distanceKm ? formatDistance(livraison.distanceKm) : livraison.codeSuivi}
+              progression={({ AFFECTEE: 0.12, RECUPEREE: 0.3, EN_COURS: 0.55, A_PROXIMITE: 0.8, ARRIVEE: 0.94, LIVREE: 1 } as Record<string, number>)[livraison.statut] ?? 0.05}
+              icone={<Ionicons name="bicycle" size={16} color="#15171A" />} />
+          </View>
+        ) : null}
         {suivi?.arriveeEstimee ? (
           <View style={styles.eta}>
             <Ionicons name="time-outline" size={18} color={theme.accent} />
@@ -182,8 +193,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     marginTop: -28,
     padding: 24,
+    paddingTop: 26,
     gap: 6,
   },
+  encoche: { position: 'absolute', top: -16, alignSelf: 'center', width: 140, height: 34, borderTopLeftRadius: 70, borderTopRightRadius: 70, backgroundColor: theme.surface, alignItems: 'center', paddingTop: 10 },
+  poignee: { width: 36, height: 4, borderRadius: 2, backgroundColor: theme.bordure },
+  trajet: { backgroundColor: '#1B1C1F', borderRadius: 24, padding: 18, marginVertical: 10 },
   remise: { marginTop: 14 },
   eta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   etaTexte: { fontSize: 15, fontWeight: '700', color: theme.texte },

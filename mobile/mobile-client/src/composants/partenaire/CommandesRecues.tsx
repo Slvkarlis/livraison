@@ -4,6 +4,8 @@ import {
   GROUPES_COMMANDES,
   MessageErreur,
   PastilleStatut,
+  EntreeAnimee,
+  Ville3D,
   api,
   compterParGroupe,
   formatHeure,
@@ -73,14 +75,18 @@ export default function CommandesRecues() {
         ListHeaderComponent={
           <View>
             <PanneauBoutique />
+            <View style={styles.hero}>
+            <Ville3D ton="nuit" style={styles.heroVille} />
             <View style={styles.enteteHaut}>
-              <Text style={styles.bonjour}>Bonjour {profil?.prenom}</Text>
+              <Text style={[styles.bonjour, styles.surNuit]}>Bonjour {profil?.prenom}</Text>
               <View style={styles.direct} accessibilityLabel={enDirect ? 'Mises à jour en direct' : 'Connexion en direct indisponible'}>
                 <View style={[styles.directPoint, { backgroundColor: enDirect ? theme.succes : theme.secondaire }]} />
                 <Text style={styles.directTexte}>{enDirect ? 'En direct' : 'Hors ligne'}</Text>
               </View>
             </View>
-            <Text style={styles.titre}>Commandes reçues</Text>
+            <Text style={[styles.titre, styles.titreHero]}>Commandes reçues</Text>
+            <Text style={styles.heroSous}>{(commandes ?? []).length} commande{(commandes ?? []).length > 1 ? 's' : ''} · {compte.nouvelles ?? 0} nouvelle{(compte.nouvelles ?? 0) > 1 ? 's' : ''}</Text>
+            </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtres}>
               {GROUPES_COMMANDES.map((g) => (
                 <Puce key={g.id} libelle={g.libelle} actif={g.id === groupe} compteur={compte[g.id]} onPress={() => setGroupe(g.id)} />
@@ -97,7 +103,7 @@ export default function CommandesRecues() {
           )
         }
         ItemSeparatorComponent={() => <View style={styles.separateur} />}
-        renderItem={({ item }) => <CarteCommandeRecue commande={item} />}
+        renderItem={({ item, index }) => <EntreeAnimee rang={index}><CarteCommandeRecue commande={item} /></EntreeAnimee>}
       />
     </SafeAreaView>
   );
@@ -140,6 +146,11 @@ const styles = StyleSheet.create({
   direct: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   directPoint: { width: 8, height: 8, borderRadius: 4 },
   directTexte: { fontSize: 12, fontWeight: '600', color: theme.secondaire },
+  hero: { backgroundColor: '#1B1C1F', borderRadius: 28, padding: 20, minHeight: 220, overflow: 'hidden', justifyContent: 'space-between', marginBottom: 14 },
+  heroVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '35%', opacity: 0.9 },
+  surNuit: { color: '#9A9EA6' },
+  titreHero: { color: '#FFFFFF', fontSize: 34, lineHeight: 38, letterSpacing: -1 },
+  heroSous: { color: '#9A9EA6', fontSize: 14, fontWeight: '600', marginTop: 8 },
   titre: { fontSize: 28, fontWeight: '800', color: theme.texte, letterSpacing: -0.5, marginTop: 2 },
   filtres: { gap: 8, paddingVertical: 18 },
   chargement: { marginTop: 40 },

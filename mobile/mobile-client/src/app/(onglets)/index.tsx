@@ -1,6 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {
   EntreeAnimee,
+  Pressionnable,
+  Ville3D,
   EtatVide,
   MessageErreur,
   PastilleStatut,
@@ -52,6 +54,7 @@ export default function MesCommandes() {
         ListHeaderComponent={
           <View>
             <View style={styles.hero}>
+              <Ville3D ton="nuit" style={styles.heroVille} />
               <View style={styles.heroHaut}>
                 <View>
                   <Text style={styles.heroSalut}>Bonjour {profil?.prenom}</Text>
@@ -63,11 +66,11 @@ export default function MesCommandes() {
                   <Text style={styles.heroBadgeTexte}>en cours</Text>
                 </View>
               </View>
-              <Pressable onPress={() => router.push('/nouvelle-commande')} style={({ pressed }) => [styles.heroBouton, pressed && { opacity: 0.9 }]}>
+              <Pressionnable onPress={() => router.push('/nouvelle-commande')} accessibilityRole="button" style={styles.heroBouton}>
                 <Ionicons name="add" size={22} color="#15171A" />
                 <Text style={styles.heroBoutonTexte}>Nouvelle commande</Text>
                 <Ionicons name="arrow-forward" size={18} color="#15171A" />
-              </Pressable>
+              </Pressionnable>
             </View>
 
             <MessageErreur message={erreur} />
@@ -127,10 +130,11 @@ function CarteCommande({ livraison }: { livraison: Livraison }) {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.fond },
   liste: { padding: 20, paddingBottom: 120 },
-  hero: { backgroundColor: '#15171A', borderRadius: 24, padding: 22, marginTop: 8, marginBottom: 24, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 24, shadowOffset: { width: 0, height: 14 }, elevation: 10 },
+  hero: { backgroundColor: '#1B1C1F', borderRadius: 28, padding: 22, minHeight: 260, justifyContent: 'space-between', marginTop: 8, marginBottom: 24, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 24, shadowOffset: { width: 0, height: 14 }, elevation: 10 },
   heroHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   heroSalut: { color: '#9A9EA6', fontSize: 14, fontWeight: '600' },
-  heroTitre: { color: '#FFFFFF', fontSize: 26, fontWeight: '800', letterSpacing: -0.8, marginTop: 4, lineHeight: 30 },
+  heroTitre: { color: '#FFFFFF', fontSize: 32, fontWeight: '800', letterSpacing: -1, marginTop: 4, lineHeight: 36 },
+  heroVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '35%', opacity: 0.9 },
   heroBadge: { backgroundColor: '#F2B233', borderRadius: 16, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
   heroChiffre: { color: '#15171A', fontSize: 24, fontWeight: '800' },
   heroBadgeTexte: { color: '#15171A', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
