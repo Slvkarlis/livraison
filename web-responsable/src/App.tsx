@@ -1,27 +1,27 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
-import Zones from './pages/Zones';
+﻿import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+const Zones = lazy(() => import('./pages/Zones'));
 import { Link, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './composants/Layout';
-import Commandes from './pages/Commandes';
-import Connexion from './pages/Connexion';
-import Livreurs from './pages/Livreurs';
-import Vehicules from './pages/Vehicules';
-import Echecs from './pages/Echecs';
-import Reclamations from './pages/Reclamations';
-import Pilote from './pages/Pilote';
-import Previsions from './pages/Previsions';
-import Prospection from './pages/Prospection';
-import Accueil from './pages/Accueil';
-import Simulateur from './pages/Simulateur';
-import Comptes from './pages/Comptes';
-import Audit from './pages/Audit';
-import Dispatch from './pages/Dispatch';
-import Finance from './pages/Finance';
-import BiFinance from './pages/BiFinance';
-import BiOperations from './pages/BiOperations';
-import BiPartenaires from './pages/BiPartenaires';
-import BiCoursiers from './pages/BiCoursiers';
-import MotDePasseOublie from './pages/MotDePasseOublie';
+const Commandes = lazy(() => import('./pages/Commandes'));
+const Connexion = lazy(() => import('./pages/Connexion'));
+const Livreurs = lazy(() => import('./pages/Livreurs'));
+const Vehicules = lazy(() => import('./pages/Vehicules'));
+const Echecs = lazy(() => import('./pages/Echecs'));
+const Reclamations = lazy(() => import('./pages/Reclamations'));
+const Pilote = lazy(() => import('./pages/Pilote'));
+const Previsions = lazy(() => import('./pages/Previsions'));
+const Prospection = lazy(() => import('./pages/Prospection'));
+const Accueil = lazy(() => import('./pages/Accueil'));
+const Simulateur = lazy(() => import('./pages/Simulateur'));
+const Comptes = lazy(() => import('./pages/Comptes'));
+const Audit = lazy(() => import('./pages/Audit'));
+const Dispatch = lazy(() => import('./pages/Dispatch'));
+const Finance = lazy(() => import('./pages/Finance'));
+const BiFinance = lazy(() => import('./pages/BiFinance'));
+const BiOperations = lazy(() => import('./pages/BiOperations'));
+const BiPartenaires = lazy(() => import('./pages/BiPartenaires'));
+const BiCoursiers = lazy(() => import('./pages/BiCoursiers'));
+const MotDePasseOublie = lazy(() => import('./pages/MotDePasseOublie'));
 import { useSession } from './session';
 import { destination, peutAudit, peutFinance, peutOperations } from './sprint1';
 import { api } from './api';
@@ -75,3 +75,4 @@ export default function App() {
     </Routes>}
   </>;
 }
+
