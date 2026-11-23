@@ -5,7 +5,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
+import com.fleetpulse.livraison.Dto.EchecDto.EchecRequest;
 import com.fleetpulse.livraison.Dto.EspaceLivreurDto.*;
+import com.fleetpulse.livraison.Service.EchecService;
 import com.fleetpulse.livraison.Service.EspaceLivreurService;
 import com.fleetpulse.livraison.Service.RemiseLivreurService;
 import com.fleetpulse.livraison.Service.SuiviPositionService;
@@ -26,6 +28,7 @@ public class EspaceLivreurController {
     private final EspaceLivreurService service;
     private final SuiviPositionService suiviPosition;
     private final RemiseLivreurService remise;
+    private final EchecService echecs;
 
     @GetMapping("/disponibilite")
     @Operation(summary = "Consulter sa disponibilité", description = "Retourne la disponibilité enregistrée et les zones autorisées actuellement en vigueur.")
@@ -61,6 +64,13 @@ public class EspaceLivreurController {
     @Operation(summary = "Valider le paiement et la remise", description = "Confirmer montantEncaisse, puis preuve : QR dynamique du client ou code de secours à six chiffres. Un écart au total exige motifEcart. Transition vers LIVREE et paiement ENCAISSE.")
     public MissionVue validerRemise(Authentication a, @PathVariable Long id, @RequestBody RemiseRequest r) {
         return remise.valider(a.getName(), id, r);
+    }
+
+    // US-308 : echec de livraison declare avec motif (le colis reste en main jusqu'a la decision du responsable)
+    @PostMapping("/missions/{id}/echec")
+    @Operation(summary = "Déclarer un échec de livraison", description = "Motif obligatoire : INJOIGNABLE, REFUS_MARCHANDISE, REFUS_PAIEMENT, ADRESSE_INTROUVABLE ou INCIDENT (commentaire de 5 caractères minimum). Possible après collecte ; passe la commande en ECHEC. Le rejeu est sans effet.")
+    public MissionVue declarerEchec(Authentication a, @PathVariable Long id, @RequestBody EchecRequest r) {
+        return echecs.declarer(a.getName(), id, r);
     }
 
     // US-301 : position GPS envoyee par l'application pendant les missions

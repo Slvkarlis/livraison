@@ -14,5 +14,7 @@ public enum ActionAudit {
     AFFECTATION_FORCEE,
     // Sprint 5 : chaine financiere (FINANCE)
     COMMISSION_MODIFIEE, COMMISSION_SUPPRIMEE, BAREME_MODIFIE, DEPOT_CASH_ENREGISTRE, CLOSING_VALIDE,
-    SEUIL_ALERTE_MODIFIE
+    SEUIL_ALERTE_MODIFIE,
+    // Sprint 7 (US-308 / US-312) : echecs et decisions du responsable
+    ECHEC_DECLARE, ECHEC_DECIDE
 }

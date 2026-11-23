@@ -37,4 +37,7 @@ public interface LivraisonRepository extends JpaRepository<Livraison, Long> {
     List<Livraison> findTop20ByPartenaireIdAndPreteLeIsNotNullAndAccepteeLeIsNotNullOrderByPreteLeDesc(Long partenaireId);
     List<Livraison> findAllByStatutAndLivreeLeGreaterThanEqualOrderByLivreeLeAsc(
             com.fleetpulse.livraison.Model.enums.StatutLivraison statut, java.time.Instant depuis);
+
+    // Sprint 7 : echecs a traiter, du plus recent au plus ancien
+    List<Livraison> findAllByStatutOrderByEchecLeDesc(com.fleetpulse.livraison.Model.enums.StatutLivraison statut);
 }

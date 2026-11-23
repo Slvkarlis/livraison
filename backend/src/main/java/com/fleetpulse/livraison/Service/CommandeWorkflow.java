@@ -29,8 +29,10 @@ public class CommandeWorkflow {
         TRANSITIONS.put(PRETE, EnumSet.of(AFFECTEE, ANNULEE));
         TRANSITIONS.put(AFFECTEE, EnumSet.of(RECUPEREE, ANNULEE));
         // Sprint 3 : Last Mile
-        TRANSITIONS.put(RECUPEREE, EnumSet.of(A_PROXIMITE, LIVREE, ANNULEE));
-        TRANSITIONS.put(A_PROXIMITE, EnumSet.of(LIVREE, ANNULEE));
+        // Sprint 7 : echec declare par le coursier, puis decision du responsable (relivraison ou retour)
+        TRANSITIONS.put(RECUPEREE, EnumSet.of(A_PROXIMITE, LIVREE, ANNULEE, ECHEC));
+        TRANSITIONS.put(A_PROXIMITE, EnumSet.of(LIVREE, ANNULEE, ECHEC));
+        TRANSITIONS.put(ECHEC, EnumSet.of(RECUPEREE, RETOURNEE));
     }
 
     private final HistoriqueStatutRepository historique;
