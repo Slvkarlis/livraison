@@ -73,6 +73,26 @@ class DemandeLots(BaseModel):
     aBordMaxMinutes: int = Field(default=35, gt=0)
 
 
+@app.post("/v1/entrainement/demande")
+def entrainement_demande(lignes: list[dict]):
+    """US-806 : reentraine le modele de demande sur un jeu exporte (contrat handoff/CONTRATS.md)."""
+    modele = ModeleDemande()
+    metriques = modele.entrainer(lignes)
+    modele.sauver(CHEMIN_DEMANDE)
+    etat["demande"] = modele
+    return {"modele": modele.version, "lignes": len(lignes), "metriques": metriques}
+
+
+@app.post("/v1/entrainement/prospection")
+def entrainement_prospection(prospects: list[dict]):
+    """US-806 : reentraine le score de prospection sur les prospects dont l'issue est connue."""
+    modele = ModeleProspection()
+    metriques = modele.entrainer(prospects)
+    modele.sauver(CHEMIN_PROSPECTION)
+    etat["prospection"] = modele
+    return {"modele": modele.version, "prospects": len(prospects), "metriques": metriques}
+
+
 @app.get("/sante")
 def sante():
     return {"statut": "ok", "version": __version__, "modeleEta": etat["modele"].version, "mae": etat["modele"].mae,

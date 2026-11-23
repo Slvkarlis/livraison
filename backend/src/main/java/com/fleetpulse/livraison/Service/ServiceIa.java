@@ -58,6 +58,32 @@ public class ServiceIa {
         return appeler("/v1/lots", demande, ReponseLots.class).filter(r -> r.lots() != null);
     }
 
+    // Sprint 8 : prevision de demande (US-804), score de prospection (US-802), reentrainement (US-806)
+    public record DemandeIa(Long zoneId, int jourSemaine, int heure, boolean ferie, int partenairesActifs) { }
+    public record PrevisionIa(Long zoneId, int jourSemaine, int heure, double commandesPrevues, String regle) { }
+    public record ReponsePrevisions(List<PrevisionIa> previsions, String modele) { }
+    public record ProspectIa(String categorie, double distanceClientsKm, int clientsZone, double couvertureZonePct, int concurrentsProches) { }
+    public record ScoreIa(double score, String modele) { }
+    public record ReponseScores(List<ScoreIa> scores, String modele) { }
+
+    public Optional<ReponsePrevisions> predireDemande(List<DemandeIa> demandes) {
+        if (demandes.isEmpty()) return Optional.empty();
+        return appeler("/v1/demande/predire", demandes, ReponsePrevisions.class)
+                .filter(r -> r.previsions() != null && r.previsions().size() == demandes.size());
+    }
+
+    public Optional<ReponseScores> scorerProspects(List<ProspectIa> prospects) {
+        if (prospects.isEmpty()) return Optional.empty();
+        return appeler("/v1/prospection/score", prospects, ReponseScores.class)
+                .filter(r -> r.scores() != null && r.scores().size() == prospects.size()
+                        && r.scores().stream().allMatch(sc -> sc.score() >= 0 && sc.score() <= 100));
+    }
+
+    /** Reentrainement distant (US-806) : jeu = liste de lignes au format du contrat ia/handoff/CONTRATS.md. */
+    public Optional<Map<String, Object>> reentrainer(String modele, Object jeu) {
+        return appeler("/v1/entrainement/" + modele, jeu, (Class<Map<String, Object>>) (Class<?>) Map.class);
+    }
+
     private <T> Optional<T> appeler(String chemin, Object corps, Class<T> type) {
         if (!actif()) return Optional.empty();
         try {
