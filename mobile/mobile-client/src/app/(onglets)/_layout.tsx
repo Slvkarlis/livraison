@@ -9,9 +9,10 @@ export default function OngletsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.accent,
-        tabBarInactiveTintColor: theme.secondaire,
+        tabBarInactiveTintColor: '#9A9EA6',
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
-        tabBarStyle: { backgroundColor: theme.surface, borderTopWidth: 0, elevation: 12, shadowOpacity: 0.06 },
+        tabBarStyle: { position: 'absolute', left: 16, right: 16, bottom: 18, height: 66, borderRadius: 22, backgroundColor: '#15171A', borderTopWidth: 0, elevation: 14, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, paddingBottom: 10, paddingTop: 8 },
+        tabBarItemStyle: { borderRadius: 16 },
         sceneStyle: { backgroundColor: theme.fond },
       }}
     >

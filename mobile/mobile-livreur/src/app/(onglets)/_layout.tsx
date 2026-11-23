@@ -11,7 +11,7 @@ export default function OngletsLivreurLayout() {
         tabBarActiveTintColor: theme.accent,
         tabBarInactiveTintColor: theme.secondaire,
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
-        tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.bordure },
+        tabBarStyle: { position: 'absolute', left: 16, right: 16, bottom: 18, height: 66, borderRadius: 22, backgroundColor: '#1F2126', borderTopWidth: 0, elevation: 14, shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, paddingBottom: 10, paddingTop: 8 },
         sceneStyle: { backgroundColor: theme.fond },
       }}
     >

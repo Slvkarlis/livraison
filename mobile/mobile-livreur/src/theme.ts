@@ -1,20 +1,20 @@
 import type { Theme } from '@fleetpulse/shared';
 
-/** Application livreur : outil de travail sombre (lisible au soleil comme de nuit), accent vert. */
+/** Application livreur : outil de travail graphite (lisible au soleil comme de nuit), accent ambre. */
 export const theme: Theme = {
   sombre: true,
-  fond: '#0A0F1A',
-  surface: '#121A2A',
-  surfaceAlt: '#1A2438',
-  texte: '#F1F5F9',
-  secondaire: '#8B98AE',
-  bordure: '#223049',
-  accent: '#22C55E',
-  surAccent: '#052E16',
-  accentDoux: 'rgba(34,197,94,0.12)',
-  erreur: '#F87171',
-  erreurFond: 'rgba(248,113,113,0.12)',
-  succes: '#22C55E',
-  rayon: 12,
+  fond: '#15171A',
+  surface: '#1F2126',
+  surfaceAlt: '#272A31',
+  texte: '#F4F3EF',
+  secondaire: '#9A9EA6',
+  bordure: '#30333B',
+  accent: '#F2B233',
+  surAccent: '#15171A',
+  accentDoux: 'rgba(242,178,51,0.14)',
+  erreur: '#F0736D',
+  erreurFond: 'rgba(240,115,109,0.14)',
+  succes: '#7DD3A0',
+  rayon: 16,
   ombre: false,
 };

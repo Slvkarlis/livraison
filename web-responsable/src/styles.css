@@ -391,3 +391,21 @@ tbody tr:hover td { background: var(--accent-doux); }
   .contenu { padding: 22px 18px 40px; }
   .bi-grille { grid-template-columns: 1fr 1fr; }
 }
+
+/* ==== Structure : groupes de navigation et barre superieure ==== */
+.app { display: grid; grid-template-columns: 252px 1fr; min-height: 100vh; }
+.zone-principale { min-width: 0; display: flex; flex-direction: column; }
+.groupe-nav { display: grid; gap: 2px; margin-bottom: 14px; }
+.groupe-titre { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #6F737B; padding: 0 12px 6px; }
+.barre {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 18px 40px; border-bottom: 1px solid var(--bordure); background: rgba(236, 235, 231, .85); backdrop-filter: blur(8px);
+  position: sticky; top: 0; z-index: 5;
+}
+.barre-date { display: block; color: var(--discret); font-size: 12px; text-transform: capitalize; }
+.barre-bonjour { font-size: 16px; font-weight: 700; }
+.barre-pastille { background: var(--nuit); color: var(--accent); border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 700; }
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .barre { padding: 14px 18px; }
+}

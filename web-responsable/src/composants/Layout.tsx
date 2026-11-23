@@ -18,8 +18,17 @@ const LIENS = [
   { vers: '/vehicules', libelle: 'Véhicules', icone: 'M3 13l2-6h11l3 6v4h-2M3 13v4h2m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m0 0h6m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0M3 13h16' },
 ];
 
+const GROUPES: { titre: string; vers: string[] }[] = [
+  { titre: 'Pilotage', vers: ['/bi-finance', '/bi-operations', '/bi-partenaires', '/bi-coursiers'] },
+  { titre: 'Opérations', vers: ['/commandes', '/dispatch', '/zones', '/livreurs', '/vehicules'] },
+  { titre: 'Finance', vers: ['/finance'] },
+  { titre: 'Administration', vers: ['/dossiers', '/comptes', '/audit'] },
+];
+
 export default function Layout() {
   const { profil, deconnexion } = useSession();
+  const aujourdhui = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const visibles = LIENS.filter(lien => lien.vers === '/audit' || (['/finance', '/bi-finance'].includes(lien.vers) ? peutFinance(profil) : peutOperations(profil)));
 
   return (
     <div className="app">
@@ -32,12 +41,21 @@ export default function Layout() {
           </div>
         </div>
         <nav>
-          {LIENS.filter(lien => lien.vers === '/audit' || (['/finance', '/bi-finance'].includes(lien.vers) ? peutFinance(profil) : peutOperations(profil))).map((lien) => (
-            <NavLink key={lien.vers} to={lien.vers} className={({ isActive }) => (isActive ? 'actif' : '')}>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d={lien.icone} /></svg>
-              {lien.libelle}
-            </NavLink>
-          ))}
+          {GROUPES.map((g) => {
+            const liens = visibles.filter((lien) => g.vers.includes(lien.vers));
+            if (liens.length === 0) return null;
+            return (
+              <div key={g.titre} className="groupe-nav">
+                <span className="groupe-titre">{g.titre}</span>
+                {liens.map((lien) => (
+                  <NavLink key={lien.vers} to={lien.vers} className={({ isActive }) => (isActive ? 'actif' : '')}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d={lien.icone} /></svg>
+                    {lien.libelle}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
         </nav>
         <div className="utilisateur">
           <div className="avatar">{profil?.prenom?.[0] ?? '?'}{profil?.nom?.[0] ?? ''}</div>
@@ -50,9 +68,18 @@ export default function Layout() {
           </button>
         </div>
       </aside>
+      <div className="zone-principale">
+        <header className="barre">
+          <div>
+            <span className="barre-date">{aujourdhui}</span>
+            <strong className="barre-bonjour">Bonjour {profil?.prenom ?? ''}</strong>
+          </div>
+          <span className="barre-pastille">{profil?.sousRole ?? 'Administrateur principal'}</span>
+        </header>
       <main className="contenu en-entree">
         <Outlet />
       </main>
+      </div>
     </div>
   );
 }

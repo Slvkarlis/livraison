@@ -1,21 +1,21 @@
 import type { Theme } from '@fleetpulse/shared';
 
-/** Application client : claire, douce et arrondie. */
+/** Application client : meme famille que le web (graphite et ambre), claire et arrondie. */
 export const theme: Theme = {
   sombre: false,
-  fond: '#F4F3FA',
+  fond: '#ECEBE7',
   surface: '#FFFFFF',
-  surfaceAlt: '#F4F3FA',
-  texte: '#17152B',
-  secondaire: '#6E6B85',
-  bordure: '#E4E2F0',
-  accent: '#5B4FE9',
-  surAccent: '#FFFFFF',
-  accentDoux: '#ECEAFD',
-  erreur: '#C2410C',
-  erreurFond: '#FFF1EB',
-  succes: '#16A34A',
-  rayon: 20,
+  surfaceAlt: '#F6F5F2',
+  texte: '#15171A',
+  secondaire: '#6B6F76',
+  bordure: '#DADAD5',
+  accent: '#F2B233',
+  surAccent: '#15171A',
+  accentDoux: '#FDF3DC',
+  erreur: '#C8312B',
+  erreurFond: '#FBE9E7',
+  succes: '#1F7A4D',
+  rayon: 16,
   ombre: true,
 };
 

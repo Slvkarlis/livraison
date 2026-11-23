@@ -50,21 +50,24 @@ export default function MesCommandes() {
         refreshControl={<RefreshControl refreshing={rafraichissement} onRefresh={rafraichir} tintColor={theme.accent} />}
         ListHeaderComponent={
           <View>
-            <Text style={styles.bonjour}>Bonjour {profil?.prenom}</Text>
-            <Text style={styles.titre}>Où livre-t-on aujourd’hui ?</Text>
-
-            <Pressable onPress={() => router.push('/nouvelle-commande')} style={({ pressed }) => [
-              styles.nouvelle, pressed && { opacity: 0.9 },
-            ]}>
-              <View style={styles.nouvelleIcone}>
-                <Ionicons name="add" size={28} color={theme.accent} />
+            <View style={styles.hero}>
+              <View style={styles.heroHaut}>
+                <View>
+                  <Text style={styles.heroSalut}>Bonjour {profil?.prenom}</Text>
+                  <Text style={styles.heroTitre}>Où livre-t-on</Text>
+                  <Text style={styles.heroTitre}>aujourd’hui ?</Text>
+                </View>
+                <View style={styles.heroBadge}>
+                  <Text style={styles.heroChiffre}>{(livraisons ?? []).filter((l) => !['LIVREE', 'ANNULEE', 'REFUSEE', 'RETOURNEE'].includes(l.statut)).length}</Text>
+                  <Text style={styles.heroBadgeTexte}>en cours</Text>
+                </View>
               </View>
-              <View style={styles.nouvelleTexte}>
-                <Text style={styles.nouvelleTitre}>Nouvelle commande</Text>
-                <Text style={styles.nouvelleSous}>Tout de suite ou sur un créneau</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={22} color="#FFFFFF" />
-            </Pressable>
+              <Pressable onPress={() => router.push('/nouvelle-commande')} style={({ pressed }) => [styles.heroBouton, pressed && { opacity: 0.9 }]}>
+                <Ionicons name="add" size={22} color="#15171A" />
+                <Text style={styles.heroBoutonTexte}>Nouvelle commande</Text>
+                <Ionicons name="arrow-forward" size={18} color="#15171A" />
+              </Pressable>
+            </View>
 
             <MessageErreur message={erreur} />
             {livraisons && livraisons.length > 0 ? <Text style={styles.section}>Mes commandes</Text> : null}
@@ -122,7 +125,16 @@ function CarteCommande({ livraison }: { livraison: Livraison }) {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.fond },
-  liste: { padding: 20, paddingBottom: 32 },
+  liste: { padding: 20, paddingBottom: 120 },
+  hero: { backgroundColor: '#15171A', borderRadius: 24, padding: 22, marginTop: 8, marginBottom: 24, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 24, shadowOffset: { width: 0, height: 14 }, elevation: 10 },
+  heroHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  heroSalut: { color: '#9A9EA6', fontSize: 14, fontWeight: '600' },
+  heroTitre: { color: '#FFFFFF', fontSize: 26, fontWeight: '800', letterSpacing: -0.8, marginTop: 4, lineHeight: 30 },
+  heroBadge: { backgroundColor: '#F2B233', borderRadius: 16, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
+  heroChiffre: { color: '#15171A', fontSize: 24, fontWeight: '800' },
+  heroBadgeTexte: { color: '#15171A', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
+  heroBouton: { marginTop: 22, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#F2B233', borderRadius: 16, paddingVertical: 15, paddingHorizontal: 18 },
+  heroBoutonTexte: { flex: 1, color: '#15171A', fontSize: 16, fontWeight: '800' },
   bonjour: { fontSize: 15, color: theme.secondaire, marginTop: 8 },
   titre: { fontSize: 28, fontWeight: '800', color: theme.texte, letterSpacing: -0.8, marginTop: 2, marginBottom: 20 },
   nouvelle: {
