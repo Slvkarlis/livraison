@@ -16,7 +16,7 @@ export default function BiFinance() {
     <FiltresBi debut={debut} fin={fin} onDebut={setDebut} onFin={setFin} chargement={chargement} onValider={() => {
       const q = filtreBi(debut, fin); if (q === query) void recharger(); else setQuery(q);
     }} />
-    <EtatTableau chargement={chargement} erreur={erreur} vide={false} messageVide="Aucune écriture sur la période." onReessayer={() => void recharger()} />
+    <EtatTableau chargement={chargement} erreur={erreur} vide={!!d && [d.gmv, d.commissionsNettes, d.margeLivraison, d.cashEnCirculation, d.reversementsAEffectuer, d.remunerationsAEffectuer, d.reversementsEffectues, d.remunerationsEffectuees, d.articlesVendus].every(v => v === 0)} messageVide="Aucune activité financière sur cette période. Élargissez les dates pour retrouver des opérations." onReessayer={() => void recharger()} />
     {d && !chargement && !erreur && <>
       <p role="status">Résultats du {d.periode.debut} au {d.periode.fin}. {d.gmv === 0 ? 'Aucune vente comptabilisée sur cette période.' : ''}</p>
       <div className="bi-grille">

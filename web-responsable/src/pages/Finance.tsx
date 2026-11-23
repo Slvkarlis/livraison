@@ -86,7 +86,7 @@ function Caisses() {
 
       <h2 className="section">Derniers reçus</h2>
       <div className="carte">
-        {recus.donnees && !recus.donnees.length && <div className="etat"><p>Aucun dépôt enregistré.</p></div>}
+        <EtatTableau chargement={recus.chargement && !recus.donnees} erreur={recus.erreur} vide={!recus.donnees?.length} messageVide="Aucun dépôt enregistré." onReessayer={() => void recus.recharger()} />
         {!!recus.donnees?.length && (
           <table>
             <thead><tr><th>Reçu</th><th>Livreur</th><th>Date</th><th className="nombre">Attendu</th><th className="nombre">Reçu</th><th>Statut</th></tr></thead>
@@ -195,7 +195,7 @@ function ClosingHebdomadaire() {
 
       <h2 className="section">Closings validés</h2>
       <div className="carte">
-        {historique.donnees && !historique.donnees.length && <div className="etat"><p>Aucun closing validé.</p></div>}
+        <EtatTableau chargement={historique.chargement && !historique.donnees} erreur={historique.erreur} vide={!historique.donnees?.length} messageVide="Aucun closing validé." onReessayer={() => void historique.recharger()} />
         {!!historique.donnees?.length && (
           <table>
             <thead><tr><th>Semaine du</th><th>Validé le</th><th>Par</th><th className="nombre">Reversements</th><th className="nombre">Rémunérations</th></tr></thead>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import CarteMission from '../composants/CarteMission';
+import RelectureSuivi from '../composants/RelectureSuivi';
 import { EnTete } from '../composants/ui';
 import { STATUTS } from '../format';
 import { coursiersDemo, coursiersDepuisApi, distanceKm, type CoursierCarte } from '../suivi';
@@ -10,16 +11,19 @@ export default function SuiviLive() {
   const [coursiers, setCoursiers] = useState<CoursierCarte[]>([]), [selection, setSelection] = useState<number>();
   const [chargement, setChargement] = useState(true), [erreur, setErreur] = useState(''), [demo, setDemo] = useState(false);
   const [actualise, setActualise] = useState(''), [incomplet, setIncomplet] = useState(0);
-  const debut = useRef(Date.now()), verrou = useRef(false), monte = useRef(false);
+  const [relecture, setRelecture] = useState(false);
+  const generation = useRef(0);
+  const debut = useRef(Date.now()), verrou = useRef<number | null>(null), monte = useRef(false);
   const charger = useCallback(async () => {
-    if (verrou.current) return; verrou.current = true;
+    const version = generation.current;
+    if (verrou.current === version) return; verrou.current = version;
     try {
       const [supervision, commandes] = await Promise.all([api.supervision(), api.livraisons()]);
-      if (!monte.current) return;
+      if (!monte.current || version !== generation.current) return;
       const liste = coursiersDepuisApi(supervision, commandes);
       setCoursiers(liste); setIncomplet(supervision.livreurs.length - liste.length); setErreur(''); setActualise(new Date().toLocaleTimeString('fr-FR'));
-    } catch (e) { if (monte.current) setErreur(e instanceof Error ? e.message : 'Les positions sont indisponibles. Réessayez.'); }
-    finally { verrou.current = false; if (monte.current) setChargement(false); }
+    } catch (e) { if (monte.current && version === generation.current) setErreur(e instanceof Error ? e.message : 'Les positions sont indisponibles. Réessayez.'); }
+    finally { if (verrou.current === version) verrou.current = null; if (monte.current && version === generation.current) setChargement(false); }
   }, []);
   useEffect(() => {
     monte.current = true;
@@ -27,7 +31,7 @@ export default function SuiviLive() {
     const actualiser = () => { if (document.hidden) return; if (demo) setCoursiers(coursiersDemo((Date.now() - debut.current) / 1000)); else void charger(); };
     if (demo) actualiser();
     const delai = window.setInterval(actualiser, demo ? 2000 : 3000);
-    return () => { monte.current = false; clearInterval(delai); };
+    return () => { monte.current = false; generation.current++; clearInterval(delai); };
   }, [charger, demo]);
   useEffect(() => { if (!coursiers.some(c => c.id === selection)) setSelection(coursiers[0]?.id); }, [coursiers, selection]);
   const choisi = coursiers.find(c => c.id === selection), commande = choisi?.commande;
@@ -37,11 +41,12 @@ export default function SuiviLive() {
   return <>
     <EnTete titre="Suivi en direct" sousTitre="Une vue sur la ville. Chaque livraison à sa place.">
       <button type="button" className="bouton secondaire" aria-pressed={demo} onClick={changerDemo}>{demo ? 'Revenir au direct' : 'Voir la démonstration'}</button>
+      <button type="button" className="bouton secondaire" aria-pressed={relecture} onClick={() => setRelecture(!relecture)}>{relecture ? 'Fermer la relecture' : 'Revoir la journée'}</button>
       <Link className="bouton" to="/dispatch">Ouvrir le dispatch →</Link>
     </EnTete>
     <div className="mission-signal" role="status"><span className="mission-voyant" /><strong>{demo ? 'Démonstration · données fictives' : erreur ? 'Connexion interrompue' : chargement ? 'Connexion en cours' : 'Supervision connectée'}</strong><span>{demo ? 'Scénario local · Tunis' : actualise ? `Dernière lecture à ${actualise}` : 'Lecture des positions GPS'}</span></div>
     {!demo && erreur && <div className="bandeau" role="alert">{erreur} {coursiers.length > 0 && 'Les dernières positions sont conservées.'} <button className="bouton-lien" onClick={() => void charger()}>Réessayer</button></div>}
-    <section className="mission" aria-label="Supervision des livraisons">
+    {relecture ? <RelectureSuivi /> : <section className="mission" aria-label="Supervision des livraisons">
       <CarteMission coursiers={coursiers} selection={selection} onSelection={setSelection} />
       <aside className="mission-flotte" aria-label="Liste des coursiers, alternative à la carte">
         <div className="mission-flotte-titre"><h2>Sur le terrain</h2><span className="mono">{String(coursiers.length).padStart(2, '0')}</span></div>
@@ -67,7 +72,7 @@ export default function SuiviLive() {
           {!demo && <Link to={`/commandes?id=${commande.id}`}>Détail de la commande →</Link>}</>}
         <p className="mission-note">GPS : {choisi.position[1].toFixed(5)}, {choisi.position[0].toFixed(5)} · {choisi.date ? new Date(choisi.date).toLocaleTimeString('fr-FR') : 'date inconnue'}</p>
       </aside>}
-    </section>
+    </section>}
     <p className="mission-bas">Tunis · {demo ? 'Scénario de présentation' : 'Positions connues du responsable'}<span>Les estimations restent indicatives.</span></p>
   </>;
 }

@@ -24,7 +24,7 @@ const erreurs = [], avertissements = [], reseau = [], rapport = [];
 ecouter('Runtime.exceptionThrown', p => erreurs.push({ page, texte: p.exceptionDetails.exception?.description ?? p.exceptionDetails.text }));
 ecouter('Runtime.consoleAPICalled', p => { if (p.type === 'error') erreurs.push({ page, texte: p.args.map(a => a.value ?? a.description).join(' ') }); if(p.type === 'warning') avertissements.push({page, texte:p.args.map(a=>a.value??a.description).join(' ')}); });
 ecouter('Network.loadingFailed', p => reseau.push({ page, texte: p.errorText, type: p.type }));
-await commande('Page.enable'); await commande('Runtime.enable'); await commande('Network.enable');
+await commande('Page.enable'); await commande('Runtime.enable'); await commande('Network.enable');await commande('Network.setCacheDisabled',{cacheDisabled:true});
 const profil = () => ({ id:1, nom:'Responsable', prenom:'Amira', email:'admin@fleetpulse.tn', telephone:null, role:'RESPONSABLE', statut:'ACTIF', sousRole:role, motifStatut:null });
 const livraison = (id, statut, prenom, longitude, latitude) => ({ id, statut, livreurPrenom:prenom, codeSuivi:`FP-${id}`, zoneNom:'Centre-ville', nomPartenaire:'Chez Amira', partenaireId:1, clientEmail:'client@example.test', adresse:'Avenue Habib Bourguiba, Tunis', latitude, longitude, creneauDebut:null, creneauFin:null, typeLivraison:'IMMEDIATE', modePaiement:'COD', statutPaiement:'A_LA_LIVRAISON', distanceKm:1.8, fraisLivraison:3, supplementImmediat:0, montantTotal:25, montantArticles:22, montantACollecter:25, dateCreation:new Date().toISOString(), lignes:[], notes:null });
 const commandes = [livraison(701,'RECUPEREE','Amine',10.1772,36.8032),livraison(702,'A_PROXIMITE','Yasmine',10.1795,36.8065),livraison(703,'PRETE',null,10.1815,36.8008)];
@@ -40,6 +40,13 @@ ecouter('Fetch.requestPaused', async p => {
   else if (chemin === '/api/admin/dispatch') data=mode==='vide'?{...supervision(),livreurs:[],lots:[]}:supervision();
   else if (chemin === '/api/livraisons') data=mode==='vide'?[]:commandes;
   else if (chemin === '/api/admin/audit/page') data={content:[],number:0,totalPages:0,totalElements:0};
+  else if (chemin === '/api/admin/livreurs') data=mode==='vide'?[]:[{id:11,prenom:'Amine',nom:'Ben Ali',actif:true},{id:12,prenom:'Yasmine',nom:'Trabelsi',actif:true}];
+  else if (chemin === '/api/admin/finance/caisses') data={cashEnCirculation:0,coursiers:[]};
+  else if (chemin === '/api/admin/bi/operations') data={periode:{debut:'2026-11-01',fin:'2026-11-23'},statuts:[],zones:[],gainDistanceKm:null,gainTempsMinutes:null,indisponibiliteGains:'Aucune mesure.'};
+  else if (chemin === '/api/admin/bi/partenaires') data={periode:{debut:'2026-11-01',fin:'2026-11-23'},partenaires:[]};
+  else if (chemin === '/api/admin/bi/coursiers') data={periode:{debut:'2026-11-01',fin:'2026-11-23'},coursiers:[],zones:[]};
+  else if (chemin === '/api/admin/finance/bi') data={periode:{debut:'2026-11-01',fin:'2026-11-23'},gmv:0,ventesArticles:0,commissionsNettes:0,margeLivraison:0,cashEnCirculation:0,reversementsAEffectuer:0,remunerationsAEffectuer:0,reversementsEffectues:0,remunerationsEffectuees:0,articlesVendus:0};
+  else if (chemin === '/api/admin/entrepot/export') { const minuit=new Date(new Date().toLocaleDateString('sv-SE',{timeZone:'Africa/Tunis'})+'T08:00:00+01:00').getTime();data={traces:mode==='vide'?[]:[0,1,2,3].map((t)=>({livreurId:11,longitude:10.17+t*.002,latitude:36.802+t*.0005,date:new Date(minuit+t*60000).toISOString()}))}; }
   else if (/\/api\/admin\/commandes\/\d+\/suivi/.test(chemin)) data={commandeId:701,codeSuivi:'FP-701',statut:'RECUPEREE',livreurPrenom:'Amine',montantAttendu:25,actions:[],historique:[]};
   else if (chemin === '/api/auth/logout') data={};
   else data=[];
@@ -57,6 +64,8 @@ try {
   await commande('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false});
   await connexion();
   for (const route of ['/suivi-live','/accueil','/dispatch','/commandes']) { await naviguer(route); rapport.push({route,titre:await evaluer(`document.querySelector('h1')?.textContent`)}); }
+  await naviguer('/dispatch');await cliquer('Voir la carte des lots');await pause(1500);exiger(await evaluer(`document.querySelectorAll('.lots-legende li').length===1`),'Légende des lots absente');
+  rapport.push({carteLots:'Contrôle affiché et légende du lot présente'});
   await naviguer('/suivi-live'); await cliquer('Voir la démonstration'); await pause(8000);
   exiger(await evaluer(`document.querySelectorAll('.mission-coursier').length===3`),'Trois coursiers de démo attendus');
   await evaluer(`document.querySelectorAll('.mission-coursier')[1].click()`); await pause(1100);
@@ -69,6 +78,11 @@ try {
   }
   await commande('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false});
   await cliquer('Revenir au direct'); await pause(1600);
+  await cliquer('Revoir la journée'); await cliquer('Charger la journée'); await pause(1500);
+  exiger(await evaluer(`!!document.querySelector('input[type=range]')`),'Curseur de relecture absent');
+  await evaluer(`(() => {const e=document.querySelector('input[type=range]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,String(Number(e.min)+60000));e.dispatchEvent(new Event('input',{bubbles:true}));})()`);await pause(500);
+  rapport.push({relecture:await evaluer(`document.querySelector('.relecture-curseur').textContent`)});
+  await cliquer('Fermer la relecture');
   mode='vide'; await naviguer('/accueil'); await naviguer('/suivi-live'); exiger(await evaluer(`document.body.textContent.includes('La flotte est au repos')`),'État vide absent');
   mode='erreur'; await naviguer('/accueil'); await naviguer('/suivi-live'); exiger(await evaluer(`!!document.querySelector('[role=alert]')`),'État erreur absent');
   mode='normal';
@@ -80,7 +94,25 @@ try {
   await commande('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]}); await naviguer('/suivi-live'); await cliquer('Voir la démonstration'); await pause(1200);
   rapport.push({mouvementReduit:await evaluer(`getComputedStyle(document.querySelector('.mission-destination')).animationName`)});
   rapport.push({controlesSansNom:await evaluer(`[...document.querySelectorAll('button,input,select,textarea')].filter(e=>!e.textContent.trim()&&!e.getAttribute('aria-label')&&!e.labels?.length).map(e=>e.outerHTML.slice(0,180))`)});
+  rapport.push({polices:await evaluer(`({jakarta:document.fonts.check('600 14px "Plus Jakarta Sans"'),mono:document.fonts.check('600 14px "JetBrains Mono"'),google:performance.getEntriesByType('resource').filter(r=>r.name.includes('fonts.google')).length})`)});
+  await connexion();
+  const routes=['/bi-finance','/bi-operations','/bi-partenaires','/bi-coursiers','/zones','/dossiers','/comptes','/audit','/commandes','/finance','/dispatch','/livreurs','/accueil','/echecs','/reclamations','/pilote','/previsions','/prospection','/vehicules'];
+  const etats=[];
+  for(const etat of ['vide','erreur']) {mode=etat;for(const route of routes){await naviguer(route);const r=await evaluer(`({titre:document.querySelector('h1')?.textContent,alertes:document.querySelectorAll('[role=alert]').length,vides:document.querySelectorAll('.vide,.etat').length,sansNom:[...document.querySelectorAll('input,select,textarea')].filter(e=>!e.labels?.length&&!e.getAttribute('aria-label')).length})`);exiger(!!r.titre,'Page sans titre : '+route);exiger(etat!=='erreur'||r.alertes>0,'Erreur non annoncée : '+route);exiger(r.sansNom===0,'Champ sans nom : '+route);etats.push({route,etat,...r});}}
+  rapport.push({etatsPages:etats});mode='normal';
+  await naviguer('/suivi-live');
+  await commande('Network.setBlockedURLs',{urls:['*tiles.openfreemap.org*']});
+  await naviguer('/accueil');await naviguer('/suivi-live');await pause(15500);
+  exiger(await evaluer(`document.body.textContent.includes('fond raster 2D')`),'Repli raster absent');
+  rapport.push({sansVecteur:'Repli raster 2D confirmé'});await commande('Network.setBlockedURLs',{urls:[]});
+  const erreursNormales=erreurs.length;
+  await commande('Page.addScriptToEvaluateOnNewDocument',{source:`const get=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type.startsWith('webgl')?null:get.call(this,type,...args)};`});
+  await connexion('OPERATIONS');await naviguer('/suivi-live');await cliquer('Voir la démonstration');await pause(1000);
+  exiger(await evaluer(`!!document.querySelector('.mission-schema')&&!document.querySelector('.mission-outils button:nth-child(2)').disabled===false`),'Repli sans WebGL absent');
+  rapport.push({sansWebGL:'Vue schématique disponible',messagesAttendus:erreurs.splice(erreursNormales)});
+  exiger(erreurs.length===0,'Erreurs console inattendues : '+JSON.stringify(erreurs));
   rapport.push({resultat:'Vérifications terminées',erreurs,avertissements,reseau});
   await writeFile(new URL('rapport-navigateur.json',captures),JSON.stringify(rapport,null,2));
   console.log(JSON.stringify(rapport,null,2));
-} finally { ws.close(); await fetch(`http://127.0.0.1:9229/json/close/${cible.id}`).catch(()=>{}); }
+} catch(e) { rapport.push({echec:e.message,erreurs,avertissements,reseau});await writeFile(new URL('rapport-navigateur.json',captures),JSON.stringify(rapport,null,2));throw e; }
+finally { ws.close(); await fetch(`http://127.0.0.1:9229/json/close/${cible.id}`).catch(()=>{}); }

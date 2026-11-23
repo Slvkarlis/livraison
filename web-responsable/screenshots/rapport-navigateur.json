@@ -16,15 +16,424 @@
     "titre": "Commandes"
   },
   {
+    "carteLots": "Contrôle affiché et légende du lot présente"
+  },
+  {
+    "relecture": "Heure de relecture · 08:01:00"
+  },
+  {
     "mouvementReduit": "none"
   },
   {
     "controlesSansNom": []
   },
   {
+    "polices": {
+      "jakarta": true,
+      "mono": true,
+      "google": 0
+    }
+  },
+  {
+    "etatsPages": [
+      {
+        "route": "/bi-finance",
+        "etat": "vide",
+        "titre": "BI Finance",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/bi-operations",
+        "etat": "vide",
+        "titre": "BI Opérations",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/bi-partenaires",
+        "etat": "vide",
+        "titre": "BI Partenaires",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/bi-coursiers",
+        "etat": "vide",
+        "titre": "BI Coursiers et zones",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/zones",
+        "etat": "vide",
+        "titre": "Zones et frais",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/dossiers",
+        "etat": "vide",
+        "titre": "Dossiers de candidature",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/comptes",
+        "etat": "vide",
+        "titre": "Gestion des comptes",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/audit",
+        "etat": "vide",
+        "titre": "Journal d’audit",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/commandes",
+        "etat": "vide",
+        "titre": "Commandes",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/finance",
+        "etat": "vide",
+        "titre": "Finance",
+        "alertes": 0,
+        "vides": 2,
+        "sansNom": 0
+      },
+      {
+        "route": "/dispatch",
+        "etat": "vide",
+        "titre": "Dispatch",
+        "alertes": 0,
+        "vides": 3,
+        "sansNom": 0
+      },
+      {
+        "route": "/livreurs",
+        "etat": "vide",
+        "titre": "Livreurs",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/accueil",
+        "etat": "vide",
+        "titre": "Bonsoir Amiravoici la ville ce soir.",
+        "alertes": 0,
+        "vides": 2,
+        "sansNom": 0
+      },
+      {
+        "route": "/echecs",
+        "etat": "vide",
+        "titre": "Échecs de livraison",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/reclamations",
+        "etat": "vide",
+        "titre": "Réclamations clients",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/pilote",
+        "etat": "vide",
+        "titre": "Pilote",
+        "alertes": 0,
+        "vides": 2,
+        "sansNom": 0
+      },
+      {
+        "route": "/previsions",
+        "etat": "vide",
+        "titre": "Prévisions et prospection",
+        "alertes": 0,
+        "vides": 2,
+        "sansNom": 0
+      },
+      {
+        "route": "/prospection",
+        "etat": "vide",
+        "titre": "Prospection",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/vehicules",
+        "etat": "vide",
+        "titre": "Véhicules",
+        "alertes": 0,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/bi-finance",
+        "etat": "erreur",
+        "titre": "BI Finance",
+        "alertes": 2,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/bi-operations",
+        "etat": "erreur",
+        "titre": "BI Opérations",
+        "alertes": 2,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/bi-partenaires",
+        "etat": "erreur",
+        "titre": "BI Partenaires",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/bi-coursiers",
+        "etat": "erreur",
+        "titre": "BI Coursiers et zones",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/zones",
+        "etat": "erreur",
+        "titre": "Zones et frais",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/dossiers",
+        "etat": "erreur",
+        "titre": "Dossiers de candidature",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/comptes",
+        "etat": "erreur",
+        "titre": "Gestion des comptes",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/audit",
+        "etat": "erreur",
+        "titre": "Journal d’audit",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/commandes",
+        "etat": "erreur",
+        "titre": "Commandes",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/finance",
+        "etat": "erreur",
+        "titre": "Finance",
+        "alertes": 2,
+        "vides": 2,
+        "sansNom": 0
+      },
+      {
+        "route": "/dispatch",
+        "etat": "erreur",
+        "titre": "Dispatch",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/livreurs",
+        "etat": "erreur",
+        "titre": "Livreurs",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/accueil",
+        "etat": "erreur",
+        "titre": "Bonsoir Amiravoici la ville ce soir.",
+        "alertes": 2,
+        "vides": 2,
+        "sansNom": 0
+      },
+      {
+        "route": "/echecs",
+        "etat": "erreur",
+        "titre": "Échecs de livraison",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/reclamations",
+        "etat": "erreur",
+        "titre": "Réclamations clients",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/pilote",
+        "etat": "erreur",
+        "titre": "Pilote",
+        "alertes": 2,
+        "vides": 2,
+        "sansNom": 0
+      },
+      {
+        "route": "/previsions",
+        "etat": "erreur",
+        "titre": "Prévisions et prospection",
+        "alertes": 2,
+        "vides": 2,
+        "sansNom": 0
+      },
+      {
+        "route": "/prospection",
+        "etat": "erreur",
+        "titre": "Prospection",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      },
+      {
+        "route": "/vehicules",
+        "etat": "erreur",
+        "titre": "Véhicules",
+        "alertes": 1,
+        "vides": 1,
+        "sansNom": 0
+      }
+    ]
+  },
+  {
+    "sansVecteur": "Repli raster 2D confirmé"
+  },
+  {
+    "sansWebGL": "Vue schématique disponible",
+    "messagesAttendus": []
+  },
+  {
     "resultat": "Vérifications terminées",
     "erreurs": [],
     "avertissements": [],
-    "reseau": []
+    "reseau": [
+      {
+        "page": "/bi-partenaires",
+        "texte": "net::ERR_ABORTED",
+        "type": "Document"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      },
+      {
+        "page": "/suivi-live",
+        "texte": "net::ERR_ABORTED",
+        "type": "Fetch"
+      }
+    ]
   }
 ]

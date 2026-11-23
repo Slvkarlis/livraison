@@ -71,7 +71,7 @@ export default function Vehicules() {
                   <td className="nombre">{v.capaciteKg != null ? `${formatNombre(v.capaciteKg)} kg` : '—'}</td>
                   <td className="nombre">{formatNombre(v.consommationLitres100Km)} L/100 km</td>
                   <td>
-                    <select className="select-compact" value={v.livreurId ?? ''}
+                    <select className="select-compact" aria-label={`Livreur du véhicule ${v.immatriculation}`} value={v.livreurId ?? ''}
                       disabled={enCours === v.id || (!v.actif && !v.livreurId)}
                       title={!v.actif ? 'Activez le véhicule pour l’affecter' : undefined}
                       onChange={(e) => changerLivreur(v, e.target.value)}>

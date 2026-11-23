@@ -22,6 +22,7 @@ function styleCarte(raster = false): StyleSpecification {
 export default function CarteMission({ coursiers = AUCUN, selection, onSelection, arcs = AUCUN_ARC }: Props) {
   const conteneur = useRef<HTMLDivElement>(null), carte = useRef<Carte | null>(null);
   const [prete, setPrete] = useState(false), [indisponible, setIndisponible] = useState(false);
+  const [revisionStyle, setRevisionStyle] = useState(0);
   const [message, setMessage] = useState('Chargement du fond de carte…');
   const [raster, setRaster] = useState(false), [vue3d, setVue3d] = useState(true), [suivi, setSuivi] = useState(true);
   const [mouvementReduit, setMouvementReduit] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -47,7 +48,7 @@ export default function CarteMission({ coursiers = AUCUN, selection, onSelection
       setMessage('Fond vectoriel indisponible : fond raster 2D.'); map.setStyle(styleCarte(true)); map.jumpTo({ pitch: 0, bearing: 0 });
     };
     const delai = window.setTimeout(() => { if (!map.isSourceLoaded('fond')) replier(); }, 14000);
-    map.on('error', () => { if (++erreurs >= 3 && !repli) replier(); else if (repli && erreurs >= 8) setMessage('Fond de carte indisponible. Les positions et la liste restent consultables.'); });
+    map.on('error', () => { if (!repli) replier(); else if (++erreurs >= 3) setMessage('Fond de carte indisponible. Les positions et la liste restent consultables.'); });
     map.on('webglcontextlost', () => { setIndisponible(true); setVue3d(false); setMessage('Rendu graphique interrompu : vue 2D schématique.'); });
     map.on('movestart', e => { if (e.originalEvent) setSuivi(false); });
     map.on('style.load', () => {
@@ -56,7 +57,7 @@ export default function CarteMission({ coursiers = AUCUN, selection, onSelection
       map.addLayer({ id: 'arcs', type: 'line', source: 'arcs', layout: { 'line-cap': 'round' }, paint: { 'line-color': ['get', 'couleur'], 'line-width': 3, 'line-opacity': .85 } });
       map.addLayer({ id: 'trajets-halo', type: 'line', source: 'trajets', filter: ['==', ['get', 'passe'], true], paint: { 'line-color': couleur('--accent'), 'line-width': 12, 'line-blur': 7, 'line-opacity': .24 } });
       map.addLayer({ id: 'trajets', type: 'line', source: 'trajets', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': couleur('--accent'), 'line-width': 3, 'line-opacity': ['case', ['get', 'passe'], .95, .24] } });
-      setPrete(true); if (!repli) setMessage('');
+      setPrete(true); setRevisionStyle(v => v + 1); if (!repli) setMessage('');
     });
     map.on('sourcedata', e => { if (e.sourceId === 'fond' && e.isSourceLoaded) window.clearTimeout(delai); });
     const observer = new ResizeObserver(() => map.resize()); observer.observe(conteneur.current);
@@ -106,23 +107,24 @@ export default function CarteMission({ coursiers = AUCUN, selection, onSelection
         r.depart = [actuel.lng, actuel.lat]; r.cible = c.position; r.debut = performance.now(); r.date = c.date;
       }
       r.marqueur.getElement().setAttribute('aria-pressed', String(c.id === selection));
+      if (mouvementReduit && suivi && c.id === selection) map.jumpTo({ center: c.position });
+      if (c.historique) r.trace = c.historique.slice(-300);
       if (c.commande) {
         if (!r.destination) { const element = document.createElement('span'); element.className = 'mission-destination'; element.setAttribute('aria-hidden', 'true'); r.destination = new maplibregl.Marker({ element }).setLngLat(c.commande.destination).addTo(map); }
         r.destination.setLngLat(c.commande.destination);
       } else { r.destination?.remove(); r.destination = undefined; }
     }
-  }, [coursiers, selection, prete, indisponible]);
+  }, [coursiers, selection, prete, indisponible, mouvementReduit, suivi]);
   useEffect(() => {
     const map = carte.current; if (!map || !prete) return;
     (map.getSource('arcs') as GeoJSONSource | undefined)?.setData({ type: 'FeatureCollection', features: arcs.map(a => ({ type: 'Feature', properties: { couleur: couleur(`--lot-${a.couleur % 5}`) }, geometry: { type: 'LineString', coordinates: a.points } })) });
     if (arcs.length && !coursiers.length) { const bornes = new maplibregl.LngLatBounds(); arcs.forEach(a => a.points.forEach(p => bornes.extend(p))); map.fitBounds(bornes, { padding: 70, maxZoom: 15, duration: mouvementReduit ? 0 : 600 }); }
-  }, [arcs, coursiers.length, prete, raster, mouvementReduit]);
+  }, [arcs, coursiers.length, prete, raster, mouvementReduit, revisionStyle]);
   useEffect(() => {
-    const map = carte.current, c = coursiers.find(c => c.id === selection);
+    const map = carte.current, c = donnees.current.coursiers.find(c => c.id === selection);
     if (!map || !prete || !c) return;
     map.flyTo({ center: c.position, zoom: 15.8, duration: mouvementReduit ? 0 : 900 });
     // Une mise à jour GPS ne doit pas relancer un vol de sélection.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection, prete, mouvementReduit]);
   useEffect(() => { const map = carte.current; if (map && prete) map.easeTo({ pitch: vue3d && !raster ? 58 : 0, bearing: vue3d && !raster ? -18 : 0, duration: mouvementReduit ? 0 : 450 }); }, [vue3d, raster, prete, mouvementReduit]);
   const choisi = coursiers.find(c => c.id === selection);

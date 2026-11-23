@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useSession } from '../session';
 import { peutAudit, peutFinance, peutOperations } from '../sprint1';
+import FrontierePage from './FrontierePage';
 
 const LIENS = [
   { vers: '/suivi-live', libelle: 'Suivi en direct', icone: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 2v3M12 19v3M2 12h3M19 12h3M8 12h8M12 8v8' },
@@ -45,8 +46,11 @@ export default function Layout() {
   useEffect(() => {
     const actif = document.querySelector<HTMLElement>('.sidebar nav a.actif');
     const nav = actif?.closest('nav');
-    if (!actif || !nav || nav.scrollWidth <= nav.clientWidth) return;
-    nav.scrollTo({ left: actif.offsetLeft - 24, behavior: 'instant' as ScrollBehavior });
+    if (!actif || !nav) return;
+    const afficherActif = () => { if (nav.scrollWidth > nav.clientWidth) nav.scrollTo({ left: actif.offsetLeft - 24, behavior: 'instant' as ScrollBehavior }); };
+    afficherActif();
+    const taille = new ResizeObserver(afficherActif); taille.observe(nav);
+    return () => taille.disconnect();
   }, [pathname]);
 
   // Inclinaison 3D des tuiles : suit le pointeur (une seule ecoute pour toute l'application)
@@ -90,7 +94,7 @@ export default function Layout() {
         </div>
         <nav aria-label="Navigation principale">
           {GROUPES.map((g) => {
-            const liens = visibles.filter((lien) => g.vers.includes(lien.vers));
+            const liens = g.vers.flatMap(vers => visibles.filter(lien => lien.vers === vers));
             if (liens.length === 0) return null;
             return (
               <div key={g.titre} className="groupe-nav">
@@ -126,7 +130,7 @@ export default function Layout() {
         </header>
       <main className="contenu">
         <div key={pathname} className="page-entree">
-          <Outlet />
+          <FrontierePage key={pathname}><Outlet /></FrontierePage>
         </div>
       </main>
       </div>

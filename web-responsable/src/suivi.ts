@@ -3,6 +3,7 @@ import type { Livraison, Supervision } from './types';
 export type PointCarte = [number, number]; // longitude, latitude (GeoJSON)
 export interface CoursierCarte {
   id: number; nom: string; position: PointCarte; date: string;
+  historique?: PointCarte[];
   commande?: { id: number; code: string; zone: string; statut: Livraison['statut']; destination: PointCarte };
 }
 export interface ArcCarte { id: number; points: PointCarte[]; couleur: number }

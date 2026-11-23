@@ -5,20 +5,24 @@ export function useDonnees<T>(charger: () => Promise<T>) {
   const [donnees, setDonnees] = useState<T | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(true);
+  const derniereRequete = useRef(0);
 
   const recharger = useCallback(async () => {
+    const version = ++derniereRequete.current;
     setChargement(true);
     try {
-      setDonnees(await charger());
+      const resultat = await charger();
+      if (version !== derniereRequete.current) return;
+      setDonnees(resultat);
       setErreur(null);
     } catch (e) {
-      setErreur((e as Error).message);
+      if (version === derniereRequete.current) setErreur(e instanceof Error ? e.message : 'Chargement impossible. Réessayez.');
     } finally {
-      setChargement(false);
+      if (version === derniereRequete.current) setChargement(false);
     }
   }, [charger]);
 
-  useEffect(() => { void recharger(); }, [recharger]);
+  useEffect(() => { void recharger(); return () => { derniereRequete.current++; }; }, [recharger]);
 
   return { donnees, erreur, chargement, recharger };
 }
@@ -74,7 +78,7 @@ export function EtatTableau({ chargement, erreur, vide, messageVide, onReessayer
 }) {
   if (erreur) {
     return (
-      <div className="etat">
+      <div className="etat" role="alert">
         <p>{erreur}</p>
         <button className="bouton secondaire" onClick={onReessayer}>Réessayer</button>
       </div>

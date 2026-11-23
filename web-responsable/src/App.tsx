@@ -36,7 +36,7 @@ export default function App() {
   const [demo, setDemo] = useState(false);
   const [erreurConfig, setErreurConfig] = useState(false);
   useEffect(() => { api.demo().then(c => setDemo(c.demonstration)).catch(() => setErreurConfig(true)); }, []);
-  if (chargement) return <div className="plein-ecran"><span className="spinner" /></div>;
+  if (chargement) return <div className="plein-ecran" role="status" aria-label="Chargement de votre session"><span className="spinner" /></div>;
   const refuse = <div className="etat"><h1>Accès refusé</h1><p>Votre rôle ne permet pas d’accéder à cette page.</p><Link to={profil ? destination(profil) : '/connexion'}>Revenir à mon espace</Link></div>;
   return <>
     {demo && <div className="bandeau" role="status">Mode démonstration — codes disponibles dans les logs backend.</div>}

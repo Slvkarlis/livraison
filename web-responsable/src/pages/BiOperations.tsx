@@ -20,7 +20,7 @@ export default function BiOperations() {
     <FiltresBi debut={debut} fin={fin} onDebut={setDebut} onFin={setFin} chargement={chargement} onValider={() => {
       const q = filtreBi(debut, fin, zone); if (q === query) void recharger(); else setQuery(q);
     }}><label className="champ">Zone<select value={zone} onChange={e => setZone(e.target.value)}><option value="">Toutes les zones</option>{zones?.map(z => <option key={z.id} value={z.id}>{z.nom}</option>)}</select></label></FiltresBi>
-    <EtatTableau chargement={chargement} erreur={erreur} vide={false} messageVide="Aucune commande sur cette période." onReessayer={() => void recharger()} />
+    <EtatTableau chargement={chargement} erreur={erreur} vide={!!d && d.statuts.every(s => s.commandes === 0)} messageVide="Aucune commande sur cette période. Élargissez les dates ou choisissez une autre zone." onReessayer={() => void recharger()} />
     {d && !erreur && !chargement && <>
       <p role="status">Période : {d.periode.debut} → {d.periode.fin}. {d.statuts.every(s => s.commandes === 0) ? 'Aucune commande créée sur la période.' : ''}</p>
       <div className="bi-grille">{d.statuts.filter(s => s.commandes > 0).map(s => <Indicateur key={s.statut} titre={STATUTS[s.statut as keyof typeof STATUTS]?.libelle ?? s.statut} valeur={s.commandes} legende="Statut actuel des commandes créées dans la période ; zone actuelle du commerce." />)}</div>

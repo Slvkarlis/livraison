@@ -19,6 +19,7 @@ export const http = creerClientHttp(() => '', () => 'Serveur injoignable. Vérif
 const request = http.request;
 
 export const api = {
+  tracesJour: (depuis: string) => request<{ traces: { livreurId: number; latitude: number; longitude: number; date: string }[] }>('GET', '/api/admin/entrepot/export?' + new URLSearchParams({ depuis })),
   // Sprint 7 : echecs, reclamations, pilote ; Sprint 8 : previsions et prospection
   echecs: () => request<EchecVue[]>('GET', '/api/admin/echecs'),
   decisionEchec: (id: number, decision: string, commentaire: string) => request<EchecVue>('POST', '/api/admin/echecs/' + id + '/decision', { decision, commentaire }),

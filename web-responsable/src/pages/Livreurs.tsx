@@ -112,7 +112,7 @@ function SelectVehicule({ livreur, vehicules, desactive, onChange }: {
   // Vehicules actifs ; ceux deja pris par un autre livreur restent choisissables (ils seront reaffectes).
   const choix = vehicules.filter((v) => v.actif || v.id === livreur.vehiculeId);
   return (
-    <select className="select-compact" value={livreur.vehiculeId ?? ''} disabled={desactive}
+    <select className="select-compact" aria-label={`Véhicule de ${livreur.prenom} ${livreur.nom}`} value={livreur.vehiculeId ?? ''} disabled={desactive}
       onChange={(e) => onChange(e.target.value)}>
       <option value="">Aucun véhicule</option>
       {choix.map((v) => (

@@ -61,7 +61,7 @@ export default function Accueil() {
               zone={c.zoneNom ?? 'Hors zone'} heure={heure(c.dateCreation)} etat={STATUTS[c.statut].libelle} ton={tonStatut(c.statut)}
               montant={formatMontant(c.montantTotal)} onClick={() => navigate(`/commandes?id=${c.id}`)} />
           ))}
-          {!!recentes.length && <div className="tdb-pied"><span>Actualisé en direct</span><Link to="/commandes">Voir les {liste.length} commandes →</Link></div>}
+          {!!recentes.length && <div className="tdb-pied"><Link to="/suivi-live">Suivre les coursiers →</Link><Link to="/commandes">Voir les {liste.length} commandes →</Link></div>}
         </Panneau>
 
         <div className="duo">
