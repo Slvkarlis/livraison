@@ -50,7 +50,7 @@ export default function Layout() {
           </button>
         </div>
       </aside>
-      <main className="contenu">
+      <main className="contenu en-entree">
         <Outlet />
       </main>
     </div>

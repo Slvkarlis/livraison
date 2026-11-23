@@ -1,6 +1,6 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="strict-origin-when-cross-origin"><title>Densité par zone</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"><style>html,body,#map{height:100%;margin:0}</style></head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"><style>html,body,#map{height:100%;margin:0}.leaflet-tile-pane{filter:grayscale(1) sepia(.35) hue-rotate(-8deg) contrast(1.05) brightness(1.04)}.leaflet-container{background:#ECEBE7}.leaflet-tooltip{background:#15171A;color:#fff;border:0;border-radius:8px;font-weight:600}</style></head>
 <body><div id="map" aria-label="Carte thermique par zone"></div>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" onerror="parent.postMessage({type:'densite-erreur'},location.origin)"></script>
 <script>
@@ -13,7 +13,7 @@ if(window.L){
     const zones=e.data.zones; couche.clearLayers(); const max=Math.max(1,...zones.map(z=>z.commandes));
     zones.forEach(z=>{
       const intensite=z.commandes/max;
-      L.circleMarker([z.latitude,z.longitude],{radius:8+30*Math.sqrt(intensite),color:intensite>.66?'#b91c1c':intensite>.33?'#ea580c':'#2563eb',fillOpacity:.55,weight:2})
+      L.circleMarker([z.latitude,z.longitude],{radius:8+30*Math.sqrt(intensite),color:intensite>.66?'#C8312B':intensite>.33?'#F2B233':'#15171A',fillOpacity:.55,weight:2})
         .bindTooltip(document.createTextNode(z.nom+' : '+z.commandes+' commandes')).addTo(couche);
     });
     const bornes=L.featureGroup(couche.getLayers()).getBounds(); if(bornes.isValid())map.fitBounds(bornes,{padding:[45,45],maxZoom:13});

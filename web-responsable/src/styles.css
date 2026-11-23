@@ -1,19 +1,21 @@
 :root {
-  /* Direction « signalétique de dépôt » (tokens Doop, canvas FleetPulse) */
-  --fond: #F2F4F2;
+  /* Direction « ambre et graphite » (tokens Doop, canvas FleetPulse, inspiree de la photo de reference) */
+  --fond: #ECEBE7;
   --surface: #FFFFFF;
-  --texte: #161B22;
-  --discret: #5B6470;
-  --bordure: #DDE2E6;
-  --accent: #0E9F6E;
-  --accent-fonce: #066A49;
-  --accent-doux: #E3F5EE;
-  --danger: #B42318;
-  --danger-doux: #FDECEA;
-  --rayon: 10px;
-  --ombre: 0 1px 2px rgba(22, 27, 34, .04);
+  --nuit: #1B1C1F;
+  --texte: #15171A;
+  --discret: #6B6F76;
+  --bordure: #DADAD5;
+  --accent: #F2B233;
+  --accent-fonce: #7A4D00;
+  --accent-doux: #FDF3DC;
+  --danger: #C8312B;
+  --danger-doux: #FBE9E7;
+  --rayon: 16px;
+  --ombre: 0 1px 2px rgba(21, 23, 26, .04), 0 12px 32px -18px rgba(21, 23, 26, .25);
+  --ease: cubic-bezier(.2, .7, .2, 1);
   color-scheme: light;
-  font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 14px;
   color: var(--texte);
 }
@@ -248,3 +250,144 @@ h2.section { font-size: 15px; margin: 22px 0 10px; color: var(--discret); }
 .bi-alerte small { color: var(--discret); }
 .bi-alerte p { margin: 0; }
 @media (max-width: 450px) { .bi-filtres .champ { min-width: 100%; } .bi-filtres .bouton { width: 100%; } }
+
+/* ==== Passe de design : ambre et graphite, relief 3D, mouvement ==== */
+
+/* Barre laterale sombre, comme la carte de la photo de reference */
+.sidebar {
+  background: var(--nuit); border-right: 0; color: #E9E7E2;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, .04);
+}
+.sidebar .marque strong, .sidebar .marque b { color: #fff; }
+.sidebar .marque small, .sidebar .utilisateur-infos small { color: #9A9EA6; }
+.sidebar .utilisateur { border-top-color: rgba(255, 255, 255, .08); }
+.sidebar .avatar { background: var(--accent); color: var(--nuit); }
+.sidebar nav a { color: #A9ADB4; transition: background .25s var(--ease), color .25s var(--ease), transform .25s var(--ease); }
+.sidebar nav a:hover { background: rgba(255, 255, 255, .06); color: #fff; transform: translateX(3px); }
+.sidebar nav a.actif {
+  background: var(--accent); color: var(--nuit); box-shadow: 0 8px 18px -10px rgba(242, 178, 51, .8);
+}
+.logo { background: var(--accent); color: var(--nuit); }
+
+/* Cartes en relief : elevation, inclinaison 3D legere au survol */
+.carte, .bi-indicateur {
+  transform-style: preserve-3d;
+  transition: transform .45s var(--ease), box-shadow .45s var(--ease);
+  box-shadow: var(--ombre);
+}
+.bi-indicateur:hover, .carte.releve:hover {
+  transform: perspective(900px) rotateX(3deg) rotateY(-4deg) translateY(-4px);
+  box-shadow: 0 28px 48px -22px rgba(21, 23, 26, .42);
+}
+
+/* Bouton principal : relief et deplacement au survol */
+.bouton.plein {
+  box-shadow: 0 10px 22px -12px rgba(242, 178, 51, .95), inset 0 -2px 0 rgba(122, 77, 0, .25);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), background .25s var(--ease);
+}
+.bouton.plein:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 26px -12px rgba(242, 178, 51, 1); }
+.bouton.plein { color: var(--nuit); }
+.bouton.plein:hover:not(:disabled) { background: #F6C35A; }
+
+/* Entrees en fondu avec decalage (liste de cartes et tableaux) */
+@keyframes monte {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.en-entree > * { animation: monte .6s var(--ease) both; }
+.en-entree > *:nth-child(2) { animation-delay: .06s; }
+.en-entree > *:nth-child(3) { animation-delay: .12s; }
+.en-entree > *:nth-child(4) { animation-delay: .18s; }
+.en-entree > *:nth-child(5) { animation-delay: .24s; }
+
+/* Chiffres : compteur qui s'affiche */
+@keyframes apparait { from { opacity: 0; letter-spacing: .08em; } to { opacity: 1; letter-spacing: normal; } }
+.bi-indicateur strong { animation: apparait .8s var(--ease) both; }
+
+/* Lignes de tableau : surbrillance douce au survol */
+tbody tr { transition: background .2s var(--ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ==== Passe de design 2 : pages, tableaux, formulaires, connexion ==== */
+body { background: var(--fond); color: var(--texte); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { letter-spacing: -.02em; color: var(--texte); }
+h1 { font-size: 28px; font-weight: 800; margin: 0 0 6px; }
+h2 { font-size: 18px; font-weight: 700; margin: 0 0 12px; }
+
+.contenu { padding: 36px 40px 56px; }
+.contenu > h1 + p, .bi-page > p { color: var(--discret); margin-top: 0; }
+
+/* Tuiles de chiffres : grand chiffre, bordure ambre fine */
+.nombre { display: block; font-size: 32px; font-weight: 800; letter-spacing: -.03em; color: var(--texte); }
+.bi-indicateur {
+  background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon);
+  padding: 20px 22px; position: relative; overflow: hidden;
+}
+.bi-indicateur::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent);
+}
+.bi-indicateur h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--discret); }
+.bi-indicateur strong { font-size: 30px; font-weight: 800; }
+.bi-indicateur p { color: var(--discret); font-size: 13px; margin: 6px 0 0; }
+.bi-grille { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 24px; }
+.bi-table, .tableau, table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface);
+  border: 1px solid var(--bordure); border-radius: var(--rayon); overflow: hidden; }
+th { background: var(--nuit); color: #E9E7E2; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; text-align: left; padding: 12px 14px; }
+td { padding: 12px 14px; border-top: 1px solid var(--bordure); font-size: 14px; }
+tbody tr:hover td { background: var(--accent-doux); }
+
+/* Cartes et sections */
+.carte, .section, .bi-page section, .detail-dossier, .details {
+  background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 22px;
+}
+.bandeau { border-radius: var(--rayon); padding: 14px 18px; background: var(--accent-doux); border: 1px solid #F5D98B; color: var(--accent-fonce); font-weight: 600; }
+.etat { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--accent-doux); color: var(--accent-fonce); font-size: 12px; font-weight: 700; }
+.succes { color: #1F6F43; }
+.discret { color: var(--discret); }
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
+
+/* Filtres et actions */
+.filtres { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+.actions, .actions-ligne { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.bouton { font-weight: 700; border-radius: 12px; padding: 10px 18px; transition: transform .2s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease); }
+.bouton.secondaire { background: var(--surface); border: 1px solid var(--bordure); color: var(--texte); }
+.bouton.secondaire:hover:not(:disabled) { border-color: var(--texte); transform: translateY(-1px); }
+.bouton-lien { color: var(--accent-fonce); font-weight: 700; text-decoration: none; }
+.bouton-lien:hover { text-decoration: underline; }
+.cliquable { cursor: pointer; transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
+.cliquable:hover { transform: translateY(-2px); box-shadow: 0 16px 28px -18px rgba(21,23,26,.45); }
+
+/* Champs */
+.champ { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--discret); }
+.champ input, .champ select, .champ textarea, .select-compact, .formulaire input, .formulaire select, .formulaire textarea {
+  border: 1px solid var(--bordure); border-radius: 12px; padding: 11px 14px; background: #fff; color: var(--texte); font: inherit; font-weight: 500;
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.champ input:focus, .champ select:focus, .champ textarea:focus, .select-compact:focus, .formulaire input:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(242, 178, 51, .25);
+}
+.formulaire { display: grid; gap: 14px; }
+
+/* Ecran de connexion : panneau graphite et carte en relief 3D */
+.page-connexion { background: radial-gradient(1200px 600px at 20% 10%, #2A2D33 0%, var(--nuit) 60%); min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.carte-connexion {
+  width: min(420px, 100%); background: #fff; border-radius: 22px; padding: 36px;
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06);
+  transform: perspective(1200px) rotateX(4deg); transition: transform .6s var(--ease);
+  animation: monte .8s var(--ease) both;
+}
+.carte-connexion:hover { transform: perspective(1200px) rotateX(0deg) translateY(-4px); }
+.carte-connexion h1 { font-size: 26px; }
+
+/* Voile de fenetre modale */
+.voile { background: rgba(21, 23, 26, .55); backdrop-filter: blur(6px); }
+.voile > * { animation: monte .4s var(--ease) both; border-radius: 18px; box-shadow: 0 40px 80px -30px rgba(0,0,0,.5); }
+.pied-modale { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+
+@media (max-width: 860px) {
+  .contenu { padding: 22px 18px 40px; }
+  .bi-grille { grid-template-columns: 1fr 1fr; }
+}
