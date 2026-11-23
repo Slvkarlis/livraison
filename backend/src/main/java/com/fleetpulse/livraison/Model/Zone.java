@@ -16,6 +16,7 @@ public class Zone {
     private double minLatitude, maxLatitude, minLongitude, maxLongitude;
     /** US-303 : vitesse moyenne d'un coursier dans la zone (trafic urbain), base de l'ETA par regles. null : valeur par defaut. */
     private Double vitesseMoyenneKmh;
+    private boolean pilote;   // US-519 : zone du pilote (3 zones au plus)
     public static final double VITESSE_PAR_DEFAUT_KMH = 20;
     public double vitesseMoyenne() { return vitesseMoyenneKmh == null ? VITESSE_PAR_DEFAUT_KMH : vitesseMoyenneKmh; }
     public void definirPolygone(Polygon p) {
