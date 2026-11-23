@@ -6,6 +6,7 @@ import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
 import { PanneauCollecte } from './PanneauCollecte';
 import { PanneauRemise } from './PanneauRemise';
+import { DeclarerEchec } from './DeclarerEchec';
 
 /** Itineraire dans l'application de cartes du telephone (ou Google Maps dans le navigateur). */
 function lienItineraire(latitude: number | null, longitude: number | null): string | null {
@@ -82,6 +83,7 @@ export default function EcranMission() {
         </>
       ) : null}
       {enRoute ? <PanneauRemise mission={mission} onLivree={setMission} /> : null}
+      {enRoute ? <DeclarerEchec missionId={mission.id} onDeclare={() => void charger()} /> : null}
       {mission.statut === 'LIVREE' && mission.livreeLe ? (
         <View style={styles.collectee}>
           <Ionicons name="checkmark-done-circle" size={22} color={theme.accent} />

@@ -16,6 +16,7 @@ import { creerApiNotifications } from './notifications';
 import { creerApiDispatchLivreur } from './dispatch';
 import { creerApiCaisseLivreur } from './finance';
 import { creerApiNotation } from './notation';
+import { creerApiSprintSept } from './sprint7';
 import { creerApiVentes } from './bi';
 import type { Compte } from './sprint1';
 export { ApiError } from './http';
@@ -34,6 +35,7 @@ function estConfigurationAuth(value: unknown): value is ConfigurationAuth {
 
 export const api = {
   ...creerApiMarche(request),
+  ...creerApiSprintSept(request),
   ...creerApiPartenaire(request),
   ...creerApiSuiviClient(request),
   ...creerApiLivreur(request),

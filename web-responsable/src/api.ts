@@ -7,10 +7,29 @@ import { creerClientHttp } from '../../mobile/packages/shared/src/http';
 import { creerApiMarche } from '../../mobile/packages/shared/src/sprint2';
 export { ApiError } from '../../mobile/packages/shared/src/http';
 import type { Compte } from './sprint1';
+
+export type EchecVue = { id: number; codeSuivi: string; statut: string; nomCommerce: string; nomZone: string; motif: string; commentaire: string | null; echecLe: string; decision: string | null; commentaireDecision: string | null; decisionLe: string | null };
+export type ReclamationVue = { id: number; commandeId: number; codeSuivi: string; type: string; description: string; montantDemande: number; statut: string; creeeLe: string; montantRembourse: number | null; imputation: string | null; commentaireDecision: string | null; decideeLe: string | null };
+export type ZonePilote = { id: number; nom: string; pilote: boolean };
+export type KpiPilote = { zone: string; commandes: number; livrees: number; echecs: number; expirees: number; delaiMoyenMinutes: number | null; respectEtaPct: number | null };
+export type AlerteCouverture = { zoneId: number; zone: string; date: string; heure: number; commandesPrevues: number; coursiersDisponibles: number; capaciteCommandes: number; renfortRecommande: number };
+export type ProspectVue = { id: number; nom: string; categorie: string; adresse: string; zone: string | null; source: string; statut: string; score: number | null; scoreModele: string | null; statutLe: string; commentaire: string | null };
 export const http = creerClientHttp(() => '', () => 'Serveur injoignable. Vérifiez le backend sur le port 8083.');
 const request = http.request;
 
 export const api = {
+  // Sprint 7 : echecs, reclamations, pilote ; Sprint 8 : previsions et prospection
+  echecs: () => request<EchecVue[]>('GET', '/api/admin/echecs'),
+  decisionEchec: (id: number, decision: string, commentaire: string) => request<EchecVue>('POST', '/api/admin/echecs/' + id + '/decision', { decision, commentaire }),
+  reclamations: () => request<ReclamationVue[]>('GET', '/api/admin/finance/reclamations'),
+  decisionReclamation: (id: number, montantRembourse: number, imputation: string | null, commentaire: string) =>
+    request<ReclamationVue>('POST', '/api/admin/finance/reclamations/' + id + '/decision', { montantRembourse, imputation, commentaire }),
+  zonesPilote: () => request<ZonePilote[]>('GET', '/api/admin/pilote/zones'),
+  definirPilote: (id: number, pilote: boolean) => request<ZonePilote>('PUT', '/api/admin/pilote/zones/' + id, { pilote }),
+  kpiPilote: () => request<KpiPilote[]>('GET', '/api/admin/pilote/kpi'),
+  alertesCouverture: () => request<AlerteCouverture[]>('GET', '/api/admin/previsions/alertes'),
+  prospects: () => request<ProspectVue[]>('GET', '/api/admin/prospects'),
+  statutProspect: (id: number, statut: string, commentaire: string) => request<ProspectVue>('PUT', '/api/admin/prospects/' + id + '/statut', { statut, commentaire }),
   ...creerApiMarche(request),
   comptes: () => request<Compte[]>('GET', '/api/admin/comptes'),
   decision: (id: number, action: string, motif: string) => request<Compte>('PUT', '/api/admin/dossiers/' + id + '/' + action, { motif }),

@@ -19,6 +19,7 @@ import {
 } from '@fleetpulse/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
+import { PanneauBoutique } from './PanneauBoutique';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
@@ -71,6 +72,7 @@ export default function CommandesRecues() {
         refreshControl={<RefreshControl refreshing={rafraichissement} onRefresh={rafraichir} tintColor={theme.accent} />}
         ListHeaderComponent={
           <View>
+            <PanneauBoutique />
             <View style={styles.enteteHaut}>
               <Text style={styles.bonjour}>Bonjour {profil?.prenom}</Text>
               <View style={styles.direct} accessibilityLabel={enDirect ? 'Mises à jour en direct' : 'Connexion en direct indisponible'}>

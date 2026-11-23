@@ -6,6 +6,10 @@ import Commandes from './pages/Commandes';
 import Connexion from './pages/Connexion';
 import Livreurs from './pages/Livreurs';
 import Vehicules from './pages/Vehicules';
+import Echecs from './pages/Echecs';
+import Reclamations from './pages/Reclamations';
+import Pilote from './pages/Pilote';
+import Previsions from './pages/Previsions';
 import Comptes from './pages/Comptes';
 import Audit from './pages/Audit';
 import Dispatch from './pages/Dispatch';
@@ -53,6 +57,10 @@ export default function App() {
         <Route path="/zones" element={<Guard operations><Zones /></Guard>} />
         <Route path="/livreurs" element={<Guard operations><Livreurs /></Guard>} />
         <Route path="/vehicules" element={<Guard operations><Vehicules /></Guard>} />
+        <Route path="/echecs" element={<Guard operations><Echecs /></Guard>} />
+        <Route path="/reclamations" element={<Guard finance><Reclamations /></Guard>} />
+        <Route path="/pilote" element={<Guard operations><Pilote /></Guard>} />
+        <Route path="/previsions" element={<Guard operations><Previsions /></Guard>} />
         <Route path="/acces-refuse" element={refuse} />
       </Route>
       <Route path="*" element={<Navigate to={destination(profil)} replace />} />

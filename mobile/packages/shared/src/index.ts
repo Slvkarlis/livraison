@@ -17,5 +17,6 @@ export * from './notifications';
 export * from './dispatch';
 export * from './finance';
 export * from './notation';
+export * from './sprint7';
 export * from './PanneauNotation';
 export * from './bi';

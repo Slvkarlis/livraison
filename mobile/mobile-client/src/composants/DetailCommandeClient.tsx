@@ -30,6 +30,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { AnnulationCommande } from './AnnulationCommande';
 import { CarteLeaflet, type CarteLeafletRef } from './CarteLeaflet';
 import { FriseHistorique } from './FriseHistorique';
+import { ReclamationClient } from './ReclamationClient';
 import { useSuiviLivraison } from './suivi/useSuiviLivraison';
 import { theme } from '../theme';
 
@@ -132,6 +133,7 @@ export default function DetailCommande() {
         ) : null}
 
         {livraison.statut === 'LIVREE' ? <PanneauNotation commandeId={livraison.id} /> : null}
+        {livraison.statut === 'LIVREE' ? <ReclamationClient commandeId={livraison.id} totalDt={livraison.montantTotal} onEnvoyee={() => {}} /> : null}
         {etapes.length ? (
           <>
             <Text style={styles.section}>Suivi</Text>
