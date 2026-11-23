@@ -35,19 +35,20 @@ export interface Theme {
 
 export const themeParDefaut: Theme = {
   sombre: false,
-  fond: '#FFFFFF',
+  // Direction « signalétique de dépôt » (tokens Doop, canvas FleetPulse).
+  fond: '#F2F4F2',
   surface: '#FFFFFF',
-  surfaceAlt: '#F3F4F6',
-  texte: '#111827',
-  secondaire: '#6B7280',
-  bordure: '#E5E7EB',
-  accent: '#4F46E5',
+  surfaceAlt: '#EEF1F3',
+  texte: '#161B22',
+  secondaire: '#5B6470',
+  bordure: '#DDE2E6',
+  accent: '#0E9F6E',
   surAccent: '#FFFFFF',
-  accentDoux: '#EEF2FF',
-  erreur: '#B91C1C',
-  erreurFond: '#FEF2F2',
-  succes: '#15803D',
-  rayon: 14,
+  accentDoux: '#E3F5EE',
+  erreur: '#B42318',
+  erreurFond: '#FDECEA',
+  succes: '#066A49',
+  rayon: 12,
   ombre: true,
 };
 
