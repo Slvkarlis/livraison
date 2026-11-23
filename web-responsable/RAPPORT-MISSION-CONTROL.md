@@ -1,5 +1,13 @@
 # FleetPulse — Rapport de réalisation
 
+## Ajout du 24 novembre 2026 : zones en 3D
+
+La page `/zones` utilise désormais la carte MapLibre partagée avec le suivi : fond sombre, bâtiments extrudés au niveau de zoom adapté, contours ambre pour la zone sélectionnée, boutons Vue 2D / Vue 3D, zoom et recentrage. La carte est placée avant les indicateurs. L'ancienne iframe Leaflet n'est plus utilisée par cette page ; le fichier HTML public reste présent pour compatibilité.
+
+La création et la modification conservent l'ajout de sommets par clic, la saisie de coordonnées, l'annulation et l'effacement. Les endpoints et les validations backend restent inchangés. Les polygones sont aussi affichés en SVG si WebGL n'est pas disponible ; dans ce cas, l'édition utilise la saisie de coordonnées. Une seule carte est montée pendant l'ouverture du formulaire.
+
+Validation : TypeScript/build réussis ; connexion réelle au backend et lecture de ses quatre zones, sélection et vues 2D/3D, trois sommets par clic, annulation, effacement, saisie manuelle, préremplissage d'un contour existant, repli sans WebGL, affichage du suivi et captures à 1366 × 768 et 390 px. Aucune erreur console. Aucune zone réelle n'a été créée ou modifiée par ces tests. Script : `scripts/verifier-zones-3d.mjs` ; résultats : `screenshots/rapport-zones-3d.json` ; captures : `screenshots/zones-3d-1366.png` et `screenshots/zones-3d-390.png`. Aucune nouvelle dépendance.
+
 Branche : `feat/mission-control`, créée depuis `work-restyled`. Toutes les modifications réalisées sont dans `web-responsable/`. Le changement préexistant de `backend/pom.xml` et les journaux JVM à la racine ne font pas partie de ces commits.
 
 ## Commits

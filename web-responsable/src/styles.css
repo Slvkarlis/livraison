@@ -614,6 +614,16 @@ h2.section::after { content: ''; flex: 1; height: 1px; background: var(--bordure
 .lots-legende li { display:flex; gap:8px; align-items:center; font-size:12px; }
 .lots-legende span { width:18px; height:4px; border-radius:2px; }
 .mission.mission-lots { min-height:420px; height:420px; margin-top:12px; }
+.mission.mission-zones { height:460px; min-height:0; margin-bottom:12px; }
+.zones-geographie { margin-bottom:20px; }
+.zones-selection { display:flex; flex-wrap:wrap; gap:8px; list-style:none; padding:0; margin:0; }
+.zones-selection button { height:auto; min-height:44px; gap:14px; padding:10px 16px; white-space:normal; text-align:left; }
+.zones-selection button span { font:500 11px var(--mono); color:var(--discret); }
+.zones-selection [aria-pressed=true] { background:var(--accent-doux); box-shadow:inset 0 0 0 2px var(--accent-fonce); }
+.mission-schema .zone-schema { fill:var(--nuit-relief); stroke:var(--sur-nuit-discret); stroke-width:2; }
+.mission-schema .zone-schema[data-selectionnee=true] { fill:color-mix(in srgb,var(--accent) 18%,var(--carte-sol)); stroke:var(--accent); stroke-width:3; }
+.zones-geographie > .discret { font-size:12px; }
+@media (max-width:700px) { .mission.mission-zones { height:390px; } .mission-zones .mission-carte { height:100%; } .zones-selection button { font-size:12px; } }
 .relecture { padding:20px; border-radius:var(--rayon); background:var(--surface); }
 .relecture > .actions { align-items:flex-end; margin-bottom:16px; }
 .relecture-curseur { margin-bottom:16px; }

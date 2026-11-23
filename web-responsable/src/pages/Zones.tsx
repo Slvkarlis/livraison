@@ -28,14 +28,14 @@ export default function Zones() {
     catch (e) { setEchec((e as Error).message); } finally { setEnvoi(false); }
   }
   return <><EnTete titre="Zones et frais" sousTitre="Les commerces desservent les adresses de leur zone. Les frontières communes sont autorisées."><button className="bouton" onClick={() => ouvrir('nouvelle')}>Créer une zone</button><button className="bouton secondaire" disabled={chargement} onClick={() => void recharger()}>Actualiser</button></EnTete>
+    {succes && <p role="status">{succes}</p>}
+    {!edition && <CarteZones zones={donnees ?? []} points={[]} edition={false} onPoints={onPoints} />}
     {donnees && <div className="bande-vedette">
       <StatHero legende="Zones desservies" valeur={<Chiffre valeur={donnees.length} />} pastille="Couverture"
         note={<><b>{donnees.reduce((n, z) => n + z.partenaires, 0)}</b> commerce{donnees.reduce((n, z) => n + z.partenaires, 0) > 1 ? 's' : ''} rattaché{donnees.reduce((n, z) => n + z.partenaires, 0) > 1 ? 's' : ''}</>} />
       <StatTuile legende="Frais moyen" valeur={donnees.length ? formatMontant(donnees.reduce((n, z) => n + z.fraisLivraison, 0) / donnees.length) : '—'} note="par livraison, toutes zones" ton="accent" delta="Tarif" />
       <StatTuile legende="Sans commerce" valeur={<Chiffre valeur={donnees.filter(z => !z.partenaires).length} />} note="zones à démarcher en priorité" ton={donnees.some(z => !z.partenaires) ? 'danger' : 'succes'} delta="Prospection" />
     </div>}
-    {succes && <p role="status">{succes}</p>}
-    <CarteZones zones={donnees ?? []} points={[]} edition={false} onPoints={onPoints} />
     <div className="carte"><EtatTableau chargement={chargement} erreur={erreur} vide={!donnees?.length} messageVide="Aucune zone. Créez une couverture pour ouvrir les commandes." onReessayer={() => void recharger()} />
       {!!donnees?.length && <table><thead><tr><th>Zone</th><th>Frais</th><th>Vitesse moyenne</th><th>Partenaires couverts</th><th>Actions</th></tr></thead><tbody>{donnees.map(z => <tr key={z.id}><td>{z.nom}</td><td>{formatMontant(z.fraisLivraison)}</td><td>{z.vitesseMoyenneKmh ?? 20} km/h</td><td>{z.partenaires}</td><td><button className="bouton-lien" onClick={() => ouvrir(z)}>Modifier {z.nom}</button> <button className="bouton-lien" onClick={() => { setSuppression(z); setEchec(null); }}>Supprimer {z.nom}</button></td></tr>)}</tbody></table>}
     </div>

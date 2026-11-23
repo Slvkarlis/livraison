@@ -7,6 +7,11 @@ export interface CoursierCarte {
   commande?: { id: number; code: string; zone: string; statut: Livraison['statut']; destination: PointCarte };
 }
 export interface ArcCarte { id: number; points: PointCarte[]; couleur: number }
+export interface ZoneCarte { id: number; nom: string; contour: PointCarte[] }
+export interface ZonageCarte {
+  zones: ZoneCarte[]; sommets: PointCarte[]; edition: boolean;
+  selection?: number; onSelection?: (id: number) => void; onPoint: (point: PointCarte) => void;
+}
 export const CENTRE_TUNIS: PointCarte = [10.1795, 36.8065];
 export const STATUTS_ACTIFS = ['AFFECTEE', 'RECUPEREE', 'EN_COURS', 'A_PROXIMITE', 'ARRIVEE'];
 export function pointValide(longitude: unknown, latitude: unknown): boolean {

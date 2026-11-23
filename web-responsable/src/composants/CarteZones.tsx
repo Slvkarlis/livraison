@@ -1,21 +1,26 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import type { Position, Zone } from '../../../mobile/packages/shared/src/sprint2';
+import { pointValide, type PointCarte, type ZonageCarte } from '../suivi';
+import { formatMontant } from '../format';
+
+const CarteMission = lazy(() => import('./CarteMission'));
 
 export default function CarteZones({ zones, points, edition, onPoints }: { zones: Zone[]; points: Position[]; edition: boolean; onPoints: (p: Position[]) => void }) {
-  const cadre = useRef<HTMLIFrameElement>(null);
-  const [erreur, setErreur] = useState(false), [prete, setPrete] = useState(false);
-  const [configuree, setConfiguree] = useState(false);
+  const [selection, setSelection] = useState<number>();
   useEffect(() => {
-    const message = (e: MessageEvent) => {
-      if (e.source !== cadre.current?.contentWindow) return;
-      if (e.data?.type === 'carte-erreur') setErreur(true);
-      if (e.data?.type === 'carte-prete') setPrete(true);
-      if (e.data?.type === 'carte-configuree') setConfiguree(true);
-      if (edition && e.data?.type === 'sommets' && Array.isArray(e.data.points) && e.data.points.length <= 200) onPoints(e.data.points);
-    };
-    window.addEventListener('message', message); return () => window.removeEventListener('message', message);
-  }, [edition, onPoints]);
-  useEffect(() => { if (prete) cadre.current?.contentWindow?.postMessage({ type: 'zones', zones, points, edition }, '*'); }, [zones, points, edition, prete]);
-  // La page locale est de confiance ; son origine permet au navigateur d'envoyer le Referer requis par OSM.
-  return <>{erreur && <p role="alert">Carte indisponible. Saisissez les coordonnées des sommets ci-dessous.</p>}<iframe ref={cadre} title="Tracer une zone sur OpenStreetMap" aria-busy={!configuree && !erreur} sandbox="allow-scripts allow-same-origin" src="/carte-zones.html" style={{ width: '100%', height: 340, border: '1px solid #E5E7EB', borderRadius: 12 }} /></>;
+    if (!edition && !zones.some(z => z.id === selection)) setSelection(zones[0]?.id);
+  }, [zones, selection, edition]);
+  const zonage = useMemo<ZonageCarte>(() => ({
+    zones: zones.map(z => ({ id: z.id, nom: z.nom, contour: z.polygone.filter(p => pointValide(p.longitude, p.latitude)).map(p => [p.longitude, p.latitude]) })),
+    sommets: points.filter(p => pointValide(p.longitude, p.latitude)).map(p => [p.longitude, p.latitude]),
+    edition, selection: edition ? undefined : selection, onSelection: setSelection,
+    onPoint: ([longitude, latitude]: PointCarte) => onPoints([...points, { latitude, longitude }]),
+  }), [zones, points, edition, selection, onPoints]);
+  return <section className="zones-geographie" aria-label={edition ? 'Tracer le contour de la zone' : 'Couverture des zones en 3D'}>
+    <div className="mission mission-zones">
+      <Suspense fallback={<p className="mission-message" role="status">Chargement de la carte 3D des zones…</p>}><CarteMission zonage={zonage} /></Suspense>
+    </div>
+    {!edition && !!zones.length && <ul className="zones-selection" aria-label="Sélectionner une zone sur la carte">{zones.map(z => <li key={z.id}><button type="button" className="bouton secondaire" aria-pressed={selection === z.id} onClick={() => setSelection(z.id)}><strong>{z.nom}</strong><span>{formatMontant(z.fraisLivraison)}</span></button></li>)}</ul>}
+    {edition && <p className="discret">Vue 3D ou 2D : cliquez pour ajouter un sommet. Vous pouvez aussi saisir les coordonnées ci-dessous, annuler le dernier point ou effacer le tracé.</p>}
+  </section>;
 }
