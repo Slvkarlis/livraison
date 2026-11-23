@@ -57,7 +57,7 @@ export default function Simulateur() {
         <CarteVille3D />
         <div className="sim-texte">
           <small>Regroupement</small>
-          <strong>{resultat?.recommandee ? `−${resultat.recommandee.economieMinPct} %` : '—'}</strong>
+          <strong className={resultat?.recommandee ? undefined : 'sim-attente'}>{resultat?.recommandee ? `−${resultat.recommandee.economieMinPct} %` : resultat ? 'Aucun gain' : 'En attente'}</strong>
           <p>{resultat ? (resultat.recommandee ? `de minutes avec un rayon de ${resultat.recommandee.rayonKm} km et une fenêtre de ${resultat.recommandee.fenetreMin} min` : 'aucun gain sur ces commandes') : 'Lancez une simulation pour voir le gain des tournées groupées.'}</p>
         </div>
       </aside>

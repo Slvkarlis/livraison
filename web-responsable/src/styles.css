@@ -461,8 +461,16 @@ tr.ligne-recommandee td { background: var(--accent-doux); font-weight: 700; }
 }
 @media (max-width: 1000px) {
   .app { grid-template-columns: 1fr; }
-  .sidebar { position: static; height: auto; }
-  .sidebar nav { flex-direction: row; flex-wrap: wrap; }
+  /* Tablette et telephone : barre compacte, liens sur une seule ligne qui defile horizontalement */
+  .sidebar { position: sticky; top: 0; z-index: 20; height: auto; padding: 12px 14px; gap: 10px; display: grid; grid-template-columns: 1fr auto; align-items: center; overflow: visible; }
+  .sidebar nav { grid-column: 1 / -1; grid-row: 2; flex-direction: row; flex-wrap: nowrap; gap: 4px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; margin: 0 -14px; padding: 2px 14px; mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 24px), transparent); }
+  .sidebar nav::-webkit-scrollbar { display: none; }
+  .groupe-nav { flex-direction: row; gap: 4px; flex: none; }
+  .groupe-titre { display: none; }
+  .sidebar nav a { white-space: nowrap; scroll-snap-align: start; padding: 8px 12px; }
+  .sidebar nav a:hover { transform: none; }
+  .sidebar .utilisateur { padding: 6px; background: transparent; }
+  .sidebar .utilisateur-infos { display: none; }
   .tdb-bas, .cmd-compteurs { grid-template-columns: 1fr 1fr; }
   .page-connexion { grid-template-columns: 1fr; } .connexion-scene { min-height: 360px; } .connexion-cote { border-radius: 36px 36px 0 0; }
   .bi-grille > .bi-indicateur:first-child { grid-column: auto; }
@@ -508,7 +516,7 @@ tr.ligne-recommandee td { background: var(--accent-doux); font-weight: 700; }
 .sim-texte small { color: var(--sur-nuit-discret); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 700; }
 .sim-texte strong { font-size: 56px; line-height: 1; color: var(--accent); letter-spacing: -.03em; }
 .sim-texte p { color: var(--sur-nuit-discret); max-width: 32ch; }
-@media (max-width: 1100px) { .sim { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .sim { grid-template-columns: minmax(0, 1fr); } }
 /* Les titres h2.section sont des intitules, pas des cartes */
 h2.section { background: none; box-shadow: none; padding: 0 4px; border-radius: 0; margin: 28px 0 12px; display: flex; align-items: center; gap: 12px; }
 h2.section::after { content: ''; flex: 1; height: 1px; background: var(--bordure); }
@@ -520,3 +528,8 @@ h2.section::after { content: ''; flex: 1; height: 1px; background: var(--bordure
 .sim-texte { z-index: 2; }
 .sim-scene::after { background: linear-gradient(0deg, var(--nuit) 0%, var(--nuit) 36%, rgba(27,28,31,.7) 52%, transparent 75%); }
 .leaflet-container { border-radius: var(--rayon-xl); }
+
+.sim-texte strong.sim-attente { font-size: 30px; letter-spacing: -.5px; color: #F4F3EF; }
+/* Simulateur : les champs et le texte d'aide ne doivent jamais elargir la carte */
+.sim > .carte { min-width: 0; } .sim textarea, .sim input { max-width: 100%; box-sizing: border-box; } .sim label { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .barre-date { display: none; } .barre { gap: 10px; } }

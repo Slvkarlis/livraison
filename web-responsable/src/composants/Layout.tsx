@@ -39,6 +39,14 @@ export default function Layout() {
   const { profil, deconnexion } = useSession();
   const { pathname } = useLocation();
 
+  // Barre compacte (tablette, telephone) : garder le lien actif visible dans la ligne qui defile
+  useEffect(() => {
+    const actif = document.querySelector<HTMLElement>('.sidebar nav a.actif');
+    const nav = actif?.closest('nav');
+    if (!actif || !nav || nav.scrollWidth <= nav.clientWidth) return;
+    nav.scrollTo({ left: actif.offsetLeft - 24, behavior: 'instant' as ScrollBehavior });
+  }, [pathname]);
+
   // Inclinaison 3D des tuiles : suit le pointeur (une seule ecoute pour toute l'application)
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
