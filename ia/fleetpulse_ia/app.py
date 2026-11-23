@@ -8,7 +8,9 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from . import __version__
+from .demande import ModeleDemande, simuler as simuler_demande
 from .eta import Caracteristiques, ModeleEta, simuler
+from .prospection import ModeleProspection, simuler as simuler_prospects
 from .lots import Commande, regrouper
 
 CHEMIN_MODELE = os.environ.get("FLEETPULSE_MODELE_ETA", "modele_eta.pkl")
@@ -23,7 +25,21 @@ def _modele_initial():
 
 
 app = FastAPI(title="FleetPulse IA", version=__version__)
-etat = {"modele": _modele_initial()}
+CHEMIN_DEMANDE = os.environ.get("FLEETPULSE_MODELE_DEMANDE", "modele_demande.pkl")
+CHEMIN_PROSPECTION = os.environ.get("FLEETPULSE_MODELE_PROSPECTION", "modele_prospection.pkl")
+
+
+def _charger_ou_simuler(chemin, classe, simulation):
+    if os.path.exists(chemin):
+        return classe.charger(chemin)
+    modele = classe()
+    modele.entrainer(simulation())   # demarrage a froid : historique simule, remplace par l'entrainement Colab
+    return modele
+
+
+etat = {"modele": _modele_initial(),
+        "demande": _charger_ou_simuler(CHEMIN_DEMANDE, ModeleDemande, simuler_demande),
+        "prospection": _charger_ou_simuler(CHEMIN_PROSPECTION, ModeleProspection, simuler_prospects)}
 
 
 class CaracteristiquesEta(BaseModel):
@@ -59,7 +75,9 @@ class DemandeLots(BaseModel):
 
 @app.get("/sante")
 def sante():
-    return {"statut": "ok", "version": __version__, "modeleEta": etat["modele"].version, "mae": etat["modele"].mae}
+    return {"statut": "ok", "version": __version__, "modeleEta": etat["modele"].version, "mae": etat["modele"].mae,
+            "modeleDemande": etat["demande"].version, "metriquesDemande": etat["demande"].metriques,
+            "modeleProspection": etat["prospection"].version, "metriquesProspection": etat["prospection"].metriques}
 
 
 @app.post("/v1/eta")
@@ -67,6 +85,47 @@ def eta(c: CaracteristiquesEta):
     preparation, trajet, modele = etat["modele"].predire(Caracteristiques(
         c.partenaireId, c.preparationAnnonceeMin, c.distanceKm, c.vitesseZoneKmh, c.heure, c.jourSemaine, c.tailleLot))
     return {"preparationMin": preparation, "trajetMin": trajet, "modele": modele}
+
+
+class DemandeIa(BaseModel):
+    zoneId: int
+    jourSemaine: int = Field(ge=1, le=7)
+    heure: int = Field(ge=0, le=23)
+    ferie: bool = False
+    partenairesActifs: int = Field(default=0, ge=0, le=10000)
+
+
+class ProspectIa(BaseModel):
+    categorie: str = "AUTRE"
+    distanceClientsKm: float = Field(default=0, ge=0, le=500)
+    clientsZone: int = Field(default=0, ge=0)
+    couvertureZonePct: float = Field(default=0, ge=0, le=100)
+    concurrentsProches: int = Field(default=0, ge=0)
+
+
+@app.post("/v1/demande/predire")
+def demande_predire(d: list[DemandeIa]):
+    """US-804 : commandes attendues par zone et creneau. Un appel par lot de creneaux (200 au plus)."""
+    if len(d) > 200:
+        raise HTTPException(status_code=413, detail="200 creneaux au plus par appel")
+    resultats = []
+    for c in d:
+        prevu, regle = etat["demande"].predire(c.zoneId, c.jourSemaine, c.heure, c.ferie, c.partenairesActifs)
+        resultats.append({"zoneId": c.zoneId, "jourSemaine": c.jourSemaine, "heure": c.heure,
+                          "commandesPrevues": prevu, "regle": regle})
+    return {"previsions": resultats, "modele": etat["demande"].version, "metriques": etat["demande"].metriques}
+
+
+@app.post("/v1/prospection/score")
+def prospection_score(prospects: list[ProspectIa]):
+    """US-802 : score de potentiel 0-100 pour chaque prospect."""
+    if len(prospects) > 500:
+        raise HTTPException(status_code=413, detail="500 prospects au plus par appel")
+    scores = []
+    for p in prospects:
+        score, modele = etat["prospection"].scorer(p.model_dump())
+        scores.append({"score": score, "modele": modele})
+    return {"scores": scores, "modele": etat["prospection"].version, "metriques": etat["prospection"].metriques}
 
 
 @app.post("/v1/lots")
