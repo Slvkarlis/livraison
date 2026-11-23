@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useSession } from '../session';
 import { peutFinance, peutOperations } from '../sprint1';
 
@@ -33,6 +34,28 @@ const GROUPES: { titre: string; vers: string[] }[] = [
 
 export default function Layout() {
   const { profil, deconnexion } = useSession();
+  const { pathname } = useLocation();
+
+  // Inclinaison 3D des tuiles : suit le pointeur (une seule ecoute pour toute l'application)
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const survol = (e: PointerEvent) => {
+      const cible = (e.target as HTMLElement).closest<HTMLElement>('.bi-indicateur, .carte.inclinable');
+      if (!cible) return;
+      const r = cible.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      cible.style.setProperty('--ry', (x * 10).toFixed(2) + 'deg');
+      cible.style.setProperty('--rx', (-y * 8).toFixed(2) + 'deg');
+    };
+    const sortie = (e: PointerEvent) => {
+      const cible = (e.target as HTMLElement).closest<HTMLElement>('.bi-indicateur, .carte.inclinable');
+      if (cible) { cible.style.setProperty('--rx', '0deg'); cible.style.setProperty('--ry', '0deg'); }
+    };
+    document.addEventListener('pointermove', survol);
+    document.addEventListener('pointerout', sortie);
+    return () => { document.removeEventListener('pointermove', survol); document.removeEventListener('pointerout', sortie); };
+  }, []);
   const aujourdhui = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
   const visibles = LIENS.filter(lien => lien.vers === '/audit' || (['/finance', '/bi-finance'].includes(lien.vers) ? peutFinance(profil) : peutOperations(profil)));
 
@@ -82,8 +105,10 @@ export default function Layout() {
           </div>
           <span className="barre-pastille">{profil?.sousRole ?? 'Administrateur principal'}</span>
         </header>
-      <main className="contenu en-entree">
-        <Outlet />
+      <main className="contenu">
+        <div key={pathname} className="page-entree">
+          <Outlet />
+        </div>
       </main>
       </div>
     </div>

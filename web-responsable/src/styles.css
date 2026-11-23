@@ -413,3 +413,121 @@ tbody tr:hover td { background: var(--accent-doux); }
 /* Barre laterale fixe : le bloc utilisateur reste visible, son texte ne coupe plus au milieu */
 .sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; }
 .utilisateur-infos small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+
+/* ==== Mouvement et profondeur (passe 3) ==== */
+
+/* Entree de page : montee douce avec flou qui disparait */
+@keyframes entree-page {
+  from { opacity: 0; transform: translateY(18px); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.page-entree { animation: entree-page .6s var(--ease) both; }
+
+/* Tuiles inclinables en 3D, avec reflet qui suit le pointeur */
+.bi-indicateur, .carte.inclinable {
+  --rx: 0deg; --ry: 0deg;
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+  will-change: transform;
+}
+.bi-indicateur:hover, .carte.inclinable:hover {
+  box-shadow: 0 30px 50px -24px rgba(21, 23, 26, .45), 0 0 0 1px rgba(242, 178, 51, .35);
+}
+.bi-indicateur::after, .carte.inclinable::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: 0;
+  background: radial-gradient(420px circle at 50% 0%, rgba(242, 178, 51, .18), transparent 60%);
+  transition: opacity .35s var(--ease);
+}
+.bi-indicateur:hover::after, .carte.inclinable:hover::after { opacity: 1; }
+.bi-indicateur strong { display: inline-block; transform: translateZ(24px); }
+
+/* Chiffres : apparition en montant */
+@keyframes chiffre { from { opacity: 0; transform: translateY(8px) translateZ(24px); } to { opacity: 1; transform: translateZ(24px); } }
+.bi-indicateur strong { animation: chiffre .7s var(--ease) both; }
+
+/* Lignes de tableau : apparition echelonnee */
+@keyframes ligne { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+tbody tr { animation: ligne .45s var(--ease) both; }
+tbody tr:nth-child(2) { animation-delay: .03s; }
+tbody tr:nth-child(3) { animation-delay: .06s; }
+tbody tr:nth-child(4) { animation-delay: .09s; }
+tbody tr:nth-child(5) { animation-delay: .12s; }
+tbody tr:nth-child(6) { animation-delay: .15s; }
+tbody tr:nth-child(7) { animation-delay: .18s; }
+tbody tr:nth-child(8) { animation-delay: .21s; }
+tbody tr:nth-child(n+9) { animation-delay: .24s; }
+tbody tr:hover td { background: var(--accent-doux); transition: background .2s var(--ease); }
+
+/* Boutons : retour tactile a la pression */
+.bouton { transition: transform .15s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease); }
+.bouton:active:not(:disabled) { transform: scale(.97); }
+
+/* Titres : filet ambre qui s'etend */
+h1 { position: relative; padding-bottom: 12px; }
+h1::after {
+  content: ''; position: absolute; left: 0; bottom: 0; height: 3px; width: 44px; border-radius: 3px;
+  background: var(--accent); transform-origin: left; animation: filet .8s var(--ease) .2s both;
+}
+@keyframes filet { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Chargement : lignes squelettes qui scintillent */
+@keyframes scintille { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+.squelette {
+  height: 44px; margin: 10px 0; border-radius: 12px;
+  background: linear-gradient(90deg, #ECEBE7 0%, #F7F6F3 50%, #ECEBE7 100%);
+  background-size: 800px 100%; animation: scintille 1.4s linear infinite;
+}
+
+/* Connexion : fond qui respire et carte qui se redresse */
+@keyframes respire { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.page-connexion {
+  background: linear-gradient(120deg, #15171A, #2A2D33, #1B1C1F, #3a3322);
+  background-size: 300% 300%; animation: respire 18s ease infinite;
+}
+.carte-connexion { animation: monte .9s var(--ease) both, redresse 1.2s var(--ease) .2s both; }
+@keyframes redresse { from { transform: perspective(1200px) rotateX(12deg); } to { transform: perspective(1200px) rotateX(4deg); } }
+
+/* Reduction des mouvements : tout reste visible, sans animation */
+@media (prefers-reduced-motion: reduce) {
+  .page-entree, .bi-indicateur, tbody tr, h1::after, .squelette { animation: none !important; transition: none !important; }
+}
+
+/* Etat vide : carte pleine, pas une pastille */
+.vide { display: grid; justify-items: center; gap: 10px; padding: 44px 20px; text-align: center; color: var(--discret); }
+.vide p { margin: 0; font-weight: 600; font-size: 15px; }
+.vide-icone { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-doux); color: var(--accent-fonce); font-size: 22px; animation: respire-pt 2.4s ease-in-out infinite; }
+@keyframes respire-pt { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+/* Premiere tuile des tableaux de bord : carte graphite en vedette */
+.bi-grille > .bi-indicateur:first-child {
+  background: linear-gradient(145deg, #23262C 0%, #15171A 70%);
+  border-color: transparent; color: #F4F3EF;
+  box-shadow: 0 24px 40px -22px rgba(21, 23, 26, .7);
+}
+.bi-grille > .bi-indicateur:first-child::before { background: var(--accent); width: 100%; height: 3px; top: 0; bottom: auto; }
+.bi-grille > .bi-indicateur:first-child h2 { color: #9A9EA6; }
+.bi-grille > .bi-indicateur:first-child strong { color: var(--accent); font-size: 40px; }
+.bi-grille > .bi-indicateur:first-child p { color: #9A9EA6; }
+
+/* Fenetres modales : tiennent dans l'ecran, en-tete fixe, contenu qui defile */
+.voile { align-items: center; }
+.modale {
+  max-height: calc(100vh - 40px); overflow-y: auto; width: min(640px, calc(100vw - 32px));
+  border-radius: 22px; padding: 0 0 24px; background: var(--surface);
+  animation: monte .45s var(--ease) both;
+}
+.modale-tete {
+  position: sticky; top: 0; z-index: 2; background: var(--surface);
+  padding: 20px 24px 14px; border-bottom: 1px solid var(--bordure);
+}
+.modale-tete h2 { margin: 0; }
+.modale > form, .modale > div:not(.modale-tete) { padding: 0 24px; }
+
+/* Calques : la fenetre modale passe toujours au-dessus de la barre superieure */
+.barre { z-index: 1; }
+.voile { z-index: 1000; }
+
+/* L'entree de page ne laisse aucun transform ni filtre apres coup : les fenetres fixes restent plein ecran */
+.page-entree { animation: entree-page .6s var(--ease) backwards; }
+@keyframes entree-page { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }

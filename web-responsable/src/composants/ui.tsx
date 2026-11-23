@@ -69,8 +69,8 @@ export function EtatTableau({ chargement, erreur, vide, messageVide, onReessayer
       </div>
     );
   }
-  if (chargement) return <div className="etat"><span className="spinner" /></div>;
-  if (vide) return <div className="etat"><p>{messageVide}</p></div>;
+  if (chargement) return <div aria-busy="true" aria-label="Chargement">{[0, 1, 2].map(i => <div key={i} className="squelette" style={{ opacity: 1 - i * 0.25 }} />)}</div>;
+  if (vide) return <div className="vide"><span className="vide-icone" aria-hidden="true">○</span><p>{messageVide}</p></div>;
   return null;
 }
 

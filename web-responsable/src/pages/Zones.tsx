@@ -41,7 +41,7 @@ export default function Zones() {
         <p>Cliquez sur la carte dans l’ordre des sommets. Le contour se ferme automatiquement. Les croisements et chevauchements sont refusés.</p>
         <CarteZones zones={(donnees ?? []).filter(z => edition === 'nouvelle' || z.id !== edition.id)} points={points.filter(p => Number.isFinite(p.latitude) && Number.isFinite(p.longitude))} edition={!envoi} onPoints={onPoints} />
         <label className="champ">Sommets : latitude,longitude (un par ligne)<textarea aria-label="Sommets" value={trace} rows={5} disabled={envoi} onChange={e => setTrace(e.target.value)} /></label>
-        <div className="actions"><button className="bouton secondaire" type="button" disabled={envoi} onClick={() => setTrace('')}>Effacer le tracé</button><button className="bouton" disabled={envoi}>{envoi ? 'Enregistrement…' : 'Enregistrer la zone'}</button></div>
+        <div className="actions"><button className="bouton secondaire" type="button" disabled={envoi || !trace.trim()} onClick={() => setTrace(t => t.trim().split('\n').slice(0, -1).join('\n'))}>Annuler le dernier point</button><button className="bouton secondaire" type="button" disabled={envoi} onClick={() => setTrace('')}>Effacer le tracé</button><button className="bouton" disabled={envoi}>{envoi ? 'Enregistrement…' : 'Enregistrer la zone'}</button></div>
       </form>
     </Modale>}
     {suppression && <Modale titre="Supprimer la zone" onFermer={() => { if (!envoi) setSuppression(null); }}><p>Supprimer « {suppression.nom} » ? Une zone couvrant encore des partenaires ne peut pas être supprimée. Les anciennes commandes restent lisibles.</p>{echec && <Alerte message={echec} />}<button className="bouton" disabled={envoi} onClick={() => {
