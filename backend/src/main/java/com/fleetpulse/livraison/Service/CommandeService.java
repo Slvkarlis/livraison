@@ -54,7 +54,7 @@ public class CommandeService {
         Zone zone = zones.desservie(adresse.getLatitude(), adresse.getLongitude());
         Partenaire p = partenaires.verrouiller(r.partenaireId()).orElseThrow(MarketplaceException::absent);
         zones.rattacher(p);
-        if (!p.isActif() || !Boolean.TRUE.equals(p.getOuvert())) throw MarketplaceException.conflit("Le partenaire est fermé ou indisponible.");
+        if (!p.isActif() || !p.accepteCommandes(Instant.now())) throw MarketplaceException.conflit("Le commerce est fermé, en pause ou hors de ses horaires.");
         if (p.getZone() == null || !p.getZone().getId().equals(zone.getId())) throw new IllegalArgumentException("Ce partenaire ne dessert pas cette adresse.");
         List<LigneVue> lignes = new ArrayList<>();
         for (Article a : r.lignes().stream().sorted(Comparator.comparing(Article::produitId)).toList()) {

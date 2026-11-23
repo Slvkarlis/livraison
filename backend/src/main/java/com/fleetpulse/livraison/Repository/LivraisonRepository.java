@@ -1,6 +1,7 @@
 package com.fleetpulse.livraison.Repository;
 
 import com.fleetpulse.livraison.Model.Livraison;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,4 +41,10 @@ public interface LivraisonRepository extends JpaRepository<Livraison, Long> {
 
     // Sprint 7 : echecs a traiter, du plus recent au plus ancien
     List<Livraison> findAllByStatutOrderByEchecLeDesc(com.fleetpulse.livraison.Model.enums.StatutLivraison statut);
+
+    // US-2B6 : commandes sans reponse du partenaire
+    List<Livraison> findAllByStatutAndDateCreationBefore(com.fleetpulse.livraison.Model.enums.StatutLivraison statut, Instant avant);
+
+    // Sprint 8 : jeu de demande par zone et creneau (toutes commandes creees depuis la date)
+    List<Livraison> findAllByDateCreationGreaterThanEqualOrderByDateCreationAsc(Instant depuis);
 }

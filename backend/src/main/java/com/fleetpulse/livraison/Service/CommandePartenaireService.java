@@ -50,6 +50,7 @@ public class CommandePartenaireService {
         Livraison c = commande(p, id, true);
         if (c.getStatut() == StatutLivraison.ACCEPTEE) return vue(c);
         workflow.transition(c, StatutLivraison.ACCEPTEE, p, "Préparation annoncée : " + minutes + " min");
+        p.setExpirationsConsecutives(0);   // US-2B6 : une reponse remet le compteur d'expirations a zero
         Instant maintenant = maintenant();
         c.setTempsPreparationMinutes(minutes);
         c.setAccepteeLe(maintenant);
@@ -128,6 +129,7 @@ public class CommandePartenaireService {
         MotifRefus motif = r == null ? null : r.motif();
         String commentaire = r == null || r.commentaire() == null || r.commentaire().isBlank() ? null : r.commentaire().trim();
         if (motif == null) throw new IllegalArgumentException("Choisissez un motif de refus.");
+        if (motif == MotifRefus.EXPIREE) throw new IllegalArgumentException("Ce motif est réservé au système.");
         if (motif == MotifRefus.AUTRE && commentaire == null) throw new IllegalArgumentException("Précisez le motif du refus.");
         if (commentaire != null && commentaire.length() > COMMENTAIRE_MAX)
             throw new IllegalArgumentException("Commentaire : " + COMMENTAIRE_MAX + " caractères maximum.");
