@@ -4,6 +4,7 @@ import { useSession } from '../session';
 import { peutAudit, peutFinance, peutOperations } from '../sprint1';
 
 const LIENS = [
+  { vers: '/suivi-live', libelle: 'Suivi en direct', icone: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M12 2v3M12 19v3M2 12h3M19 12h3M8 12h8M12 8v8' },
   { vers: '/bi-finance', libelle: 'BI Finance', icone: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
   { vers: '/bi-operations', libelle: 'BI Opérations', icone: 'M3 12h4l3-7 4 14 3-7h4' },
   { vers: '/bi-partenaires', libelle: 'BI Partenaires', icone: 'M3 10l2-6h14l2 6M4 10v10h16V10M8 20v-6h5v6M3 10h18' },
@@ -28,7 +29,7 @@ const LIENS = [
 
 const GROUPES: { titre: string; vers: string[] }[] = [
   { titre: 'Pilotage', vers: ['/accueil', '/bi-finance', '/bi-operations', '/bi-partenaires', '/bi-coursiers'] },
-  { titre: 'Opérations', vers: ['/commandes', '/dispatch', '/echecs', '/zones', '/livreurs', '/vehicules'] },
+  { titre: 'Opérations', vers: ['/suivi-live', '/commandes', '/dispatch', '/echecs', '/zones', '/livreurs', '/vehicules'] },
   { titre: 'Croissance et analyse', vers: ['/pilote', '/previsions', '/prospection', '/simulateur'] },
   { titre: 'Finance', vers: ['/finance', '/reclamations'] },
   { titre: 'Administration', vers: ['/dossiers', '/comptes', '/audit'] },

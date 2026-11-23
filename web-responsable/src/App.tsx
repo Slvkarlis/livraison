@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import Zones from './pages/Zones';
 import { Link, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './composants/Layout';
@@ -25,6 +25,7 @@ import MotDePasseOublie from './pages/MotDePasseOublie';
 import { useSession } from './session';
 import { destination, peutAudit, peutFinance, peutOperations } from './sprint1';
 import { api } from './api';
+const SuiviLive = lazy(() => import('./pages/SuiviLive'));
 function Guard({ operations = false, finance = false, children }: { operations?: boolean; finance?: boolean; children: ReactNode }) {
   const { profil } = useSession();
   const autorise = operations ? peutOperations(profil) : finance ? peutFinance(profil) : peutAudit(profil);
@@ -52,6 +53,7 @@ export default function App() {
         <Route path="/audit" element={<Guard><Audit /></Guard>} />
         <Route path="/commandes" element={<Guard operations><Commandes /></Guard>} />
         <Route path="/dispatch" element={<Guard operations><Dispatch /></Guard>} />
+        <Route path="/suivi-live" element={<Guard operations><Suspense fallback={<div className="etat" role="status">Chargement du suivi en direct…</div>}><SuiviLive /></Suspense></Guard>} />
         <Route path="/finance" element={<Guard finance><Finance /></Guard>} />
         <Route path="/bi-finance" element={<Guard finance><BiFinance /></Guard>} />
         <Route path="/bi-operations" element={<Guard operations><BiOperations /></Guard>} />

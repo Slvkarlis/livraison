@@ -28,6 +28,18 @@
   --ombre-haute: 0 40px 60px -40px rgba(21, 23, 26, .55);
   --police: 'Plus Jakarta Sans', system-ui, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  --carte-sol: #202326;
+  --carte-eau: #171c20;
+  --carte-route: #363a3e;
+  --carte-batiment: #41464b;
+  --mission-surface: #202328;
+  --mission-bordure: #45494f;
+  --mission-ombre: 0 12px 40px #00000030;
+  --lot-0: #F2B233;
+  --lot-1: #F6CD79;
+  --lot-2: #D98D22;
+  --lot-3: #FFE0A1;
+  --lot-4: #C5B493;
   color-scheme: light;
 }
 
@@ -533,3 +545,75 @@ h2.section::after { content: ''; flex: 1; height: 1px; background: var(--bordure
 /* Simulateur : les champs et le texte d'aide ne doivent jamais elargir la carte */
 .sim > .carte { min-width: 0; } .sim textarea, .sim input { max-width: 100%; box-sizing: border-box; } .sim label { overflow-wrap: anywhere; }
 @media (max-width: 640px) { .barre-date { display: none; } .barre { gap: 10px; } }
+
+/* Suivi : la carte est la scène, les informations restent sur des surfaces opaques. */
+.mission-signal { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin:-4px 0 16px; font-size:12px; color:var(--discret); }
+.mission-signal strong { color:var(--texte); font-weight:700; }
+.mission-signal > span:last-child { margin-left:auto; }
+.mission-voyant { width:7px; height:7px; border-radius:50%; background:var(--accent-fonce); }
+.mission { position:relative; isolation:isolate; min-height:600px; height:calc(100vh - 230px); max-height:950px; border-radius:var(--rayon-xl); background:var(--carte-sol); overflow:hidden; color:var(--sur-nuit); }
+.mission-carte { position:absolute; inset:0; background:var(--carte-sol); }
+.mission-carte .mission-fond { position:absolute; inset:0; width:100%; height:100%; }
+.mission .maplibregl-canvas { outline-offset:-4px; }
+.mission .maplibregl-ctrl-attrib { background:var(--mission-surface); color:var(--sur-nuit-discret); font:10px var(--police); padding:5px 10px; }
+.mission .maplibregl-ctrl-attrib a { color:var(--sur-nuit-discret); }
+.mission-flotte, .mission-commande, .mission-outils, .mission-message, .mission-legende { background:var(--mission-surface); color:var(--sur-nuit); border:1px solid var(--mission-bordure); box-shadow:var(--mission-ombre); }
+.mission-flotte { position:absolute; top:20px; left:20px; width:280px; max-height:calc(100% - 100px); overflow:auto; border-radius:20px; }
+.mission-flotte-titre { display:flex; align-items:center; justify-content:space-between; padding:18px; border-bottom:1px solid var(--mission-bordure); }
+.mission-flotte h2 { font-size:16px; }
+.mission-flotte-titre .mono { color:var(--accent); }
+.mission-flotte ul { list-style:none; margin:0; padding:8px; }
+.mission-coursier { width:100%; display:grid; grid-template-columns:34px minmax(0,1fr) auto; gap:10px; align-items:center; border:1px solid transparent; padding:13px 9px; background:transparent; color:inherit; font:inherit; text-align:left; border-radius:12px; cursor:pointer; transition:background .18s var(--ease); }
+.mission-coursier[aria-pressed=true] { border-color:var(--accent); background:var(--nuit-relief); }
+.mission-coursier:hover { background:var(--nuit-relief); }
+.mission-coursier strong { font-size:12px; display:block; }
+.mission-coursier small { display:block; font-size:10px; color:var(--sur-nuit-discret); line-height:1.6; }
+.mission-coursier .mono { font-size:10px; color:var(--sur-nuit-discret); }
+.mission-initiales { display:grid; place-items:center; width:34px; height:34px; background:var(--nuit-relief); border-radius:10px; font:600 11px var(--mono); color:var(--accent); }
+.mission-eta { text-align:right; font:600 17px var(--mono); }
+.mission-note { color:var(--sur-nuit-discret); font-size:11px; line-height:1.7; }
+.mission-flotte > .mission-note { padding:12px 18px 18px; border-top:1px solid var(--mission-bordure); }
+.mission-etat { padding:18px; font-size:13px; }
+.mission-etat p { margin:8px 0 16px; color:var(--sur-nuit-discret); }
+.mission-commande { position:absolute; right:20px; bottom:58px; width:310px; padding:22px; border-radius:20px; display:grid; gap:12px; }
+.mission-commande-titre { display:flex; justify-content:space-between; gap:8px; align-items:center; }
+.mission-commande-titre .mono { font-size:10px; color:var(--accent); }
+.mission-surtitre { font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--sur-nuit-discret); }
+.mission-commande h2 { font-size:24px; line-height:1.2; }
+.mission-mesures { display:grid; grid-template-columns:1fr 1fr; padding:14px 0; border-block:1px solid var(--mission-bordure); }
+.mission-mesures strong { display:block; font-size:30px; letter-spacing:-.04em; }
+.mission-mesures small { font-size:12px; font-weight:500; letter-spacing:0; }
+.mission-mesures span { color:var(--sur-nuit-discret); font-size:11px; }
+.mission-etapes { list-style:none; padding:0; margin:0; display:flex; justify-content:space-between; gap:4px; font-size:9px; color:var(--sur-nuit-discret); }
+.mission-etapes li { padding-top:12px; flex:1; border-top:2px solid var(--mission-bordure); }
+.mission-etapes [data-actif=true] { border-color:var(--accent); color:var(--sur-nuit); }
+.mission-commande a { color:var(--accent); font-size:12px; }
+.mission-outils { position:absolute; right:20px; top:20px; display:flex; gap:4px; padding:5px; border-radius:14px; }
+.mission-outils button { background:transparent; border:0; border-radius:9px; color:var(--sur-nuit-discret); font:600 12px var(--police); padding:10px 12px; cursor:pointer; }
+.mission-outils button[aria-pressed=true] { background:var(--nuit-relief); color:var(--sur-nuit); }
+.mission-outils button:disabled { opacity:.45; cursor:default; }
+.mission-message { position:absolute; top:84px; right:20px; max-width:280px; border-radius:12px; padding:12px; font-size:12px; }
+.mission-legende { position:absolute; bottom:16px; left:20px; display:flex; gap:14px; flex-wrap:wrap; padding:9px 12px; border-radius:10px; font-size:10px; color:var(--sur-nuit-discret); }
+.mission-repere { width:34px; height:34px; border:2px solid var(--sur-nuit); border-radius:50%; background:var(--accent); color:var(--nuit); font:800 10px var(--mono); cursor:pointer; box-shadow:var(--mission-ombre); }
+.mission-repere[aria-pressed=true] { outline:5px solid color-mix(in srgb,var(--accent) 25%,transparent); }
+.mission-destination { display:block; width:13px; height:13px; border-radius:50%; background:var(--accent); border:2px solid var(--sur-nuit); box-shadow:0 0 0 8px color-mix(in srgb,var(--accent) 20%,transparent); animation:mission-destination 2s var(--ease) infinite; }
+@keyframes mission-destination { 50% { box-shadow:0 0 0 14px color-mix(in srgb,var(--accent) 5%,transparent); } }
+.mission-bas { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px; font-size:11px; color:var(--discret); margin-top:10px; }
+.mission-schema { width:100%; height:100%; }
+.mission-schema polyline { stroke:var(--accent); fill:none; stroke-width:3; }
+.mission-schema .mission-direction { stroke-dasharray:6 6; opacity:.5; }
+.mission-schema circle { fill:var(--accent); stroke:var(--sur-nuit); stroke-width:2; }
+.mission-schema text { fill:var(--sur-nuit); paint-order:stroke; stroke:var(--mission-surface); stroke-width:6px; font:600 16px var(--police); }
+@media (max-width:1100px) and (min-width:701px) { .mission-commande { width:275px; } .mission-flotte { width:250px; } }
+@media (max-width:700px) {
+  .mission { height:auto; max-height:none; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+  .mission-carte { position:relative; height:390px; flex-shrink:0; order:0; }
+  .mission-flotte { position:relative; inset:auto; width:auto; margin:12px; max-height:310px; order:2; }
+  .mission-commande { position:relative; inset:auto; width:auto; margin:0 12px 12px; order:1; }
+  .mission-outils { top:12px; right:12px; }
+  .mission-outils button { padding:9px; }
+  .mission-message { top:72px; right:12px; left:12px; max-width:none; }
+  .mission-legende { left:12px; right:12px; bottom:32px; gap:8px; font-size:9px; }
+  .mission-signal > span:last-child { margin-left:17px; width:100%; }
+}
+@media (prefers-reduced-motion:reduce) { .mission-destination { animation:none; } }

@@ -96,6 +96,8 @@ export interface VehiculeRequest {
 }
 
 export interface Livraison {
+  /** Champ existant dans LivraisonResponse ; aucun identifiant de coursier exposé. */
+  livreurPrenom?: string | null;
   partenaireId: number | null;
   nomPartenaire: string | null;
   zoneNom: string | null;

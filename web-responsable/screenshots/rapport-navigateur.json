@@ -1,0 +1,30 @@
+[
+  {
+    "route": "/suivi-live",
+    "titre": "Suivi en direct"
+  },
+  {
+    "route": "/accueil",
+    "titre": "Bonsoir Amiravoici la ville ce soir."
+  },
+  {
+    "route": "/dispatch",
+    "titre": "Dispatch"
+  },
+  {
+    "route": "/commandes",
+    "titre": "Commandes"
+  },
+  {
+    "mouvementReduit": "none"
+  },
+  {
+    "controlesSansNom": []
+  },
+  {
+    "resultat": "Vérifications terminées",
+    "erreurs": [],
+    "avertissements": [],
+    "reseau": []
+  }
+]
