@@ -135,7 +135,7 @@ export default function CarteMission({ coursiers = AUCUN, selection, onSelection
       {!!coursiers.length && <button type="button" aria-pressed={suivi} onClick={() => { setSuivi(!suivi); if (!suivi && choisi) carte.current?.easeTo({ center: choisi.position, duration: mouvementReduit ? 0 : 600 }); }}>{suivi ? 'Suivi' : 'Libre'}</button>}
     </div>
     {message && <p className="mission-message" role="status">{message}</p>}
-    <div className="mission-legende"><span>● Position</span><span>━ Trace observée</span><span>┄ Direction estimée</span></div>
+    <div className="mission-legende">{arcs.length && !coursiers.length ? <span>Arcs des lots · départ indicatif ou dépôt renseigné</span> : <><span>● Position</span><span>━ Trace observée</span><span>┄ Direction estimée</span></>}</div>
   </div>;
 }
 

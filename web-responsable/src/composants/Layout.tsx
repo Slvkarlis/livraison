@@ -35,7 +35,7 @@ const GROUPES: { titre: string; vers: string[] }[] = [
   { titre: 'Administration', vers: ['/dossiers', '/comptes', '/audit'] },
 ];
 
-const SELECTEUR_INCLINABLE = '.bi-indicateur, .carte.inclinable, .sh, .st';
+const SELECTEUR_INCLINABLE = '.tdb-heros .inclinable';
 
 export default function Layout() {
   const { profil, deconnexion } = useSession();
@@ -51,8 +51,10 @@ export default function Layout() {
 
   // Inclinaison 3D des tuiles : suit le pointeur (une seule ecoute pour toute l'application)
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (pathname !== '/accueil') return;
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
     const survol = (e: PointerEvent) => {
+      if (media.matches) return;
       const cible = (e.target as HTMLElement).closest<HTMLElement>(SELECTEUR_INCLINABLE);
       if (!cible) return;
       const r = cible.getBoundingClientRect();
@@ -61,14 +63,16 @@ export default function Layout() {
       cible.style.setProperty('--ry', (x * 10).toFixed(2) + 'deg');
       cible.style.setProperty('--rx', (-y * 8).toFixed(2) + 'deg');
     };
+    const reinitialiser = () => document.querySelectorAll<HTMLElement>(SELECTEUR_INCLINABLE).forEach(cible => { cible.style.removeProperty('--rx'); cible.style.removeProperty('--ry'); });
+    media.addEventListener('change', reinitialiser);
     const sortie = (e: PointerEvent) => {
       const cible = (e.target as HTMLElement).closest<HTMLElement>(SELECTEUR_INCLINABLE);
       if (cible) { cible.style.setProperty('--rx', '0deg'); cible.style.setProperty('--ry', '0deg'); }
     };
     document.addEventListener('pointermove', survol);
     document.addEventListener('pointerout', sortie);
-    return () => { document.removeEventListener('pointermove', survol); document.removeEventListener('pointerout', sortie); };
-  }, []);
+    return () => { document.removeEventListener('pointermove', survol); document.removeEventListener('pointerout', sortie); media.removeEventListener('change', reinitialiser); reinitialiser(); };
+  }, [pathname]);
   const aujourdhui = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
   const page = LIENS.find(l => pathname.startsWith(l.vers))?.libelle;
   const groupe = GROUPES.find(g => g.vers.some(v => pathname.startsWith(v)))?.titre;
