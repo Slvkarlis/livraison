@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { Alerte, Badge, Champ, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 import { formatDate, formatDistance, STATUTS } from '../format';
 import type { CommandeAttente, Livreur, LotSupervision, StatutOffre } from '../types';
+const CarteLots = lazy(() => import('../composants/CarteLots'));
 
 const ACTUALISATION_MS = 10_000;
 const MOTIF_MIN = 5;
@@ -26,6 +27,7 @@ export default function Dispatch() {
   const [forcer, setForcer] = useState<CommandeAttente | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [cycle, setCycle] = useState(false);
+  const [carteVisible, setCarteVisible] = useState(false);
   const [maintenant, setMaintenant] = useState(() => Date.now());
 
   // Actualisation periodique : offres qui expirent, nouvelles commandes pretes, livreurs qui se connectent
@@ -57,6 +59,7 @@ export default function Dispatch() {
         : 'Supervision des commandes prêtes, des lots et des livreurs'}>
         <button className="bouton secondaire" onClick={() => void lancerCycle()} disabled={cycle}>Relancer le dispatch</button>
         <button className="bouton secondaire" onClick={() => void recharger()} disabled={chargement}>Actualiser</button>
+        <button className="bouton secondaire" aria-pressed={carteVisible} onClick={() => setCarteVisible(!carteVisible)}>{carteVisible ? 'Masquer la carte des lots' : 'Voir la carte des lots'}</button>
       </EnTete>
       {donnees && <div className="bande-vedette">
         <StatHero legende="Commandes sans livreur" valeur={<Chiffre valeur={donnees.enAttente.length} />} pastille={donnees.ia ? 'IA active' : 'Règles'}
@@ -66,6 +69,7 @@ export default function Dispatch() {
       </div>}
       {message && <Alerte message={message} onFermer={() => setMessage(null)} />}
       {alertes > 0 && <Alerte message={`${alertes} commande(s) attendent un livreur depuis plus de ${donnees?.delaiRechercheMaxMinutes} min : forcez une assignation.`} />}
+      {carteVisible && <Suspense fallback={<div className="etat" role="status">Chargement de la carte des lots…</div>}><CarteLots lots={donnees?.lots ?? []} erreur={erreur} chargement={chargement && !donnees} /></Suspense>}
 
       <h2 className="section">Commandes prêtes sans livreur</h2>
       <div className="carte">
