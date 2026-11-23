@@ -1,16 +1,16 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useSession } from '../session';
-import { peutFinance, peutOperations } from '../sprint1';
+import { peutAudit, peutFinance, peutOperations } from '../sprint1';
 
 const LIENS = [
   { vers: '/bi-finance', libelle: 'BI Finance', icone: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
-  { vers: '/bi-operations', libelle: 'BI Opérations', icone: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
-  { vers: '/bi-partenaires', libelle: 'BI Partenaires', icone: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
-  { vers: '/bi-coursiers', libelle: 'BI Coursiers', icone: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
+  { vers: '/bi-operations', libelle: 'BI Opérations', icone: 'M3 12h4l3-7 4 14 3-7h4' },
+  { vers: '/bi-partenaires', libelle: 'BI Partenaires', icone: 'M3 10l2-6h14l2 6M4 10v10h16V10M8 20v-6h5v6M3 10h18' },
+  { vers: '/bi-coursiers', libelle: 'BI Coursiers', icone: 'M12 3a9 9 0 1 0 9 9M12 3v9h9M6 17l3-3' },
   { vers: '/zones', libelle: 'Zones et frais', icone: 'M3 3l6 3 6-3 6 3v15l-6-3-6 3-6-3zM9 6v15M15 3v15' },
   { vers: '/dossiers', libelle: 'Dossiers', icone: 'M4 4h16v16H4zM8 8h8M8 12h8' },
-  { vers: '/comptes', libelle: 'Comptes', icone: 'M4 6h16M4 12h16M4 18h10' },
+  { vers: '/comptes', libelle: 'Comptes', icone: 'M3 5h18v14H3zM7 15v-1a3 3 0 0 1 6 0v1M10 8h.01M16 9h2M16 13h2' },
   { vers: '/audit', libelle: 'Journal d’audit', icone: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h4' },
   { vers: '/commandes', libelle: 'Commandes', icone: 'M4 6h16M4 12h16M4 18h10' },
   { vers: '/finance', libelle: 'Finance', icone: 'M12 3v18M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H6' },
@@ -21,14 +21,15 @@ const LIENS = [
   { vers: '/reclamations', libelle: 'Réclamations', icone: 'M4 4h16v12H8l-4 4z' },
   { vers: '/pilote', libelle: 'Pilote', icone: 'M3 17l6-6 4 4 8-8M14 7h7v7' },
   { vers: '/previsions', libelle: 'Prévisions', icone: 'M4 19V5m0 14h16M8 15l3-4 3 2 5-6' },
-  { vers: '/prospection', libelle: 'Prospection', icone: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 8a7 7 0 0 1 14 0' },
+  { vers: '/prospection', libelle: 'Prospection', icone: 'M16 16l5 5M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14M7 10h6M10 7v6' },
   { vers: '/simulateur', libelle: 'Simulateur de lots', icone: 'M4 6h6v6H4zM14 12h6v6h-6zM10 9h4M12 9v6' },
   { vers: '/vehicules', libelle: 'Véhicules', icone: 'M3 13l2-6h11l3 6v4h-2M3 13v4h2m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m0 0h6m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0M3 13h16' },
 ];
 
 const GROUPES: { titre: string; vers: string[] }[] = [
   { titre: 'Pilotage', vers: ['/accueil', '/bi-finance', '/bi-operations', '/bi-partenaires', '/bi-coursiers'] },
-  { titre: 'Opérations', vers: ['/commandes', '/dispatch', '/echecs', '/zones', '/livreurs', '/vehicules', '/pilote', '/previsions', '/prospection', '/simulateur'] },
+  { titre: 'Opérations', vers: ['/commandes', '/dispatch', '/echecs', '/zones', '/livreurs', '/vehicules'] },
+  { titre: 'Croissance et analyse', vers: ['/pilote', '/previsions', '/prospection', '/simulateur'] },
   { titre: 'Finance', vers: ['/finance', '/reclamations'] },
   { titre: 'Administration', vers: ['/dossiers', '/comptes', '/audit'] },
 ];
@@ -70,7 +71,7 @@ export default function Layout() {
   const aujourdhui = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
   const page = LIENS.find(l => pathname.startsWith(l.vers))?.libelle;
   const groupe = GROUPES.find(g => g.vers.some(v => pathname.startsWith(v)))?.titre;
-  const visibles = LIENS.filter(lien => lien.vers === '/audit' || (['/finance', '/bi-finance'].includes(lien.vers) ? peutFinance(profil) : peutOperations(profil)));
+  const visibles = LIENS.filter(lien => lien.vers === '/audit' ? peutAudit(profil) : (['/finance', '/bi-finance', '/reclamations'].includes(lien.vers) ? peutFinance(profil) : peutOperations(profil)));
 
   return (
     <div className="app">
@@ -82,7 +83,7 @@ export default function Layout() {
             <small>Espace responsable</small>
           </div>
         </div>
-        <nav>
+        <nav aria-label="Navigation principale">
           {GROUPES.map((g) => {
             const liens = visibles.filter((lien) => g.vers.includes(lien.vers));
             if (liens.length === 0) return null;
