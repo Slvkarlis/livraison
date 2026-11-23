@@ -2,15 +2,18 @@ package com.fleetpulse.livraison.Controller;
 
 import com.fleetpulse.livraison.Dto.ProspectDto.*;
 import com.fleetpulse.livraison.Model.enums.StatutProspect;
+import com.fleetpulse.livraison.Service.MarketplaceException;
 import com.fleetpulse.livraison.Service.PrevisionService;
 import com.fleetpulse.livraison.Service.PrevisionService.*;
 import com.fleetpulse.livraison.Service.ProspectionService;
+import com.fleetpulse.livraison.Service.ServiceIa;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -24,6 +27,7 @@ public class PrevisionController {
     private static final ZoneId FUSEAU = ZoneId.of("Africa/Tunis");
     private final PrevisionService previsions;
     private final ProspectionService prospection;
+    private final ServiceIa ia;
 
     @GetMapping("/api/admin/previsions")
     @Operation(summary = "Prévoir la demande d'un jour", description = "Commandes attendues par zone et par heure (10 h à 22 h). Source : service d'IA, ou moyenne historique si indisponible.")
@@ -61,4 +65,16 @@ public class PrevisionController {
     @GetMapping("/api/admin/previsions/jeu-demande")
     @Operation(summary = "Jeu d'entraînement de la demande", description = "Une ligne par zone, date et heure ouverte, depuis la date donnée (90 jours par défaut).")
     public List<LigneDemande> jeuDemande(@RequestParam(required = false) Instant depuis) { return previsions.jeuDemande(depuis); }
+
+    /** US-806 : reentraine un modele sur le jeu courant de l'entrepot. Si le service IA ne repond pas, rien n'est modifie. */
+    @PostMapping("/api/admin/ia/reentrainer/{modele}")
+    @Operation(summary = "Réentraîner un modèle d'IA", description = "modele = demande ou prospection. Le jeu vient de l'entrepôt ; si le service IA ne répond pas, le modèle actuel est conservé.")
+    public Map<String, Object> reentrainer(@PathVariable String modele) {
+        Object jeu = switch (modele) {
+            case "demande" -> previsions.jeuDemande(null);
+            case "prospection" -> prospection.jeuProspection();
+            default -> throw new IllegalArgumentException("Modèle inconnu : demande ou prospection.");
+        };
+        return ia.reentrainer(modele, jeu).orElseThrow(() -> MarketplaceException.conflit("Service IA indisponible : modèle non réentraîné."));
+    }
 }
