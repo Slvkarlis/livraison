@@ -13,6 +13,7 @@ export type ReclamationVue = { id: number; commandeId: number; codeSuivi: string
 export type ZonePilote = { id: number; nom: string; pilote: boolean };
 export type KpiPilote = { zone: string; commandes: number; livrees: number; echecs: number; expirees: number; delaiMoyenMinutes: number | null; respectEtaPct: number | null };
 export type AlerteCouverture = { zoneId: number; zone: string; date: string; heure: number; commandesPrevues: number; coursiersDisponibles: number; capaciteCommandes: number; renfortRecommande: number };
+export type ResultatSimulation = { unitaire: { tournees: number; km: number; minutes: number }; combinaisons: { rayonKm: number; fenetreMin: number; lots: { tournees: number; km: number; minutes: number }; economieKmPct: number; economieMinPct: number }[]; recommandee: { rayonKm: number; fenetreMin: number; economieMinPct: number } | null };
 export type ProspectVue = { id: number; nom: string; categorie: string; adresse: string; zone: string | null; source: string; statut: string; score: number | null; scoreModele: string | null; statutLe: string; commentaire: string | null };
 export const http = creerClientHttp(() => '', () => 'Serveur injoignable. Vérifiez le backend sur le port 8083.');
 const request = http.request;
@@ -29,6 +30,9 @@ export const api = {
   kpiPilote: () => request<KpiPilote[]>('GET', '/api/admin/pilote/kpi'),
   alertesCouverture: () => request<AlerteCouverture[]>('GET', '/api/admin/previsions/alertes'),
   prospects: () => request<ProspectVue[]>('GET', '/api/admin/prospects'),
+  importerProspects: (source: string, lignes: unknown[]) => request<{ crees: number; erreurs: string[] }>('POST', '/api/admin/prospects/import', { source, lignes }),
+  scorerProspects: () => request<number>('POST', '/api/admin/prospects/scoring'),
+  simulerLots: (scenario: unknown) => request<ResultatSimulation>('POST', '/api/admin/simulateur/lots', scenario),
   statutProspect: (id: number, statut: string, commentaire: string) => request<ProspectVue>('PUT', '/api/admin/prospects/' + id + '/statut', { statut, commentaire }),
   ...creerApiMarche(request),
   comptes: () => request<Compte[]>('GET', '/api/admin/comptes'),

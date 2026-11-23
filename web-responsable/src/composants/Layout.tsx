@@ -19,12 +19,14 @@ const LIENS = [
   { vers: '/reclamations', libelle: 'Réclamations', icone: 'M4 4h16v12H8l-4 4z' },
   { vers: '/pilote', libelle: 'Pilote', icone: 'M3 17l6-6 4 4 8-8M14 7h7v7' },
   { vers: '/previsions', libelle: 'Prévisions', icone: 'M4 19V5m0 14h16M8 15l3-4 3 2 5-6' },
+  { vers: '/prospection', libelle: 'Prospection', icone: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 8a7 7 0 0 1 14 0' },
+  { vers: '/simulateur', libelle: 'Simulateur de lots', icone: 'M4 6h6v6H4zM14 12h6v6h-6zM10 9h4M12 9v6' },
   { vers: '/vehicules', libelle: 'Véhicules', icone: 'M3 13l2-6h11l3 6v4h-2M3 13v4h2m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m0 0h6m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0M3 13h16' },
 ];
 
 const GROUPES: { titre: string; vers: string[] }[] = [
   { titre: 'Pilotage', vers: ['/bi-finance', '/bi-operations', '/bi-partenaires', '/bi-coursiers'] },
-  { titre: 'Opérations', vers: ['/commandes', '/dispatch', '/echecs', '/zones', '/livreurs', '/vehicules', '/pilote', '/previsions'] },
+  { titre: 'Opérations', vers: ['/commandes', '/dispatch', '/echecs', '/zones', '/livreurs', '/vehicules', '/pilote', '/previsions', '/prospection', '/simulateur'] },
   { titre: 'Finance', vers: ['/finance', '/reclamations'] },
   { titre: 'Administration', vers: ['/dossiers', '/comptes', '/audit'] },
 ];

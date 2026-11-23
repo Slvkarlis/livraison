@@ -10,6 +10,8 @@ import Echecs from './pages/Echecs';
 import Reclamations from './pages/Reclamations';
 import Pilote from './pages/Pilote';
 import Previsions from './pages/Previsions';
+import Prospection from './pages/Prospection';
+import Simulateur from './pages/Simulateur';
 import Comptes from './pages/Comptes';
 import Audit from './pages/Audit';
 import Dispatch from './pages/Dispatch';
@@ -61,6 +63,8 @@ export default function App() {
         <Route path="/reclamations" element={<Guard finance><Reclamations /></Guard>} />
         <Route path="/pilote" element={<Guard operations><Pilote /></Guard>} />
         <Route path="/previsions" element={<Guard operations><Previsions /></Guard>} />
+        <Route path="/prospection" element={<Guard operations><Prospection /></Guard>} />
+        <Route path="/simulateur" element={<Guard operations><Simulateur /></Guard>} />
         <Route path="/acces-refuse" element={refuse} />
       </Route>
       <Route path="*" element={<Navigate to={destination(profil)} replace />} />
