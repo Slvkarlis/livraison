@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { Alerte, Badge, Champ, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 import { formatDate, formatDistance, STATUTS } from '../format';
 import type { CommandeAttente, Livreur, LotSupervision, StatutOffre } from '../types';
@@ -57,6 +58,12 @@ export default function Dispatch() {
         <button className="bouton secondaire" onClick={() => void lancerCycle()} disabled={cycle}>Relancer le dispatch</button>
         <button className="bouton secondaire" onClick={() => void recharger()} disabled={chargement}>Actualiser</button>
       </EnTete>
+      {donnees && <div className="bande-vedette">
+        <StatHero legende="Commandes sans livreur" valeur={<Chiffre valeur={donnees.enAttente.length} />} pastille={donnees.ia ? 'IA active' : 'Règles'}
+          note={alertes ? <><b>{alertes}</b> en attente depuis plus de {donnees.delaiRechercheMaxMinutes} min</> : 'Aucune attente anormale'} />
+        <StatTuile legende="Lots en cours" valeur={<Chiffre valeur={donnees.lots.length} />} note="collectes regroupées en tournée" delta={donnees.parLots ? 'Par lots' : 'Unitaire'} ton="accent" />
+        <StatTuile legende="Livreurs suivis" valeur={<Chiffre valeur={donnees.livreurs.length} />} note="avec une position transmise" delta={`${donnees.livreurs.filter(l => l.offreEnCours).length} offre(s) en cours`} ton="succes" />
+      </div>}
       {message && <Alerte message={message} onFermer={() => setMessage(null)} />}
       {alertes > 0 && <Alerte message={`${alertes} commande(s) attendent un livreur depuis plus de ${donnees?.delaiRechercheMaxMinutes} min : forcez une assignation.`} />}
 

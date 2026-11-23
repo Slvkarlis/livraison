@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api, type EchecVue } from '../api';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { Alerte, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 
 const DECISIONS = [
@@ -38,6 +39,12 @@ export default function Echecs() {
       <EnTete titre="Échecs de livraison" sousTitre={`${aTraiter} échec${aTraiter > 1 ? 's' : ''} en attente de décision`}>
         <button className="bouton secondaire" disabled={chargement} onClick={() => void recharger()}>Actualiser</button>
       </EnTete>
+      {donnees && <div className="bande-vedette">
+        <StatHero legende="Échecs à décider" valeur={<Chiffre valeur={aTraiter} />} pastille="Relivraison · retour · perte"
+          note={<><b>{donnees.length}</b> échec{donnees.length > 1 ? 's' : ''} déclaré{donnees.length > 1 ? 's' : ''} au total</>} />
+        <StatTuile legende="Décidés" valeur={<Chiffre valeur={donnees.length - aTraiter} />} note="avec écritures au ledger" delta="Traçables" ton="succes" />
+        <StatTuile legende="Motif fréquent" valeur={motifFrequent(donnees.map(e => e.motif))} note="sur l’ensemble des déclarations" ton="danger" delta="À surveiller" />
+      </div>}
       <div className="carte">
         <EtatTableau chargement={chargement} erreur={erreur} vide={!donnees?.length} messageVide="Aucun échec déclaré." onReessayer={() => void recharger()} />
         {!!donnees?.length && (
@@ -82,4 +89,10 @@ export default function Echecs() {
       )}
     </>
   );
+}
+
+function motifFrequent(motifs: string[]): string {
+  const n = motifs.reduce<Record<string, number>>((a, m) => { a[m] = (a[m] ?? 0) + 1; return a; }, {});
+  const [m] = Object.entries(n).sort((a, b) => b[1] - a[1])[0] ?? ['—'];
+  return m.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase());
 }

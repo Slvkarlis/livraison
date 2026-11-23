@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api, type ReclamationVue } from '../api';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { Alerte, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 import { formatMontant } from '../format';
 
@@ -46,6 +47,12 @@ export default function Reclamations() {
       <EnTete titre="Réclamations clients" sousTitre="Remboursements et imputations. Chaque décision produit ses écritures au ledger.">
         <button className="bouton secondaire" disabled={chargement} onClick={() => void recharger()}>Actualiser</button>
       </EnTete>
+      {donnees && <div className="bande-vedette">
+        <StatHero legende="Réclamations ouvertes" valeur={<Chiffre valeur={donnees.filter(r => !r.decideeLe).length} />} pastille="Finance"
+          note={<><b>{donnees.length}</b> réclamation{donnees.length > 1 ? 's' : ''} reçue{donnees.length > 1 ? 's' : ''}</>} />
+        <StatTuile legende="Montant demandé" valeur={<Chiffre valeur={donnees.reduce((s, r) => s + r.montantDemande, 0)} format={v => v.toFixed(3).replace('.', ',')} />} unite="DT" note="par les clients" ton="accent" delta="Toutes" />
+        <StatTuile legende="Remboursé" valeur={<Chiffre valeur={donnees.reduce((s, r) => s + (r.montantRembourse ?? 0), 0)} format={v => v.toFixed(3).replace('.', ',')} />} unite="DT" note="après décision, imputé au ledger" ton="succes" delta="Décidées" />
+      </div>}
       <div className="carte">
         <EtatTableau chargement={chargement} erreur={erreur} vide={!donnees?.length} messageVide="Aucune réclamation à traiter." onReessayer={() => void recharger()} />
         {!!donnees?.length && (

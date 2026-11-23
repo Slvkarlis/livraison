@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { Alerte, EnTete, EtatTableau, useDonnees } from '../composants/ui';
 
 export default function Pilote() {
@@ -21,6 +22,12 @@ export default function Pilote() {
   return (
     <>
       <EnTete titre="Pilote" sousTitre={`${actives} zone${actives > 1 ? 's' : ''} sur 3 au pilote. Les indicateurs ne portent que sur elles.`} />
+      {kpi.donnees && <div className="bande-vedette">
+        <StatHero legende="Commandes en zones pilotes" valeur={<Chiffre valeur={kpi.donnees.reduce((s, k) => s + k.commandes, 0)} />} pastille={`${actives} / 3 zones`}
+          note={<><b>{kpi.donnees.reduce((s, k) => s + k.livrees, 0)}</b> livrées</>} />
+        <StatTuile legende="Échecs" valeur={<Chiffre valeur={kpi.donnees.reduce((s, k) => s + k.echecs, 0)} />} note="dans les zones pilotes" ton="danger" delta="Pilote" />
+        <StatTuile legende="Offres expirées" valeur={<Chiffre valeur={kpi.donnees.reduce((s, k) => s + k.expirees, 0)} />} note="sans livreur dans le délai" ton="accent" delta="Dispatch" />
+      </div>}
       {echec && <Alerte message={echec} />}
       <div className="carte">
         <h2>Zones du pilote</h2>

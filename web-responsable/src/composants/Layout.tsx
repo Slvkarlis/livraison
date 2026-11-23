@@ -33,6 +33,8 @@ const GROUPES: { titre: string; vers: string[] }[] = [
   { titre: 'Administration', vers: ['/dossiers', '/comptes', '/audit'] },
 ];
 
+const SELECTEUR_INCLINABLE = '.bi-indicateur, .carte.inclinable, .sh, .st';
+
 export default function Layout() {
   const { profil, deconnexion } = useSession();
   const { pathname } = useLocation();
@@ -41,7 +43,7 @@ export default function Layout() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const survol = (e: PointerEvent) => {
-      const cible = (e.target as HTMLElement).closest<HTMLElement>('.bi-indicateur, .carte.inclinable');
+      const cible = (e.target as HTMLElement).closest<HTMLElement>(SELECTEUR_INCLINABLE);
       if (!cible) return;
       const r = cible.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width - 0.5;
@@ -50,7 +52,7 @@ export default function Layout() {
       cible.style.setProperty('--rx', (-y * 8).toFixed(2) + 'deg');
     };
     const sortie = (e: PointerEvent) => {
-      const cible = (e.target as HTMLElement).closest<HTMLElement>('.bi-indicateur, .carte.inclinable');
+      const cible = (e.target as HTMLElement).closest<HTMLElement>(SELECTEUR_INCLINABLE);
       if (cible) { cible.style.setProperty('--rx', '0deg'); cible.style.setProperty('--ry', '0deg'); }
     };
     document.addEventListener('pointermove', survol);
@@ -58,13 +60,15 @@ export default function Layout() {
     return () => { document.removeEventListener('pointermove', survol); document.removeEventListener('pointerout', sortie); };
   }, []);
   const aujourdhui = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const page = LIENS.find(l => pathname.startsWith(l.vers))?.libelle;
+  const groupe = GROUPES.find(g => g.vers.some(v => pathname.startsWith(v)))?.titre;
   const visibles = LIENS.filter(lien => lien.vers === '/audit' || (['/finance', '/bi-finance'].includes(lien.vers) ? peutFinance(profil) : peutOperations(profil)));
 
   return (
     <div className="app">
       <aside className="sidebar">
         <div className="marque">
-          <span className="logo">F</span>
+          <span className="logo"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 17l5-10 4 7 3-4 4 7" /></svg></span>
           <div>
             <strong>FleetPulse</strong>
             <small>Espace responsable</small>
@@ -100,11 +104,11 @@ export default function Layout() {
       </aside>
       <div className="zone-principale">
         <header className="barre">
-          <div>
+          <span className="barre-fil">{groupe ? `${groupe} · ` : ''}<b>{page ?? 'Espace responsable'}</b></span>
+          <div className="barre-droite">
             <span className="barre-date">{aujourdhui}</span>
-            <strong className="barre-bonjour">Bonjour {profil?.prenom ?? ''}</strong>
+            <span className="barre-pastille">{profil?.sousRole ?? 'Administrateur principal'}</span>
           </div>
-          <span className="barre-pastille">{profil?.sousRole ?? 'Administrateur principal'}</span>
         </header>
       <main className="contenu">
         <div key={pathname} className="page-entree">

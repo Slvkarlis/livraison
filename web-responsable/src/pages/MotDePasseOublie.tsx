@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { CarteVille3D } from '../composants/CarteVille3D';
 import { Alerte, Champ } from '../composants/ui';
 import { codeValide, motDePasseValide } from '../sprint1';
 export default function MotDePasseOublie() {
@@ -35,7 +36,7 @@ export default function MotDePasseOublie() {
     catch (err) { setErreur((err as Error).message); }
     finally { setEnvoi(false); }
   }
-  return <div className="page-connexion"><form className="carte-connexion" onSubmit={soumettre}>
+  return <div className="page-connexion"><section className="connexion-scene" aria-hidden="true"><CarteVille3D /><h2>Un nouveau mot de passe, <em>en deux minutes.</em></h2><p>Un code à 6 chiffres vous est envoyé. Il expire au bout de quelques minutes.</p></section><div className="connexion-cote"><form className="carte-connexion" onSubmit={soumettre}>
     <h1>Mot de passe oublié</h1>
     {erreur && <Alerte message={erreur} />}
     {etape === 2 ? <p role="status" className="succes">Mot de passe réinitialisé. Vous pouvez vous reconnecter.</p> : <>
@@ -53,5 +54,5 @@ export default function MotDePasseOublie() {
       </div>}
     </>}
     <p><Link to="/connexion">Retour à la connexion</Link></p>
-  </form></div>;
+  </form></div></div>;
 }

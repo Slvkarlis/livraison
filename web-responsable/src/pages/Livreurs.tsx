@@ -1,5 +1,6 @@
 import { useCallback, useState, type FormEvent } from 'react';
 import { api } from '../api';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { Alerte, BadgeActif, Champ, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 import { ZonesLivreur } from '../composants/ZonesLivreur';
 import type { Livreur, LivreurRequest, Vehicule } from '../types';
@@ -38,6 +39,12 @@ export default function Livreurs() {
       <EnTete titre="Livreurs" sousTitre="Comptes des livreurs et véhicule associé">
         <button className="bouton plein" onClick={() => setEdition('nouveau')}>Ajouter un livreur</button>
       </EnTete>
+      {donnees && <div className="bande-vedette">
+        <StatHero legende="Livreurs actifs" valeur={<Chiffre valeur={livreurs.filter(l => l.actif).length} />} pastille="Flotte"
+          note={<><b>{livreurs.length}</b> compte{livreurs.length > 1 ? 's' : ''} au total</>} />
+        <StatTuile legende="Avec véhicule" valeur={<Chiffre valeur={livreurs.filter(l => l.vehiculeId).length} />} note={`sur ${vehicules.length} véhicule${vehicules.length > 1 ? 's' : ''} en flotte`} ton="accent" delta="Affectés" />
+        <StatTuile legende="Sans zone" valeur={<Chiffre valeur={livreurs.filter(l => !l.zonePrincipale).length} />} note="à rattacher à une zone principale" ton={livreurs.some(l => !l.zonePrincipale) ? 'danger' : 'succes'} delta="Couverture" />
+      </div>}
 
       {erreurAction && <Alerte message={erreurAction} onFermer={() => setErreurAction(null)} />}
 

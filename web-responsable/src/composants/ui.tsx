@@ -35,8 +35,19 @@ export function EnTete({ titre, sousTitre, children }: { titre: string; sousTitr
   );
 }
 
-export function Badge({ texte, couleur, fond }: { texte: string; couleur: string; fond: string }) {
-  return <span className="badge" style={{ color: couleur, background: fond }}>{texte}</span>;
+/** Pastille d'etat : la couleur d'origine est ramenee a l'un des tons du systeme (succes, danger, neutre, ambre). */
+export function Badge({ texte, couleur }: { texte: string; couleur: string; fond?: string }) {
+  return <span className={`badge ton-${tonDepuisCouleur(couleur)}`}>{texte}</span>;
+}
+
+function tonDepuisCouleur(couleur: string): 'succes' | 'danger' | 'neutre' | 'accent' {
+  const hex = couleur.replace('#', '');
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16));
+  if ([r, g, b].some(Number.isNaN)) return 'accent';
+  if (Math.max(r, g, b) - Math.min(r, g, b) < 30) return 'neutre';
+  if (r > g + 40 && r > b + 40 && g < 80) return 'danger';
+  if (g > r && g >= b) return 'succes';
+  return 'accent';
 }
 
 export function BadgeActif({ actif }: { actif: boolean }) {
