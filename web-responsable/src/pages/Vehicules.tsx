@@ -1,4 +1,5 @@
 import { useCallback, useState, type FormEvent } from 'react';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { api } from '../api';
 import { Alerte, BadgeActif, Champ, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 import { formatNombre } from '../format';
@@ -37,6 +38,12 @@ export default function Vehicules() {
       <EnTete titre="Véhicules" sousTitre="Flotte et affectation aux livreurs">
         <button className="bouton plein" onClick={() => setEdition('nouveau')}>Ajouter un véhicule</button>
       </EnTete>
+      {donnees && <div className="bande-vedette">
+        <StatHero legende="Véhicules actifs" valeur={<Chiffre valeur={vehicules.filter(v => v.actif).length} />} pastille="Flotte"
+          note={<><b>{vehicules.length}</b> véhicule{vehicules.length > 1 ? 's' : ''} enregistré{vehicules.length > 1 ? 's' : ''}</>} />
+        <StatTuile legende="Affectés" valeur={<Chiffre valeur={vehicules.filter(v => v.livreurId).length} />} note={`${livreurs.length} livreur${livreurs.length > 1 ? 's' : ''} en flotte`} ton="accent" delta="Livreurs" />
+        <StatTuile legende="Capacité totale" valeur={<Chiffre valeur={vehicules.filter(v => v.actif).reduce((n, v) => n + (v.capaciteKg ?? 0), 0)} />} unite="kg" note="véhicules actifs uniquement" ton="succes" delta="Charge" />
+      </div>}
 
       {erreurAction && <Alerte message={erreurAction} onFermer={() => setErreurAction(null)} />}
 

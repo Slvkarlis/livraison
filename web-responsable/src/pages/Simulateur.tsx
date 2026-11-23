@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CarteVille3D } from '../composants/CarteVille3D';
 import { api, type ResultatSimulation } from '../api';
 import { Alerte, EnTete } from '../composants/ui';
 
@@ -37,6 +38,7 @@ export default function Simulateur() {
   return (
     <>
       <EnTete titre="Simulateur de lots" sousTitre="Compare le dispatch unitaire et le regroupement, sur des commandes données. Aucune commande réelle n'est modifiée." />
+      <div className="sim">
       <div className="carte">
         <form className="formulaire" onSubmit={e => { e.preventDefault(); void simuler(); }}>
           {echec && <Alerte message={echec} />}
@@ -50,6 +52,15 @@ export default function Simulateur() {
           </label>
           <div className="pied-modale"><button className="bouton" disabled={envoi}>{envoi ? 'Calcul…' : 'Simuler'}</button></div>
         </form>
+      </div>
+      <aside className="sim-scene">
+        <CarteVille3D />
+        <div className="sim-texte">
+          <small>Regroupement</small>
+          <strong>{resultat?.recommandee ? `−${resultat.recommandee.economieMinPct} %` : '—'}</strong>
+          <p>{resultat ? (resultat.recommandee ? `de minutes avec un rayon de ${resultat.recommandee.rayonKm} km et une fenêtre de ${resultat.recommandee.fenetreMin} min` : 'aucun gain sur ces commandes') : 'Lancez une simulation pour voir le gain des tournées groupées.'}</p>
+        </div>
+      </aside>
       </div>
       {resultat && <>
         <div className="bi-grille">

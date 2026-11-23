@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { api, type ProspectVue } from '../api';
 import { Alerte, EnTete, EtatTableau, useDonnees } from '../composants/ui';
 
@@ -66,6 +67,12 @@ export default function Prospection() {
       </EnTete>
       {echec && <Alerte message={echec} />}
       {succes && <p role="status" className="bandeau">{succes}</p>}
+      {donnees && <div className="bande-vedette">
+        <StatHero legende="À contacter" valeur={<Chiffre valeur={donnees.filter(p => p.statut === 'A_CONTACTER').length} />} pastille="Pipeline"
+          note={<><b>{donnees.length}</b> commerce{donnees.length > 1 ? 's' : ''} importé{donnees.length > 1 ? 's' : ''}</>} />
+        <StatTuile legende="Intéressés" valeur={<Chiffre valeur={donnees.filter(p => p.statut === 'INTERESSE').length} />} note={`${donnees.filter(p => p.statut === 'INSCRIT').length} déjà inscrits`} ton="succes" delta="Conversion" />
+        <StatTuile legende="Score moyen" valeur={donnees.some(p => p.score != null) ? Math.round(donnees.reduce((n, p) => n + (p.score ?? 0), 0) / Math.max(1, donnees.filter(p => p.score != null).length) * 100) / 100 : '—'} note="potentiel estimé par le modèle" ton="accent" delta="Potentiel" />
+      </div>}
       <div className="carte">
         <h2>Importer des prospects</h2>
         <form className="formulaire" onSubmit={e => { e.preventDefault(); void importer(); }}>

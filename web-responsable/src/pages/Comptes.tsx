@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { api } from '../api';
 import { Alerte, Champ, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 import { useSession } from '../session';
@@ -49,6 +50,13 @@ export default function Comptes({ dossiers = false }: { dossiers?: boolean }) {
   ] : [];
   return <>
     <EnTete titre={dossiers ? 'Dossiers de candidature' : 'Gestion des comptes'} sousTitre={dossiers ? 'Examinez les candidatures des partenaires et coursiers.' : 'Consultez les comptes, suspendez ou réactivez leur accès.'} />
+    {donnees && <div className="bande-vedette">
+      <StatHero legende={dossiers ? 'Dossiers à examiner' : 'Comptes actifs'} pastille={dossiers ? 'Candidatures' : 'Accès'}
+        valeur={<Chiffre valeur={dossiers ? donnees.filter(c => c.statut === 'EN_ATTENTE').length : donnees.filter(c => c.statut === 'ACTIF').length} />}
+        note={<><b>{donnees.length}</b> compte{donnees.length > 1 ? 's' : ''} au total</>} />
+      <StatTuile legende="Complément demandé" valeur={<Chiffre valeur={donnees.filter(c => c.statut === 'COMPLEMENT_DEMANDE').length} />} note="en attente du demandeur" ton="accent" delta="Relance" />
+      <StatTuile legende="Suspendus" valeur={<Chiffre valeur={donnees.filter(c => c.statut === 'SUSPENDU').length} />} note="accès bloqué par un responsable" ton={donnees.some(c => c.statut === 'SUSPENDU') ? 'danger' : 'succes'} delta="Sécurité" />
+    </div>}
     {succes && <p className="succes" role="status">{succes}</p>}
     <div className="filtres">
       <Champ libelle="Rechercher"><input type="search" value={recherche} onChange={e => setRecherche(e.target.value)} placeholder="Nom, email, téléphone, commerce…" /></Champ>

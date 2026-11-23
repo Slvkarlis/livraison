@@ -1,4 +1,5 @@
 import { useCallback, useState, type FormEvent } from 'react';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { api } from '../api';
 import { Alerte, Badge, Champ, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 import { formatDate, formatMontant } from '../format';
@@ -55,7 +56,13 @@ function Caisses() {
   return (
     <>
       {message && <Alerte message={message} onFermer={() => setMessage(null)} />}
-      <h2 className="section">Cash en circulation : {donnees ? formatMontant(donnees.cashEnCirculation) : '…'}</h2>
+      {donnees && <div className="bande-vedette">
+        <StatHero legende="Cash en circulation" valeur={formatMontant(donnees.cashEnCirculation)} pastille="Caisses"
+          note={<><b>{donnees.coursiers.length}</b> livreur{donnees.coursiers.length > 1 ? 's' : ''} détien{donnees.coursiers.length > 1 ? 'nent' : 't'} du cash</>} />
+        <StatTuile legende="Commandes non déposées" valeur={<Chiffre valeur={donnees.coursiers.reduce((n, c) => n + c.nbCommandes, 0)} />} note="encaissées, pas encore déposées" ton="accent" delta="À déposer" />
+        <StatTuile legende="Reçus avec écart" valeur={<Chiffre valeur={(recus.donnees ?? []).filter(r => r.statut === 'ECART').length} />} note={`sur ${(recus.donnees ?? []).length} reçu${(recus.donnees ?? []).length > 1 ? 's' : ''} de dépôt`} ton={(recus.donnees ?? []).some(r => r.statut === 'ECART') ? 'danger' : 'succes'} delta="Rapprochement" />
+      </div>}
+      <h2 className="section">Soldes par livreur</h2>
       <div className="carte">
         <EtatTableau chargement={chargement && !donnees} erreur={erreur} vide={!donnees?.coursiers.length}
           messageVide="Aucun livreur ne détient de cash." onReessayer={() => void recharger()} />

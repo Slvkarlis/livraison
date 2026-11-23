@@ -1,4 +1,5 @@
 import { useCallback, useState, type FormEvent } from 'react';
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { api, type Audit as Entree } from '../api';
 import { Champ, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 const ACTIONS = ['INSCRIPTION_CLIENT', 'INSCRIPTION_PARTENAIRE', 'CANDIDATURE_LIVREUR', 'DOSSIER_RESOUMIS',
@@ -27,6 +28,12 @@ export default function Audit() {
   }
   return <>
     <EnTete titre="Journal d’audit" sousTitre="Historique des actions sensibles sur les comptes et dossiers." />
+    {donnees && <div className="bande-vedette">
+      <StatHero legende="Actions journalisées" valeur={<Chiffre valeur={donnees.totalElements} />} pastille={query ? 'Filtré' : 'Tout'}
+        note={<>page <b>{donnees.number + 1}</b> sur {Math.max(1, donnees.totalPages)}</>} />
+      <StatTuile legende="Acteurs sur la page" valeur={<Chiffre valeur={new Set(donnees.content.map(e => e.acteur)).size} />} note="responsables distincts" ton="accent" delta="Traçabilité" />
+      <StatTuile legende="Types d’action" valeur={<Chiffre valeur={new Set(donnees.content.map(e => e.action)).size} />} note="sur les entrées affichées" ton="succes" delta="Diversité" />
+    </div>}
     <form className="filtres" onSubmit={filtrer}>
       <Champ libelle="Acteur (email exact)"><input value={filtres.acteur} onChange={e => setFiltres({ ...filtres, acteur: e.target.value })} /></Champ>
       <Champ libelle="Action"><select value={filtres.action} onChange={e => setFiltres({ ...filtres, action: e.target.value })}>

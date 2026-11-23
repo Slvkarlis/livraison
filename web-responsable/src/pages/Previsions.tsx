@@ -1,3 +1,4 @@
+import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { api } from '../api';
 import { EnTete, EtatTableau, useDonnees } from '../composants/ui';
 
@@ -9,17 +10,11 @@ export default function Previsions() {
   return (
     <>
       <EnTete titre="Prévisions et prospection" sousTitre="Où la demande dépasse la capacité des coursiers, et quels commerces démarcher." />
-      <div className="bi-grille">
-        <article className="bi-indicateur">
-          <h2>Alertes de couverture</h2>
-          <strong>{alertes.donnees?.length ?? '—'}</strong>
-          <p>créneaux à renforcer aujourd’hui</p>
-        </article>
-        <article className="bi-indicateur">
-          <h2>Prospects à contacter</h2>
-          <strong>{aContacter}</strong>
-          <p>sur {prospects.donnees?.length ?? '—'} prospects importés</p>
-        </article>
+      <div className="bande-vedette">
+        <StatHero legende="Alertes de couverture" valeur={alertes.donnees ? <Chiffre valeur={alertes.donnees.length} /> : '—'} pastille="Aujourd’hui"
+          note={<><b>{(alertes.donnees ?? []).reduce((n, a) => n + a.renfortRecommande, 0)}</b> coursier(s) de renfort conseillé(s)</>} />
+        <StatTuile legende="Commandes prévues" valeur={<Chiffre valeur={(alertes.donnees ?? []).reduce((n, a) => n + a.commandesPrevues, 0)} />} note="sur les créneaux en tension" ton={alertes.donnees?.length ? 'danger' : 'succes'} delta="Demande" />
+        <StatTuile legende="Prospects à contacter" valeur={<Chiffre valeur={aContacter} />} note={`sur ${prospects.donnees?.length ?? '—'} prospects importés`} ton="accent" delta="Pipeline" />
       </div>
       <div className="carte">
         <h2>Créneaux sous-couverts</h2>
