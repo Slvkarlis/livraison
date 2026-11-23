@@ -25,7 +25,7 @@ public class ReclamationController {
 
     @GetMapping("/api/reclamations")
     @PreAuthorize("hasRole('CLIENT')")
-    @Operation(summary = "Lister mes réclamations")
+    @Operation(summary = "Lister mes réclamations", description = "Réclamations ouvertes par le client connecté, la plus récente d'abord.")
     public List<ReclamationVue> mes(Authentication a) { return service.mesReclamations(a.getName()); }
 
     @GetMapping("/api/admin/finance/reclamations")

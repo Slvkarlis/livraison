@@ -109,7 +109,7 @@ abstract class ParcoursSprint3 {
     }
 
     @BeforeEach void preparerSprint3() throws Exception {
-        double lat = 10 + sequence.incrementAndGet() * 2;
+        double lat = 10 + (sequence.incrementAndGet() % 35) * 2;   // reste dans les bornes geographiques
         admin = login("admin@sprint1.test", "test-admin-password");
         zoneA = creerZone("Zone S3 " + lat, lat, 20);
         latCommerce = lat + .5; lngCommerce = 20.5;

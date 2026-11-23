@@ -39,7 +39,7 @@ public class SprintSeptController {
 
     @GetMapping("/api/admin/pilote/zones")
     @PreAuthorize("hasRole('OPERATIONS')")
-    @Operation(summary = "Lister les zones et le pilote")
+    @Operation(summary = "Lister les zones et le pilote", description = "Toutes les zones, avec le drapeau pilote pour chacune.")
     public List<ZonePilote> zones() { return pilote.zones(); }
 
     @PutMapping("/api/admin/pilote/zones/{id}")

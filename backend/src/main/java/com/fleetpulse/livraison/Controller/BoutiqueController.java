@@ -32,6 +32,6 @@ public class BoutiqueController {
     }
 
     @DeleteMapping("/pause")
-    @Operation(summary = "Reprendre les commandes")
+    @Operation(summary = "Reprendre les commandes", description = "Leve une pause manuelle ou automatique ; le compteur d'expirations repart a zero.")
     public Etat reprendre(Authentication a) { return service.reprendre(a.getName()); }
 }
