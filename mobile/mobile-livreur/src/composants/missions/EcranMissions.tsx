@@ -100,13 +100,22 @@ export default function EcranMissions() {
         refreshControl={<RefreshControl refreshing={rafraichissement} onRefresh={rafraichir} tintColor={theme.accent} />}
         ListHeaderComponent={
           <View style={styles.entete}>
-            <View style={styles.ligneHaut}>
-              <Text style={styles.bonjour}>Bonjour {profil?.prenom}</Text>
-              <Text style={[styles.direct, { color: enDirect ? theme.accent : theme.secondaire }]}>
-                {enDirect ? '● En direct' : '○ Hors ligne'}
+            <View style={styles.hero}>
+              <View style={styles.heroHaut}>
+                <View>
+                  <Text style={styles.bonjour}>Bonjour {profil?.prenom}</Text>
+                  <Text style={styles.titre}>Missions</Text>
+                </View>
+                <View style={[styles.pilule, { backgroundColor: enDirect ? theme.accent : 'rgba(255,255,255,0.12)' }]}>
+                  <Text style={[styles.piluleTexte, { color: enDirect ? theme.surAccent : theme.secondaire }]}>
+                    {enDirect ? 'En direct' : 'Hors ligne'}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.heroSous}>
+                {missions ? `${missions.length} mission${missions.length > 1 ? 's' : ''} en cours` : 'Chargement…'}
               </Text>
             </View>
-            <Text style={styles.titre}>Missions</Text>
             <MessageErreur message={erreur} />
             {disponibilite ? <CarteDisponibilite disponibilite={disponibilite} onChange={(d) => void apresChangementDisponibilite(d)} /> : null}
             <CarteSuiviGps />
@@ -145,7 +154,12 @@ const styles = StyleSheet.create({
   ligneHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   bonjour: { fontSize: 15, color: theme.secondaire },
   direct: { fontSize: 12, fontWeight: '700' },
-  titre: { fontSize: 28, fontWeight: '800', color: theme.texte, marginTop: -8 },
+  titre: { fontSize: 28, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.6, marginTop: 2 },
+  hero: { backgroundColor: '#1F2126', borderRadius: 24, padding: 20, marginTop: 8, marginBottom: 18, borderWidth: 1, borderColor: theme.bordure },
+  heroHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  heroSous: { color: theme.secondaire, fontSize: 14, fontWeight: '600', marginTop: 10 },
+  pilule: { borderRadius: 999, paddingVertical: 7, paddingHorizontal: 12 },
+  piluleTexte: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6 },
   section: { fontSize: 12, fontWeight: '700', color: theme.secondaire, letterSpacing: 1.5, marginTop: 10 },
   chargement: { marginTop: 40 },
   separateur: { height: 12 },
