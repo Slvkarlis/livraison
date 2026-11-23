@@ -1,4 +1,5 @@
 import {
+  EntreeAnimee,
   EtatVide,
   MessageErreur,
   api,
@@ -141,7 +142,7 @@ export default function EcranMissions() {
           {livrees.map(m => <CarteMission key={m.id} mission={m} />)}
           {!livrees.length && <Text style={{ color: theme.secondaire }}>Aucune mission livrée.</Text>}
         </View>}
-        renderItem={({ item }) => <CarteMission mission={item} />}
+        renderItem={({ item, index }) => <EntreeAnimee rang={index}><CarteMission mission={item} /></EntreeAnimee>}
       />
     </SafeAreaView>
   );

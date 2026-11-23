@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {
+  EntreeAnimee,
   EtatVide,
   MessageErreur,
   PastilleStatut,
@@ -84,7 +85,7 @@ export default function MesCommandes() {
           )
         }
         ItemSeparatorComponent={() => <View style={styles.separateur} />}
-        renderItem={({ item }) => <CarteCommande livraison={item} />}
+        renderItem={({ item, index }) => <EntreeAnimee rang={index}><CarteCommande livraison={item} /></EntreeAnimee>}
       />
     </SafeAreaView>
   );

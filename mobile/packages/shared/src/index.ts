@@ -20,3 +20,4 @@ export * from './notation';
 export * from './sprint7';
 export * from './PanneauNotation';
 export * from './bi';
+export * from './mouvement';
