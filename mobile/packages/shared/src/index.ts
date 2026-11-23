@@ -22,3 +22,4 @@ export * from './PanneauNotation';
 export * from './bi';
 export * from './mouvement';
 export * from './ville3d';
+export * from './glisser';

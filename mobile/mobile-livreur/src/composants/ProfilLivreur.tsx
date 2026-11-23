@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Bouton, MessageErreur, useAuth } from '@fleetpulse/shared';
+import { Bouton, EntreeAnimee, MessageErreur, Ville3D, useAuth } from '@fleetpulse/shared';
 import { useState, type ComponentProps } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,7 +40,9 @@ export default function ProfilLivreur() {
           />
         }
       >
+        <EntreeAnimee rang={0}>
         <View style={styles.entete}>
+          <Ville3D ton="nuit" progression={0.4} style={styles.enteteVille} />
           <View style={styles.avatar}>
             <Text style={styles.initiales}>{initiales}</Text>
           </View>
@@ -55,6 +57,7 @@ export default function ProfilLivreur() {
             </Text>
           </View>
         </View>
+        </EntreeAnimee>
 
         <MessageErreur message={erreur} />
 
@@ -132,28 +135,30 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.fond },
   contenu: { padding: 20 },
   flex: { flex: 1 },
-  entete: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 28, marginTop: 8 },
+  entete: { flexDirection: 'row', alignItems: 'flex-end', gap: 14, marginBottom: 28, marginTop: 8, minHeight: 200, padding: 20, borderRadius: 28, backgroundColor: '#1B1C1F', overflow: 'hidden', borderWidth: 1, borderColor: theme.bordure },
+  enteteVille: { position: 'absolute', top: 0, bottom: 0, left: '25%', right: 0, opacity: 0.85 },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 10,
-    backgroundColor: theme.surfaceAlt,
-    borderWidth: 1,
-    borderColor: theme.bordure,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.accent,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: 'rgba(242,178,51,0.3)',
   },
-  initiales: { fontSize: 18, fontWeight: '800', color: theme.texte },
+  initiales: { fontSize: 20, fontWeight: '800', color: theme.surAccent },
   etiquette: { fontSize: 12, fontWeight: '700', color: theme.secondaire, letterSpacing: 1.5, marginBottom: 10 },
-  nom: { fontSize: 20, fontWeight: '700', color: theme.texte, marginTop: -6 },
+  nom: { fontSize: 24, fontWeight: '800', color: '#FFFFFF', marginTop: -6, letterSpacing: -0.5 },
   etat: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     backgroundColor: theme.accentDoux,
-    borderRadius: 6,
-    paddingHorizontal: 10,
+    borderRadius: 999,
+    paddingHorizontal: 12,
     paddingVertical: 6,
+    alignSelf: 'flex-start',
   },
   etatAttente: { backgroundColor: 'rgba(251,191,36,0.12)' },
   point: { width: 8, height: 8, borderRadius: 4, backgroundColor: theme.accent },
@@ -164,16 +169,16 @@ const styles = StyleSheet.create({
     backgroundColor: theme.surface,
     borderWidth: 1,
     borderColor: theme.bordure,
-    borderRadius: theme.rayon,
-    padding: 16,
+    borderRadius: 24,
+    padding: 18,
     marginBottom: 24,
   },
   plaque: {
     alignSelf: 'flex-start',
     backgroundColor: '#000000',
     borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderRadius: 6,
+    borderColor: theme.accent,
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },

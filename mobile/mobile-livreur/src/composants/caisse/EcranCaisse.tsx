@@ -1,6 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {
+  EntreeAnimee,
   EtatVide,
+  Pilule,
+  Ville3D,
   MessageErreur,
   api,
   conseilDepot,
@@ -53,17 +56,34 @@ export default function EcranCaisse() {
         <MessageErreur message={erreur} />
         {!caisse ? <ActivityIndicator color={theme.accent} style={styles.chargement} /> : (
           <>
-            <View style={styles.solde}>
-              <Text style={styles.libelle}>CASH À DÉPOSER</Text>
-              <Text style={styles.montant}>{formatMontant(caisse.solde)}</Text>
-              <Text style={styles.conseil}>{conseilDepot(caisse)}</Text>
-            </View>
+            <EntreeAnimee rang={0}>
+              <View style={styles.solde}>
+                <Ville3D ton="nuit" progression={0.9} style={styles.soldeVille} />
+                <View style={styles.soldeHaut}>
+                  <Text style={styles.libelle}>CASH À DÉPOSER</Text>
+                  <Pilule texte={caisse.solde > 0 ? 'À déposer' : 'Rien à déposer'} ton={caisse.solde > 0 ? 'verre' : 'succes'} pulse={caisse.solde > 0} />
+                </View>
+                <View>
+                  <Text style={styles.montant} adjustsFontSizeToFit numberOfLines={1}>{formatMontant(caisse.solde)}</Text>
+                  <Text style={styles.conseil}>{conseilDepot(caisse)}</Text>
+                </View>
+              </View>
+            </EntreeAnimee>
 
-            <View style={styles.carte}>
-              <Text style={styles.section}>RÉMUNÉRATION EN ATTENTE</Text>
-              <Text style={styles.ligneForte}>{formatMontant(caisse.remunerationEnAttente)}</Text>
-              <Text style={styles.discret}>{caisse.missionsEnAttente} mission{caisse.missionsEnAttente > 1 ? 's' : ''} livrée{caisse.missionsEnAttente > 1 ? 's' : ''}, payée{caisse.missionsEnAttente > 1 ? 's' : ''} au prochain closing</Text>
-            </View>
+            <EntreeAnimee rang={1}>
+              <View style={styles.duo}>
+                <View style={[styles.tuile, styles.tuileClaire]}>
+                  <Text style={styles.tuileLibelle}>Rémunération en attente</Text>
+                  <Text style={styles.tuileValeur} adjustsFontSizeToFit numberOfLines={1}>{formatMontant(caisse.remunerationEnAttente)}</Text>
+                  <Text style={styles.tuileNote}>payée au prochain closing</Text>
+                </View>
+                <View style={styles.tuile}>
+                  <Text style={[styles.tuileLibelle, styles.surNuit]}>Missions</Text>
+                  <Text style={[styles.tuileValeur, styles.blanc]}>{caisse.missionsEnAttente}</Text>
+                  <Text style={[styles.tuileNote, styles.surNuit]}>livrée{caisse.missionsEnAttente > 1 ? 's' : ''} cette période</Text>
+                </View>
+              </View>
+            </EntreeAnimee>
 
             {caisse.commandes.length > 0 ? (
               <View style={styles.carte}>
@@ -120,18 +140,27 @@ export default function EcranCaisse() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.fond },
   contenu: { padding: 20, paddingBottom: 40, gap: 14 },
-  titre: { fontSize: 28, fontWeight: '800', color: theme.texte, marginTop: 8 },
+  titre: { fontSize: 40, fontWeight: '800', color: theme.texte, marginTop: 8, letterSpacing: -1.2 },
   chargement: { marginTop: 40 },
-  solde: { gap: 4, padding: 18, borderRadius: theme.rayon, backgroundColor: theme.accentDoux, borderWidth: 1, borderColor: theme.accent },
-  libelle: { fontSize: 12, fontWeight: '700', color: theme.accent, letterSpacing: 1.5 },
-  montant: { fontSize: 32, fontWeight: '800', color: theme.texte, fontVariant: ['tabular-nums'] },
-  conseil: { fontSize: 13, color: theme.secondaire },
-  carte: { gap: 10, padding: 16, borderRadius: theme.rayon, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.bordure },
+  solde: { minHeight: 230, padding: 20, borderRadius: 28, backgroundColor: '#1B1C1F', overflow: 'hidden', justifyContent: 'space-between', borderWidth: 1, borderColor: theme.bordure },
+  soldeVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '30%', opacity: 0.85 },
+  soldeHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
+  libelle: { fontSize: 12, fontWeight: '700', color: '#9A9EA6', letterSpacing: 1.5 },
+  montant: { fontSize: 46, fontWeight: '800', color: theme.accent, letterSpacing: -1.4, fontVariant: ['tabular-nums'] },
+  conseil: { fontSize: 13, color: '#C9CCD2', marginTop: 4, maxWidth: '75%' },
+  duo: { flexDirection: 'row', gap: 12 },
+  tuile: { flex: 1, padding: 16, borderRadius: 24, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.bordure, gap: 4 },
+  tuileClaire: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  tuileLibelle: { fontSize: 12, fontWeight: '600', color: '#6B6F76' },
+  tuileValeur: { fontSize: 26, fontWeight: '800', color: '#15171A', letterSpacing: -0.6, fontVariant: ['tabular-nums'] },
+  tuileNote: { fontSize: 12, color: '#6B6F76' },
+  surNuit: { color: '#9A9EA6' },
+  blanc: { color: '#F4F3EF' },
+  carte: { gap: 12, padding: 18, borderRadius: 24, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.bordure },
   section: { fontSize: 12, fontWeight: '700', color: theme.secondaire, letterSpacing: 1.5 },
   ligne: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   flex: { flex: 1, gap: 2 },
   texte: { fontSize: 15, color: theme.texte },
   texteFort: { fontSize: 15, fontWeight: '700', color: theme.texte },
-  ligneForte: { fontSize: 22, fontWeight: '800', color: theme.texte },
   discret: { fontSize: 13, color: theme.secondaire },
 });

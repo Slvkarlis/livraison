@@ -72,10 +72,10 @@ export function DeclarerEchec({ missionId, onDeclare }: { missionId: number; onD
 }
 
 const styles = StyleSheet.create({
-  declencheur: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: theme.rayon, borderWidth: 1, borderColor: theme.erreur, paddingVertical: 13, marginTop: 12 },
+  declencheur: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 999, borderWidth: 1, borderColor: theme.erreur, backgroundColor: 'rgba(200,49,43,0.08)', paddingVertical: 15 },
   declencheurTexte: { color: theme.erreur, fontWeight: '700', fontSize: 15 },
   voile: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  feuille: { backgroundColor: theme.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, maxHeight: '85%' },
+  feuille: { backgroundColor: theme.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 22, maxHeight: '85%' },
   titre: { fontSize: 20, fontWeight: '800', color: theme.texte, marginBottom: 14, letterSpacing: -0.4 },
   ligne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderRadius: theme.rayon, padding: 14, marginBottom: 8, backgroundColor: theme.surfaceAlt },
   ligneActive: { backgroundColor: theme.accentDoux, borderWidth: 1, borderColor: theme.accent },

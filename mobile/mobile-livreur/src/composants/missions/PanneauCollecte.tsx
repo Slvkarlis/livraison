@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Bouton, Champ, MessageErreur, api, type Mission } from '@fleetpulse/shared';
+import { Bouton, Champ, GlisserPourConfirmer, MessageErreur, api, type Mission } from '@fleetpulse/shared';
 import { useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
@@ -54,8 +54,9 @@ export function PanneauCollecte({ missionId, onCollectee }: { missionId: number;
         editable={!envoi}
       />
       <MessageErreur message={erreur} />
-      <Bouton titre="Confirmer la collecte" variante="secondaire" chargement={envoi && !!code} desactive={!codeComplet}
-        onPress={() => void confirmer(code)} />
+      <GlisserPourConfirmer libelle={codeComplet ? 'Glisser : colis récupéré' : 'Saisissez le code pour glisser'}
+        chargement={envoi && !!code} desactive={!codeComplet} onConfirmer={() => void confirmer(code)}
+        icone={<Ionicons name="cube" size={22} color={codeComplet ? '#15171A' : '#6B6F76'} />} />
 
       <Modal visible={scannerOuvert} animationType="slide" onRequestClose={() => setScannerOuvert(false)}>
         <ScannerQr onScan={(contenu) => void confirmer(contenu)} onFermer={() => setScannerOuvert(false)} />
@@ -67,9 +68,8 @@ export function PanneauCollecte({ missionId, onCollectee }: { missionId: number;
 const styles = StyleSheet.create({
   carte: {
     gap: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderRadius: theme.rayon,
+    padding: 18,
+    borderRadius: 24,
     backgroundColor: theme.surface,
     borderWidth: 1,
     borderColor: theme.accent,

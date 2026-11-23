@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Bouton, Champ, MessageErreur, api, ecartEncaissement, formatMontant, lireMontant, type Mission } from '@fleetpulse/shared';
+import { Bouton, Champ, GlisserPourConfirmer, MessageErreur, api, ecartEncaissement, formatMontant, lireMontant, type Mission } from '@fleetpulse/shared';
 import { useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
@@ -84,8 +84,9 @@ export function PanneauRemise({ mission, onLivree }: { mission: Mission; onLivre
         editable={!envoi}
       />
       <MessageErreur message={erreur} />
-      <Bouton titre="Valider la remise" variante="secondaire" chargement={envoi && !!code} desactive={!codeComplet}
-        onPress={() => void valider(code)} />
+      <GlisserPourConfirmer libelle={codeComplet ? 'Glisser : colis remis' : 'Saisissez le code pour glisser'}
+        chargement={envoi && !!code} desactive={!codeComplet} onConfirmer={() => void valider(code)}
+        icone={<Ionicons name="checkmark" size={24} color={codeComplet ? '#15171A' : '#6B6F76'} />} />
 
       <Modal visible={scannerOuvert} animationType="slide" onRequestClose={() => setScannerOuvert(false)}>
         <ScannerQr onScan={(contenu) => void valider(contenu)} onFermer={() => setScannerOuvert(false)} />
@@ -97,9 +98,8 @@ export function PanneauRemise({ mission, onLivree }: { mission: Mission; onLivre
 const styles = StyleSheet.create({
   carte: {
     gap: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderRadius: theme.rayon,
+    padding: 18,
+    borderRadius: 24,
     backgroundColor: theme.surface,
     borderWidth: 1,
     borderColor: theme.accent,
