@@ -54,7 +54,7 @@ export default function MesCommandes() {
         ListHeaderComponent={
           <View>
             <View style={styles.hero}>
-              <Ville3D ton="nuit" style={styles.heroVille} />
+              <Ville3D ton="nuit" fondu="#1B1C1F" style={styles.heroVille} />
               <View style={styles.heroHaut}>
                 <View>
                   <Text style={styles.heroSalut}>Bonjour {profil?.prenom}</Text>
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   heroHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   heroSalut: { color: '#9A9EA6', fontSize: 14, fontWeight: '600' },
   heroTitre: { color: '#FFFFFF', fontSize: 32, fontWeight: '800', letterSpacing: -1, marginTop: 4, lineHeight: 36 },
-  heroVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '35%', opacity: 0.9 },
+  heroVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '35%' },
   heroBadge: { backgroundColor: '#F2B233', borderRadius: 16, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
   heroChiffre: { color: '#15171A', fontSize: 24, fontWeight: '800' },
   heroBadgeTexte: { color: '#15171A', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },

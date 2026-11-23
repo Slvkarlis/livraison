@@ -1,8 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Bouton, Carte, Ligne, MessageErreur, api, useAuth, type Commerce } from '@fleetpulse/shared';
+import { BandeauVille, Bouton, Carte, EntreeAnimee, Ligne, MessageErreur, Pilule, api, useAuth, type Commerce } from '@fleetpulse/shared';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
 
@@ -45,13 +45,11 @@ export default function ProfilPartenaire() {
   return (
     <SafeAreaView style={styles.page} edges={['top']}>
       <ScrollView contentContainerStyle={styles.contenu}>
-        <View style={styles.entete}>
-          <View style={styles.avatar}>
-            <Ionicons name="storefront" size={34} color={theme.accent} />
-          </View>
-          <Text style={styles.nom}>{commerce?.nomCommerce ?? 'Mon commerce'}</Text>
-          <Text style={styles.email}>{profil.prenom} {profil.nom} · {profil.email}</Text>
-        </View>
+        <EntreeAnimee rang={0} style={styles.bandeau}>
+          <BandeauVille surtitre="Mon commerce" titre={commerce?.nomCommerce ?? 'Mon commerce'} progression={0.2}
+            note={`${profil.prenom} ${profil.nom} · ${profil.email}`}
+            pastille={commerce ? <Pilule texte={commerce.ouvert ? 'Ouvert' : 'Fermé'} ton={commerce.ouvert ? 'succes' : 'verre'} pulse={commerce.ouvert} /> : null} />
+        </EntreeAnimee>
 
         <MessageErreur message={erreur} />
         {succes ? <Text accessibilityLiveRegion="polite" style={styles.succes}>{succes}</Text> : null}
@@ -90,18 +88,7 @@ export default function ProfilPartenaire() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.fond },
   contenu: { padding: 20 },
-  entete: { alignItems: 'center', paddingVertical: 24 },
-  avatar: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: theme.accentDoux,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  nom: { fontSize: 22, fontWeight: '700', color: theme.texte, textAlign: 'center' },
-  email: { fontSize: 14, color: theme.secondaire, marginTop: 4, textAlign: 'center' },
+  bandeau: { marginBottom: 18, marginTop: 8 },
   succes: { color: theme.succes, marginBottom: 12 },
   bloc: { marginTop: 16 },
 });

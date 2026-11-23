@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { ActivityIndicator, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { api, Bouton, Carte, Ligne, MessageErreur, formatMontant, periodeParDefaut, useEvenementsCommandes, verifierPeriodeBi, type VentesPartenaire } from '@fleetpulse/shared';
+import { api, BandeauVille, Bouton, Carte, Champ, EntreeAnimee, MessageErreur, Pilule, formatMontant, periodeParDefaut, useEvenementsCommandes, verifierPeriodeBi, type VentesPartenaire } from '@fleetpulse/shared';
 import { theme } from '../../theme';
 
 export default function EcranVentes() {
@@ -17,14 +17,19 @@ export default function EcranVentes() {
   }, [periode]);
   useFocusEffect(useCallback(() => { void charger(); }, [charger]));
   useEvenementsCommandes(() => { void charger(); });
-  const champ = { color: theme.texte, backgroundColor: theme.surface, borderColor: theme.bordure, borderWidth: 1, borderRadius: 10, padding: 12 };
   return <SafeAreaView style={{ flex: 1, backgroundColor: theme.fond }} edges={['top']}>
     <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 48 }}>
-      <Text accessibilityRole="header" style={{ fontSize: 28, fontWeight: '800', color: theme.texte }}>Mes ventes</Text>
-      <Text style={{ color: theme.secondaire }}>Articles livrés uniquement, hors frais et avant commission. Dates incluses en Africa/Tunis.</Text>
+      <EntreeAnimee rang={0}>
+        <BandeauVille surtitre="Chiffre d’affaires articles" titre="Mes ventes" progression={0.9}
+          valeur={ventes && !chargement ? formatMontant(ventes.chiffreAffaires) : '…'}
+          note={ventes ? `${ventes.commandes} commande${ventes.commandes > 1 ? 's' : ''} livrée${ventes.commandes > 1 ? 's' : ''} · du ${ventes.periode.debut} au ${ventes.periode.fin}` : 'Articles livrés, hors frais et avant commission.'}
+          pastille={<Pilule texte="Africa/Tunis" ton="verre" />} />
+      </EntreeAnimee>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <View style={{ flex: 1 }}><Champ libelle="Du (AAAA-MM-JJ)" accessibilityLabel="Début de période" value={debut} onChangeText={setDebut} maxLength={10} /></View>
+        <View style={{ flex: 1 }}><Champ libelle="Au inclus" accessibilityLabel="Fin de période" value={fin} onChangeText={setFin} maxLength={10} /></View>
+      </View>
       <View style={{ gap: 8 }}>
-        <Text style={{ color: theme.texte }}>Du (AAAA-MM-JJ)</Text><TextInput accessibilityLabel="Début de période" value={debut} onChangeText={setDebut} maxLength={10} style={champ} />
-        <Text style={{ color: theme.texte }}>Au inclus (AAAA-MM-JJ)</Text><TextInput accessibilityLabel="Fin de période" value={fin} onChangeText={setFin} maxLength={10} style={champ} />
         <Bouton titre="Appliquer / actualiser" chargement={chargement} onPress={() => {
           const invalide = verifierPeriodeBi(debut, fin); if (invalide) { setErreur(invalide); return; }
           if (periode.debut === debut && periode.fin === fin) void charger(); else setPeriode({ debut, fin });
@@ -35,11 +40,25 @@ export default function EcranVentes() {
       {chargement && <ActivityIndicator accessibilityLabel="Chargement des ventes" color={theme.accent} />}
       {ventes && !chargement && !erreur && <>
         <Text accessibilityLiveRegion="polite" style={{ color: theme.secondaire }}>Résultats du {ventes.periode.debut} au {ventes.periode.fin}</Text>
-        <Carte><Ligne libelle="Chiffre d’affaires articles" valeur={formatMontant(ventes.chiffreAffaires)} fort /><Ligne libelle="Commandes livrées" valeur={ventes.commandes} /></Carte>
         {!ventes.commandes && <Text style={{ color: theme.secondaire }}>Aucune commande livrée sur cette période.</Text>}
         <Text accessibilityRole="header" style={{ fontSize: 20, fontWeight: '700', color: theme.texte }}>Produits les plus vendus</Text>
         <Text style={{ color: theme.secondaire }}>Les 20 premiers, par quantité puis chiffre d’affaires. Montants des lignes figés à la commande ; nom actuel du catalogue.</Text>
-        {ventes.meilleursProduits.map((p, i) => <Carte key={p.id}><Ligne libelle={`${i + 1}. ${p.nom} · ${p.quantite} unités`} valeur={formatMontant(p.chiffreAffaires)} /></Carte>)}
+        {ventes.meilleursProduits.length ? <Carte style={{ gap: 14 }}>{ventes.meilleursProduits.map((p, i) => {
+          const max = Math.max(...ventes.meilleursProduits.map(x => x.chiffreAffaires), 1);
+          return <EntreeAnimee key={p.id} rang={i} style={{ gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: i === 0 ? theme.accent : theme.surfaceAlt, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontWeight: '800', color: '#15171A', fontSize: 13 }}>{i + 1}</Text>
+              </View>
+              <Text style={{ flex: 1, color: theme.texte, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>{p.nom}</Text>
+              <Text style={{ color: theme.texte, fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{formatMontant(p.chiffreAffaires)}</Text>
+            </View>
+            <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.surfaceAlt, overflow: 'hidden', marginLeft: 38 }}>
+              <View style={{ width: `${Math.max(4, (p.chiffreAffaires / max) * 100)}%`, height: 8, borderRadius: 4, backgroundColor: i === 0 ? theme.accent : '#E2C27A' }} />
+            </View>
+            <Text style={{ color: theme.secondaire, fontSize: 12, marginLeft: 38 }}>{p.quantite} unités</Text>
+          </EntreeAnimee>;
+        })}</Carte> : null}
         {!ventes.meilleursProduits.length && <Text style={{ color: theme.secondaire }}>Aucun produit livré sur cette période.</Text>}
       </>}
     </ScrollView>

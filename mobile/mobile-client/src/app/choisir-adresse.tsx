@@ -102,6 +102,7 @@ export default function ChoisirAdresse() {
       </View>
 
       <View style={[styles.panneau, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={styles.encoche}><View style={styles.poignee} /></View>
         <Text style={styles.aide}>
           {deplacement ? 'Relâchez pour placer le repère…' : recherche ? 'Recherche de l’adresse…' : 'Déplacez la carte pour ajuster le repère.'}
         </Text>
@@ -134,11 +135,11 @@ const styles = StyleSheet.create({
   boutonPosition: {
     position: 'absolute',
     right: 16,
-    bottom: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.surface,
+    bottom: 46,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#1B1C1F',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -149,11 +150,13 @@ const styles = StyleSheet.create({
   },
   panneau: {
     backgroundColor: theme.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: -24,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: -30,
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 26,
   },
+  encoche: { position: 'absolute', top: -18, alignSelf: 'center', width: 150, height: 38, borderTopLeftRadius: 75, borderTopRightRadius: 75, backgroundColor: theme.surface, alignItems: 'center', paddingTop: 10 },
+  poignee: { width: 40, height: 5, borderRadius: 3, backgroundColor: theme.bordure },
   aide: { fontSize: 14, color: theme.secondaire, marginBottom: 12 },
 });

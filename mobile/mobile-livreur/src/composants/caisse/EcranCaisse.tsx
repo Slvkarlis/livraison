@@ -58,7 +58,7 @@ export default function EcranCaisse() {
           <>
             <EntreeAnimee rang={0}>
               <View style={styles.solde}>
-                <Ville3D ton="nuit" progression={0.9} style={styles.soldeVille} />
+                <Ville3D ton="nuit" fondu="#1B1C1F" progression={0.9} style={styles.soldeVille} />
                 <View style={styles.soldeHaut}>
                   <Text style={styles.libelle}>CASH À DÉPOSER</Text>
                   <Pilule texte={caisse.solde > 0 ? 'À déposer' : 'Rien à déposer'} ton={caisse.solde > 0 ? 'verre' : 'succes'} pulse={caisse.solde > 0} />
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   titre: { fontSize: 40, fontWeight: '800', color: theme.texte, marginTop: 8, letterSpacing: -1.2 },
   chargement: { marginTop: 40 },
   solde: { minHeight: 230, padding: 20, borderRadius: 28, backgroundColor: '#1B1C1F', overflow: 'hidden', justifyContent: 'space-between', borderWidth: 1, borderColor: theme.bordure },
-  soldeVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '30%', opacity: 0.85 },
+  soldeVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '30%' },
   soldeHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
   libelle: { fontSize: 12, fontWeight: '700', color: '#9A9EA6', letterSpacing: 1.5 },
   montant: { fontSize: 46, fontWeight: '800', color: theme.accent, letterSpacing: -1.4, fontVariant: ['tabular-nums'] },

@@ -76,7 +76,7 @@ export default function CommandesRecues() {
           <View>
             <PanneauBoutique />
             <View style={styles.hero}>
-            <Ville3D ton="nuit" style={styles.heroVille} />
+            <Ville3D ton="nuit" fondu="#1B1C1F" style={styles.heroVille} />
             <View style={styles.enteteHaut}>
               <Text style={[styles.bonjour, styles.surNuit]}>Bonjour {profil?.prenom}</Text>
               <View style={styles.direct} accessibilityLabel={enDirect ? 'Mises à jour en direct' : 'Connexion en direct indisponible'}>
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   directPoint: { width: 8, height: 8, borderRadius: 4 },
   directTexte: { fontSize: 12, fontWeight: '600', color: theme.secondaire },
   hero: { backgroundColor: '#1B1C1F', borderRadius: 28, padding: 20, minHeight: 220, overflow: 'hidden', justifyContent: 'space-between', marginBottom: 14 },
-  heroVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '35%', opacity: 0.9 },
+  heroVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '35%' },
   surNuit: { color: '#9A9EA6' },
   titreHero: { color: '#FFFFFF', fontSize: 34, lineHeight: 38, letterSpacing: -1 },
   heroSous: { color: '#9A9EA6', fontSize: 14, fontWeight: '600', marginTop: 8 },

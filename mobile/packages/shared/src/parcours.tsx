@@ -2,7 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { api, ApiError } from './api';
 import { useAuth } from './auth';
-import { Bouton, Champ, MessageErreur, Titre, useTheme } from './ui';
+import { Bouton, Champ, MessageErreur, useTheme } from './ui';
+import { Pilule, Ville3D } from './ville3d';
+import { EntreeAnimee } from './mouvement';
 import { candidatureVide, codeValide, motDePasseValide, payloadCandidature, STATUTS_COMPTE,
   telephoneValide, verifierCandidature, verifierIdentite, type Compte, type FormCandidature } from './sprint1';
 
@@ -25,17 +27,28 @@ export function ConfigurationProvider({ children }: { children: ReactNode }) {
     {children}
   </Configuration.Provider>;
 }
-function Page({ titre, children }: { titre: string; children: ReactNode }) {
+/** Parcours de compte : bandeau nuit avec la ville 3D, puis le formulaire. */
+function Page({ titre, children, entete }: { titre: string; children: ReactNode; entete?: ReactNode }) {
   const t = useTheme();
   return <KeyboardAvoidingView style={{ flex: 1, backgroundColor: t.fond }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 24, gap: 12, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
-      <Titre>{titre}</Titre>{children}
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 12, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
+      <EntreeAnimee rang={0}>
+        <View style={{ minHeight: 180, borderRadius: 28, overflow: 'hidden', backgroundColor: '#1B1C1F', padding: 20, justifyContent: 'flex-end', marginBottom: 8 }}>
+          <Ville3D ton="nuit" fondu="#1B1C1F" progression={0.35} style={{ position: 'absolute', top: 0, bottom: 0, left: '30%', right: 0 }} />
+          {entete}
+          <Text accessibilityRole="header" style={{ color: '#FFFFFF', fontSize: 32, fontWeight: '800', letterSpacing: -1, lineHeight: 36, maxWidth: '70%' }}>{titre}</Text>
+        </View>
+      </EntreeAnimee>
+      <EntreeAnimee rang={1} style={{ gap: 12 }}>{children}</EntreeAnimee>
     </ScrollView>
   </KeyboardAvoidingView>;
 }
 function Info({ children }: { children: ReactNode }) {
   const t = useTheme();
-  return <Text accessibilityLiveRegion="polite" style={{ color: t.texte, lineHeight: 24 }}>{children}</Text>;
+  return <View style={{ flexDirection: 'row', gap: 12, padding: 14, borderRadius: 16, backgroundColor: t.surfaceAlt, borderWidth: 1, borderColor: t.bordure }}>
+    <View style={{ width: 4, borderRadius: 2, backgroundColor: t.accent }} />
+    <Text accessibilityLiveRegion="polite" style={{ flex: 1, color: t.texte, lineHeight: 22, fontSize: 15 }}>{children}</Text>
+  </View>;
 }
 function useCompteARebours() {
   const { delaiRenvoiSecondes } = useContext(Configuration);
@@ -203,7 +216,8 @@ export function SuiviDossier() {
     } catch (e) { setErreur((e as Error).message); }
     finally { setEnvoi(false); }
   }
-  return <Page titre="Suivi de mon dossier">
+  const tonDossier = dossier?.statut === 'ACTIF' ? 'succes' : dossier?.statut === 'REFUSE' || dossier?.statut === 'SUSPENDU' ? 'danger' : 'verre';
+  return <Page titre="Suivi de mon dossier" entete={dossier ? <View style={{ marginBottom: 'auto' }}><Pilule texte={STATUTS_COMPTE[dossier.statut]} ton={tonDossier} pulse={dossier.statut === 'EN_ATTENTE'} /></View> : null}>
     <MessageErreur message={erreur} />
     {!charge && <Info>Chargement du dossier…</Info>}
     {charge && !dossier && !erreur && <Info>Aucun dossier disponible.</Info>}

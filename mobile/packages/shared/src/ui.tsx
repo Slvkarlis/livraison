@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -120,28 +121,49 @@ export function Bouton({
   const couleurTexte = variante === 'primaire' ? theme.surAccent
     : variante === 'secondaire' ? theme.texte
     : variante === 'danger' ? theme.erreur : theme.accent;
+  const [echelle] = useState(() => new Animated.Value(1));
+  // La mise en page (marges, flex, largeur) va a la zone tactile ; l'apparence (bord, fond) au bouton dessine
+  const { disposition, apparence } = separerStyle(style);
+  const presser = (vers: number) => Animated.spring(echelle, { toValue: vers, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: inactif }}
       onPress={onPress}
       disabled={inactif}
-      style={({ pressed }) => [
-        s.bouton,
-        { backgroundColor: fond, opacity: inactif ? 0.45 : pressed ? 0.8 : 1 },
-        style,
-      ]}
+      onPressIn={() => presser(0.97)}
+      onPressOut={() => presser(1)}
+      style={disposition}
     >
-      {chargement ? (
-        <ActivityIndicator color={couleurTexte} />
-      ) : (
-        <View style={s.boutonContenu}>
-          {icone}
-          <Text style={[s.boutonTexte, { color: couleurTexte }]}>{titre}</Text>
-        </View>
+      {({ pressed }) => (
+        <Animated.View style={[
+          s.bouton,
+          variante === 'primaire' && s.boutonPrimaire,
+          variante === 'secondaire' && s.boutonSecondaire,
+          { backgroundColor: fond, opacity: inactif ? 0.45 : pressed ? 0.9 : 1, transform: [{ scale: echelle }] },
+          apparence,
+        ]}>
+          {chargement ? (
+            <ActivityIndicator color={couleurTexte} />
+          ) : (
+            <View style={s.boutonContenu}>
+              {icone}
+              <Text style={[s.boutonTexte, { color: couleurTexte }]}>{titre}</Text>
+            </View>
+          )}
+        </Animated.View>
       )}
     </Pressable>
   );
+}
+
+const CLES_DISPOSITION = new Set(['flex', 'flexGrow', 'flexShrink', 'flexBasis', 'alignSelf', 'width', 'minWidth', 'maxWidth',
+  'margin', 'marginTop', 'marginBottom', 'marginLeft', 'marginRight', 'marginHorizontal', 'marginVertical', 'position', 'top', 'bottom', 'left', 'right']);
+function separerStyle(style: StyleProp<ViewStyle>): { disposition: ViewStyle; apparence: ViewStyle } {
+  const plat = (StyleSheet.flatten(style) ?? {}) as Record<string, unknown>;
+  const disposition: Record<string, unknown> = {}; const apparence: Record<string, unknown> = {};
+  for (const [cle, valeur] of Object.entries(plat)) (CLES_DISPOSITION.has(cle) ? disposition : apparence)[cle] = valeur;
+  return { disposition: disposition as ViewStyle, apparence: apparence as ViewStyle };
 }
 
 export function Champ({ libelle, erreur, ...props }: TextInputProps & { libelle: string; erreur?: string }) {
@@ -162,6 +184,7 @@ export function Champ({ libelle, erreur, ...props }: TextInputProps & { libelle:
         style={[
           s.champ,
           { borderColor: erreur ? theme.erreur : focus ? theme.accent : theme.bordure },
+          focus && !erreur ? s.champFocus : null,
           props.style,
         ]}
       />
@@ -216,42 +239,45 @@ export function Chargement() {
 function fabriqueStyles(t: Theme) {
   return {
     titreBloc: { marginBottom: 20 },
-    titre: { fontSize: 28, fontWeight: '700', color: t.texte, letterSpacing: -0.5 },
+    titre: { fontSize: 28, fontWeight: '800', color: t.texte, letterSpacing: -0.8, lineHeight: 32 },
     sousTitre: { marginTop: 4, fontSize: 15, color: t.secondaire },
     carte: {
       backgroundColor: t.surface,
-      borderRadius: t.rayon,
-      padding: 16,
+      borderRadius: 24,
+      padding: 18,
       ...(t.ombre
         ? { shadowColor: '#1E1B4B', shadowOpacity: 0.06, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 2 }
         : { borderWidth: 1, borderColor: t.bordure }),
     },
     ligne: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, gap: 12 },
-    ligneLibelle: { fontSize: 15, color: t.secondaire },
-    ligneValeur: { fontSize: 15, color: t.texte, fontWeight: '500', flexShrink: 1, textAlign: 'right' },
+    ligneLibelle: { fontSize: 15, color: t.secondaire, flex: 1 },
+    ligneValeur: { fontSize: 15, color: t.texte, fontWeight: '600', flexShrink: 1, maxWidth: '60%', textAlign: 'right', fontVariant: ['tabular-nums'] },
     ligneForte: { fontSize: 17, fontWeight: '700', color: t.texte },
     bouton: {
       minHeight: 54,
-      borderRadius: Math.min(t.rayon, 16),
+      borderRadius: 999,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 20,
+      paddingHorizontal: 22,
     },
+    boutonPrimaire: { shadowColor: t.accent, shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
+    boutonSecondaire: { borderWidth: 1, borderColor: t.bordure },
     boutonContenu: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    boutonTexte: { fontSize: 16, fontWeight: '600' },
+    boutonTexte: { fontSize: 16, fontWeight: '700', letterSpacing: 0.1 },
     champBloc: { marginBottom: 16 },
     champLibelle: { fontSize: 14, fontWeight: '500', color: t.texte, marginBottom: 6 },
     champ: {
-      minHeight: 52,
+      minHeight: 54,
       borderWidth: 1,
-      borderRadius: Math.min(t.rayon, 14),
-      paddingHorizontal: 14,
+      borderRadius: 16,
+      paddingHorizontal: 16,
       fontSize: 16,
       color: t.texte,
       backgroundColor: t.surfaceAlt,
     },
+    champFocus: { shadowColor: t.accent, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 0 } },
     champErreur: { marginTop: 4, fontSize: 13, color: t.erreur },
-    erreurBloc: { backgroundColor: t.erreurFond, borderRadius: 12, padding: 12, marginBottom: 16 },
+    erreurBloc: { backgroundColor: t.erreurFond, borderRadius: 16, padding: 14, marginBottom: 16 },
     erreurTexte: { color: t.erreur, fontSize: 14, lineHeight: 20 },
     pastille: {
       flexDirection: 'row',

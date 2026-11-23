@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { api, ApiError, Bouton, Carte, Champ, Ligne, MessageErreur, Titre, ajouterProduit, quantitePanier,
+import { api, ApiError, Bouton, Carte, Champ, EntreeAnimee, GlisserPourConfirmer, MessageErreur, Pilule, Pressionnable, Ville3D, ajouterProduit, quantitePanier,
   verifierPanier, verifierPosition, nombreSaisi, nouvelleCle, panierVide, formatMontant, useTheme,
   type Adresse, type Commerce, type Produit, type DevisCommande, type PanierEnvoi, type Livraison } from '@fleetpulse/shared';
 import { definirAdresse, useAdresseChoisie } from '../brouillon';
@@ -86,49 +87,176 @@ export default function MarcheClient() {
   }
   const bloque = envoi || attente !== null;
   const texte = { color: t.texte, fontSize: 16 } as const;
-  return <ScrollView style={{ flex: 1, backgroundColor: t.fond }} contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 50 }} keyboardShouldPersistTaps="handled">
-    <Titre sousTitre="Articles et livraison, à régler en espèces à l’arrivée.">Commander</Titre>
+  const etape = devis ? 4 : panier.lignes.length ? 3 : selection ? 2 : adresseId ? 2 : 1;
+  const nbArticles = panier.lignes.reduce((n, l) => n + l.quantite, 0);
+  return <ScrollView style={{ flex: 1, backgroundColor: t.fond }} contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
+    <EntreeAnimee rang={0}>
+      <View style={styles.hero}>
+        <Ville3D ton="nuit" fondu="#1B1C1F" progression={etape / 4} style={styles.heroVille} />
+        <Pilule texte={nbArticles ? `${nbArticles} article${nbArticles > 1 ? 's' : ''} au panier` : 'Paiement à la livraison'} ton="verre" pulse={nbArticles > 0} />
+        <View>
+          <Text style={styles.heroTitre}>Commander</Text>
+          <Text style={styles.heroSous}>Articles et livraison, à régler en espèces à l’arrivée.</Text>
+          <View style={styles.progression}>
+            {['Adresse', 'Commerce', 'Panier', 'Confirmer'].map((nom, i) => (
+              <View key={nom} style={styles.progressionEtape}>
+                <View style={[styles.progressionBarre, i < etape && styles.progressionFaite]} />
+                <Text style={[styles.progressionTexte, i < etape && styles.progressionTexteFait]}>{nom}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </View>
+    </EntreeAnimee>
     <MessageErreur message={erreur} />
-    {succes ? <Text accessibilityLiveRegion="polite" style={{ color: t.succes }}>{succes}</Text> : null}
+    {succes ? <Text accessibilityLiveRegion="polite" style={[styles.succes, { color: t.succes }]}>{succes}</Text> : null}
     {attente ? <Carte><Text style={texte}>La confirmation attend une réponse certaine. Réessayez avec la même clé pour retrouver la commande sans doublon.</Text><Bouton titre="Réessayer la confirmation" onPress={() => void commander()} chargement={envoi} /></Carte> : null}
-    <Carte><Titre>1. Adresse de livraison</Titre>
+
+    <EntreeAnimee rang={1}><Carte style={styles.carte}><Etape n={1} titre="Adresse de livraison" fait={!!adresseId} />
       {!adressesChargees ? <Bouton titre="Charger les adresses" onPress={() => void chargerAdresses()} /> : !adresses.length ? <Text style={texte}>Aucune adresse enregistrée.</Text> : null}
-      {adresses.map(a => <View key={a.id} style={{ gap: 6, marginBottom: 12 }}>
-        <Bouton titre={(adresseId === a.id ? '✓ ' : '') + a.libelle + ' — ' + a.adresse} variante={adresseId === a.id ? 'primaire' : 'secondaire'} desactive={bloque} onPress={() => choisir(a.id)} />
+      {adresses.map(a => <View key={a.id} style={styles.choixBloc}>
+        <Choix titre={a.libelle} detail={a.adresse} icone="home" actif={adresseId === a.id} desactive={bloque} onPress={() => choisir(a.id)} />
         <Bouton titre={'Modifier ' + a.libelle} variante="discret" desactive={bloque} onPress={() => saisir(a)} />
       </View>)}
       <Champ libelle="Libellé" value={libelle} onChangeText={setLibelle} maxLength={80} editable={!bloque} />
       <Champ libelle="Adresse complète" value={adresse} onChangeText={setAdresse} maxLength={250} editable={!bloque} />
       <View style={{ flexDirection: 'row', gap: 10 }}><View style={{ flex: 1 }}><Champ libelle="Latitude" value={latitude} onChangeText={setLatitude} keyboardType="numbers-and-punctuation" editable={!bloque} /></View><View style={{ flex: 1 }}><Champ libelle="Longitude" value={longitude} onChangeText={setLongitude} keyboardType="numbers-and-punctuation" editable={!bloque} /></View></View>
-      <Bouton titre="Placer sur la carte / ma position" variante="secondaire" desactive={bloque} onPress={() => { definirAdresse(null); router.push('/choisir-adresse'); }} />
+      <Bouton titre="Placer sur la carte / ma position" variante="secondaire" desactive={bloque} onPress={() => { definirAdresse(null); router.push('/choisir-adresse'); }}
+        icone={<Ionicons name="map" size={18} color={t.texte} />} />
       <Bouton titre={edition ? 'Enregistrer les corrections' : 'Enregistrer une adresse'} desactive={bloque} onPress={() => void sauverAdresse()} />
       {edition ? <><Bouton titre="Annuler la modification" variante="discret" desactive={bloque} onPress={() => setEdition(null)} /><Bouton titre="Supprimer cette adresse" variante="danger" desactive={bloque} onPress={() => { setEnvoi(true); api.supprimerAdresse(edition).then(async () => { setEdition(null); setSucces('Adresse supprimée.'); await chargerAdresses(); }).catch(e => setErreur(e.message)).finally(() => setEnvoi(false)); }} /></> : null}
-    </Carte>
-    <Carte><Titre>2. Partenaires ouverts</Titre>
+    </Carte></EntreeAnimee>
+
+    <EntreeAnimee rang={2}><Carte style={styles.carte}><Etape n={2} titre="Partenaires ouverts" fait={!!selection} />
       <Champ libelle="Rechercher un commerce" value={recherche} onChangeText={setRecherche} editable={!bloque} />
       <Champ libelle="Catégorie (vide = toutes)" placeholder="Restaurant, Épicerie…" value={categorie} onChangeText={setCategorie} editable={!bloque} />
       <Bouton titre="Actualiser les partenaires" variante="discret" chargement={chargement} desactive={bloque} onPress={() => void chargerCommerces()} />
       {!chargement && !commerces.length ? <Text style={texte}>{adresseId ? 'Aucun partenaire ouvert pour cette adresse et ces filtres.' : 'Choisissez une adresse.'}</Text> : null}
-      {commerces.map(p => <View key={p.id} style={{ marginTop: 10 }}><Bouton titre={p.nomCommerce + ' · ' + p.categorie} variante="secondaire" desactive={bloque} onPress={() => void catalogue(p)} /></View>)}
-    </Carte>
-    {selection ? <Carte><Titre sousTitre={selection.zoneNom ?? ''}>{selection.nomCommerce}</Titre>
+      {commerces.map(p => <Choix key={p.id} titre={p.nomCommerce} detail={p.categorie} initiale={p.nomCommerce} actif={selection?.id === p.id} desactive={bloque} onPress={() => void catalogue(p)} />)}
+    </Carte></EntreeAnimee>
+
+    {selection ? <Carte style={styles.carte}>
+      <Text style={styles.commerceNom}>{selection.nomCommerce}</Text>
+      {selection.zoneNom ? <Text style={[styles.commerceZone, { color: t.secondaire }]}>{selection.zoneNom}</Text> : null}
       {chargement ? <Text style={texte}>Chargement du catalogue…</Text> : !produits.length ? <Text style={texte}>Aucun produit publié.</Text> : null}
-      {produits.map(p => <View key={p.id} style={{ marginBottom: 14, gap: 6 }}><Ligne libelle={p.nom} valeur={formatMontant(p.prix)} /><Bouton titre={p.disponible ? 'Ajouter ' + p.nom : 'Indisponible'} desactive={bloque || !p.disponible} onPress={() => ajouter(p)} /></View>)}
+      {produits.map(p => <View key={p.id} style={[styles.produit, { borderColor: t.bordure }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.produitNom, { color: t.texte }]}>{p.nom}</Text>
+          <Text style={[styles.produitPrix, { color: t.secondaire }]}>{formatMontant(p.prix)}</Text>
+        </View>
+        <Pressionnable onPress={() => ajouter(p)} disabled={bloque || !p.disponible} accessibilityRole="button"
+          accessibilityLabel={p.disponible ? 'Ajouter ' + p.nom : p.nom + ' indisponible'} style={[styles.ajout, (!p.disponible || bloque) && styles.ajoutInactif]}>
+          {p.disponible ? <Ionicons name="add" size={22} color="#15171A" /> : <Text style={styles.ajoutTexte}>Indisponible</Text>}
+        </Pressionnable>
+      </View>)}
     </Carte> : null}
     {remplacement ? <Carte><Text accessibilityRole="alert" style={texte}>Ce produit appartient à un autre partenaire. Vider le panier et le remplacer ?</Text><Bouton titre="Vider et ajouter" desactive={bloque} onPress={() => ajouter(remplacement, true)} /><Bouton titre="Garder mon panier" variante="secondaire" onPress={() => remplacer(null)} /></Carte> : null}
-    <Carte><Titre>3. Mon panier</Titre>
+
+    <EntreeAnimee rang={3}><Carte style={styles.carte}><Etape n={3} titre="Mon panier" fait={!!panier.lignes.length} />
       {!panier.lignes.length ? <Text style={texte}>Votre panier est vide.</Text> : null}
-      {panier.lignes.map(l => <View key={l.produitId} style={{ marginBottom: 12 }}><Text style={texte}>{connus[l.produitId]?.nom ?? devis?.lignes.find(x => x.produitId === l.produitId)?.nomProduit ?? 'Produit #' + l.produitId} · {l.quantite}</Text>
-        <View style={{ flexDirection: 'row', gap: 8 }}><Bouton titre="−" desactive={bloque} variante="secondaire" onPress={() => changer(quantitePanier(panier, l.produitId, l.quantite - 1))} /><Bouton titre="+" desactive={bloque || l.quantite >= 99} variante="secondaire" onPress={() => changer(quantitePanier(panier, l.produitId, l.quantite + 1))} /><Bouton titre="Retirer" desactive={bloque} variante="discret" onPress={() => changer(quantitePanier(panier, l.produitId, 0))} /></View>
+      {panier.lignes.map(l => <View key={l.produitId} style={[styles.ligne, { borderColor: t.bordure }]}>
+        <Text style={[texte, { flex: 1 }]} numberOfLines={2}>{connus[l.produitId]?.nom ?? devis?.lignes.find(x => x.produitId === l.produitId)?.nomProduit ?? 'Produit #' + l.produitId}</Text>
+        <View style={[styles.quantite, { backgroundColor: t.surfaceAlt, borderColor: t.bordure }]}>
+          <Pressionnable onPress={() => changer(quantitePanier(panier, l.produitId, l.quantite - 1))} disabled={bloque} accessibilityRole="button" accessibilityLabel="Retirer un" style={styles.quantiteBouton}><Ionicons name="remove" size={18} color={t.texte} /></Pressionnable>
+          <Text style={[styles.quantiteValeur, { color: t.texte }]}>{l.quantite}</Text>
+          <Pressionnable onPress={() => changer(quantitePanier(panier, l.produitId, l.quantite + 1))} disabled={bloque || l.quantite >= 99} accessibilityRole="button" accessibilityLabel="Ajouter un" style={styles.quantiteBouton}><Ionicons name="add" size={18} color={t.texte} /></Pressionnable>
+        </View>
+        <Pressionnable onPress={() => changer(quantitePanier(panier, l.produitId, 0))} disabled={bloque} accessibilityRole="button" accessibilityLabel="Retirer du panier" style={styles.retirer}><Ionicons name="trash-outline" size={18} color={t.erreur} /></Pressionnable>
       </View>)}
       <Champ libelle="Notes pour la commande (500 caractères)" value={panier.notes} maxLength={500} multiline editable={!bloque} onChangeText={notes => changer({ ...panier, notes })} />
       <Bouton titre="Calculer les frais et le total" desactive={bloque || !panier.lignes.length || !adresseId} onPress={() => void calculer()} />
-    </Carte>
-    {devis ? <Carte><Titre>4. Vérifier et confirmer</Titre><Text style={texte}>{devis.nomPartenaire} · {devis.zoneNom}</Text>
-      <Text style={texte}>{adresses.find(a => a.id === adresseId)?.adresse}</Text>
-      {devis.lignes.map(l => <Ligne key={l.produitId} libelle={l.quantite + ' × ' + l.nomProduit} valeur={formatMontant(l.sousTotal)} />)}
-      <Ligne libelle="Articles" valeur={formatMontant(devis.montantArticles)} /><Ligne libelle="Livraison" valeur={formatMontant(devis.fraisLivraison)} /><Ligne libelle="Total à payer à la livraison" valeur={formatMontant(devis.total)} fort />
-      <Bouton titre="Confirmer la commande COD" desactive={bloque} onPress={() => void commander()} />
-    </Carte> : null}
+    </Carte></EntreeAnimee>
+
+    {devis ? <EntreeAnimee rang={0}><View style={styles.recap}>
+      <Etape n={4} titre="Vérifier et confirmer" fait={false} sombre />
+      <Text style={styles.recapCommerce}>{devis.nomPartenaire} · {devis.zoneNom}</Text>
+      <Text style={styles.recapAdresse}>{adresses.find(a => a.id === adresseId)?.adresse}</Text>
+      <View style={styles.recapLignes}>
+        {devis.lignes.map(l => <View key={l.produitId} style={styles.recapLigne}><Text style={styles.recapLibelle}>{l.quantite} × {l.nomProduit}</Text><Text style={styles.recapValeur}>{formatMontant(l.sousTotal)}</Text></View>)}
+        <View style={styles.recapLigne}><Text style={styles.recapLibelle}>Articles</Text><Text style={styles.recapValeur}>{formatMontant(devis.montantArticles)}</Text></View>
+        <View style={styles.recapLigne}><Text style={styles.recapLibelle}>Livraison</Text><Text style={styles.recapValeur}>{formatMontant(devis.fraisLivraison)}</Text></View>
+      </View>
+      <Text style={styles.recapTotalLibelle}>Total à payer à la livraison</Text>
+      <Text style={styles.recapTotal}>{formatMontant(devis.total)}</Text>
+      <GlisserPourConfirmer libelle="Glisser pour commander" chargement={envoi} desactive={bloque} onConfirmer={() => void commander()}
+        icone={<Ionicons name="bag-check" size={22} color="#15171A" />} />
+    </View></EntreeAnimee> : null}
   </ScrollView>;
 }
+
+/** Titre d'etape numerote : disque ambre plein une fois l'etape faite. */
+function Etape({ n, titre, fait, sombre }: { n: number; titre: string; fait: boolean; sombre?: boolean }) {
+  const t = useTheme();
+  return <View style={styles.etape} accessibilityRole="header">
+    <View style={[styles.etapeDisque, fait ? styles.etapeFaite : { borderColor: sombre ? '#F2B233' : t.bordure }]}>
+      {fait ? <Ionicons name="checkmark" size={16} color="#15171A" /> : <Text style={[styles.etapeNumero, { color: sombre ? '#F2B233' : t.texte }]}>{n}</Text>}
+    </View>
+    <Text style={[styles.etapeTitre, { color: sombre ? '#FFFFFF' : t.texte }]}>{titre}</Text>
+  </View>;
+}
+
+/** Choix selectionnable (adresse, commerce) : carte avec pastille, bord ambre quand il est choisi. */
+function Choix({ titre, detail, icone, initiale, actif, desactive, onPress }: {
+  titre: string; detail?: string; icone?: keyof typeof Ionicons.glyphMap; initiale?: string; actif: boolean; desactive?: boolean; onPress: () => void;
+}) {
+  const t = useTheme();
+  return <Pressionnable onPress={onPress} disabled={desactive} accessibilityRole="button" accessibilityLabel={titre + (detail ? ', ' + detail : '')}
+    style={[styles.choix, { backgroundColor: actif ? t.accentDoux : t.surfaceAlt, borderColor: actif ? t.accent : t.bordure }]}>
+    <View style={[styles.choixPastille, { backgroundColor: actif ? t.accent : t.surface }]}>
+      {icone ? <Ionicons name={icone} size={18} color="#15171A" /> : <Text style={styles.choixInitiale}>{(initiale ?? titre).charAt(0).toUpperCase()}</Text>}
+    </View>
+    <View style={{ flex: 1 }}>
+      <Text style={[styles.choixTitre, { color: t.texte }]} numberOfLines={1}>{titre}</Text>
+      {detail ? <Text style={[styles.choixDetail, { color: t.secondaire }]} numberOfLines={1}>{detail}</Text> : null}
+    </View>
+    {actif ? <Ionicons name="checkmark-circle" size={22} color={t.accent} /> : <Ionicons name="chevron-forward" size={18} color={t.secondaire} />}
+  </Pressionnable>;
+}
+
+const styles = StyleSheet.create({
+  hero: { minHeight: 240, borderRadius: 28, backgroundColor: '#1B1C1F', overflow: 'hidden', padding: 20, justifyContent: 'space-between' },
+  heroVille: { position: 'absolute', top: 0, bottom: 0, left: '30%', right: 0 },
+  heroTitre: { color: '#FFFFFF', fontSize: 36, fontWeight: '800', letterSpacing: -1.2 },
+  heroSous: { color: '#C9CCD2', fontSize: 14, marginTop: 4, maxWidth: '80%' },
+  progression: { flexDirection: 'row', gap: 6, marginTop: 16 },
+  progressionEtape: { flex: 1, gap: 6 },
+  progressionBarre: { height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.14)' },
+  progressionFaite: { backgroundColor: '#F2B233' },
+  progressionTexte: { color: '#9A9EA6', fontSize: 11, fontWeight: '700' },
+  progressionTexteFait: { color: '#F4F3EF' },
+  succes: { fontWeight: '600' },
+  carte: { gap: 10 },
+  etape: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 },
+  etapeDisque: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  etapeFaite: { backgroundColor: '#F2B233', borderColor: '#F2B233' },
+  etapeNumero: { fontSize: 14, fontWeight: '800' },
+  etapeTitre: { fontSize: 20, fontWeight: '800', letterSpacing: -0.4, flex: 1 },
+  choixBloc: { gap: 2 },
+  choix: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 20, borderWidth: 1.5 },
+  choixPastille: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  choixInitiale: { fontSize: 17, fontWeight: '800', color: '#15171A' },
+  choixTitre: { fontSize: 16, fontWeight: '700' },
+  choixDetail: { fontSize: 13, marginTop: 1 },
+  commerceNom: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
+  commerceZone: { fontSize: 13, marginBottom: 4 },
+  produit: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1 },
+  produitNom: { fontSize: 16, fontWeight: '700' },
+  produitPrix: { fontSize: 14, marginTop: 2, fontVariant: ['tabular-nums'] },
+  ajout: { minWidth: 44, height: 44, borderRadius: 22, paddingHorizontal: 12, backgroundColor: '#F2B233', alignItems: 'center', justifyContent: 'center' },
+  ajoutInactif: { backgroundColor: '#E5E3DD' },
+  ajoutTexte: { fontSize: 12, fontWeight: '700', color: '#6B6F76' },
+  ligne: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1 },
+  quantite: { flexDirection: 'row', alignItems: 'center', borderRadius: 999, borderWidth: 1 },
+  quantiteBouton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  quantiteValeur: { minWidth: 22, textAlign: 'center', fontSize: 15, fontWeight: '800' },
+  retirer: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  recap: { backgroundColor: '#1B1C1F', borderRadius: 28, padding: 20, gap: 6 },
+  recapCommerce: { color: '#F4F3EF', fontSize: 16, fontWeight: '700' },
+  recapAdresse: { color: '#9A9EA6', fontSize: 13 },
+  recapLignes: { marginVertical: 10, paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.1)', gap: 6 },
+  recapLigne: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  recapLibelle: { color: '#C9CCD2', fontSize: 14, flex: 1 },
+  recapValeur: { color: '#F4F3EF', fontSize: 14, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  recapTotalLibelle: { color: '#9A9EA6', fontSize: 12, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
+  recapTotal: { color: '#F2B233', fontSize: 38, fontWeight: '800', letterSpacing: -1.2, marginBottom: 12, fontVariant: ['tabular-nums'] },
+});

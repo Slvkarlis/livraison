@@ -42,7 +42,7 @@ export default function ProfilLivreur() {
       >
         <EntreeAnimee rang={0}>
         <View style={styles.entete}>
-          <Ville3D ton="nuit" progression={0.4} style={styles.enteteVille} />
+          <Ville3D ton="nuit" fondu="#1B1C1F" progression={0.4} style={styles.enteteVille} />
           <View style={styles.avatar}>
             <Text style={styles.initiales}>{initiales}</Text>
           </View>
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   contenu: { padding: 20 },
   flex: { flex: 1 },
   entete: { flexDirection: 'row', alignItems: 'flex-end', gap: 14, marginBottom: 28, marginTop: 8, minHeight: 200, padding: 20, borderRadius: 28, backgroundColor: '#1B1C1F', overflow: 'hidden', borderWidth: 1, borderColor: theme.bordure },
-  enteteVille: { position: 'absolute', top: 0, bottom: 0, left: '25%', right: 0, opacity: 0.85 },
+  enteteVille: { position: 'absolute', top: 0, bottom: 0, left: '38%', right: 0 },
   avatar: {
     width: 60,
     height: 60,

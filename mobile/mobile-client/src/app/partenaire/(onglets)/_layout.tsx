@@ -9,10 +9,12 @@ export default function OngletsPartenaireLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.accent,
-        tabBarInactiveTintColor: theme.secondaire,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
-        tabBarStyle: { backgroundColor: theme.surface, borderTopWidth: 0, elevation: 12, shadowOpacity: 0.06 },
-        sceneStyle: { backgroundColor: theme.fond },
+        tabBarInactiveTintColor: '#9A9EA6',
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '700', marginTop: 2 },
+        tabBarStyle: { position: 'absolute', left: 16, right: 16, bottom: 18, height: 76, borderRadius: 26, backgroundColor: '#15171A', borderTopWidth: 0, elevation: 14, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, paddingBottom: 12, paddingTop: 10 },
+        tabBarItemStyle: { borderRadius: 16 },
+        // La barre flotte : on reserve sa hauteur sous le contenu
+        sceneStyle: { backgroundColor: theme.fond, paddingBottom: 100 },
       }}
     >
       <Tabs.Screen

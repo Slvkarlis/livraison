@@ -1,9 +1,9 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Animated, Easing, Pressable, type StyleProp, type ViewStyle } from 'react-native';
 
 /** Entree en fondu avec montee douce, decalee selon le rang (liste echelonnee). */
 export function EntreeAnimee({ rang = 0, children, style }: { rang?: number; children: ReactNode; style?: StyleProp<ViewStyle> }) {
-  const valeur = useRef(new Animated.Value(0)).current;
+  const valeur = useState(() => new Animated.Value(0))[0];
   useEffect(() => {
     Animated.timing(valeur, {
       toValue: 1,
@@ -34,7 +34,7 @@ export function Pressionnable({ onPress, children, style, disabled, accessibilit
   accessibilityRole?: 'button' | 'link';
   accessibilityLabel?: string;
 }) {
-  const echelle = useRef(new Animated.Value(1)).current;
+  const echelle = useState(() => new Animated.Value(1))[0];
   const animer = (vers: number) => Animated.spring(echelle, { toValue: vers, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
   return (
     <Pressable

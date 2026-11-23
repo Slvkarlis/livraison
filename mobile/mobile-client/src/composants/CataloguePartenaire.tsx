@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
-import { api, Bouton, Carte, Champ, MessageErreur, Titre, useTheme, verifierProduit, nombreSaisi, formatMontant, type Commerce, type Produit } from '@fleetpulse/shared';
+import { api, BandeauVille, Bouton, Carte, Champ, EntreeAnimee, MessageErreur, Pilule, Pressionnable, Titre, useTheme, verifierProduit, nombreSaisi, formatMontant, type Commerce, type Produit } from '@fleetpulse/shared';
 
 // US-203 : onglet Catalogue de l'espace partenaire (ouverture du commerce et deconnexion : onglet Commerce)
 export default function CataloguePartenaire() {
@@ -23,8 +24,13 @@ export default function CataloguePartenaire() {
     try { await api.sauverProduit(id, { nom, prix: nombreSaisi(prix), disponible }); nouveau(); await charger(); setSucces('Produit enregistré.'); }
     catch (e) { setErreur((e as Error).message); } finally { setEnvoi(false); }
   }
-  return <SafeAreaView style={{ flex: 1, backgroundColor: t.fond }} edges={['top']}><ScrollView style={{ backgroundColor: t.fond }} contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 50 }} keyboardShouldPersistTaps="handled">
-    <Titre sousTitre={commerce ? (commerce.nomCommerce + (commerce.ouvert ? ' · ouvert' : ' · fermé')) : 'Gérez vos produits.'}>Mon catalogue</Titre><MessageErreur message={erreur} />
+  return <SafeAreaView style={{ flex: 1, backgroundColor: t.fond }} edges={['top']}><ScrollView style={{ backgroundColor: t.fond }} contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+    <EntreeAnimee rang={0}>
+      <BandeauVille surtitre={commerce?.nomCommerce ?? 'Catalogue'} titre="Mon catalogue" progression={0.3}
+        valeur={`${produits.filter(p => p.disponible).length} / ${produits.length}`} note="produits disponibles à la commande"
+        pastille={commerce ? <Pilule texte={commerce.ouvert ? 'Ouvert' : 'Fermé'} ton={commerce.ouvert ? 'succes' : 'verre'} pulse={commerce.ouvert} /> : null} />
+    </EntreeAnimee>
+    <MessageErreur message={erreur} />
     {succes ? <Text accessibilityLiveRegion="polite" style={{ color: t.succes }}>{succes}</Text> : null}
     <Bouton titre="Actualiser" chargement={chargement} desactive={envoi} variante="secondaire" onPress={() => void charger()} />
     <Carte><Titre>{id ? 'Modifier le produit' : 'Publier un produit'}</Titre>
@@ -33,9 +39,37 @@ export default function CataloguePartenaire() {
       <Bouton titre="Enregistrer le produit" chargement={envoi} onPress={() => void sauver()} />{id ? <Bouton titre="Annuler" variante="discret" onPress={nouveau} desactive={envoi} /> : null}
     </Carte>
     {!chargement && !produits.length ? <Text style={{ color: t.texte }}>Aucun produit. Publiez votre premier article.</Text> : null}
-    {produits.map(p => <Carte key={p.id}><View style={{ gap: 8 }}><Text style={{ color: t.texte, fontSize: 18 }}>{p.nom} · {formatMontant(p.prix)}</Text><Text style={{ color: t.secondaire }}>{p.disponible ? 'Disponible' : 'Indisponible'}</Text>
-      <Bouton titre={'Modifier ' + p.nom} variante="secondaire" desactive={envoi} onPress={() => { setId(p.id); setNom(p.nom); setPrix(String(p.prix)); setDisponible(p.disponible); }} />
-      <Bouton titre={p.disponible ? 'Rendre indisponible' : 'Rendre disponible'} variante="discret" desactive={envoi} onPress={() => { setEnvoi(true); api.sauverProduit(p.id, { ...p, disponible: !p.disponible }).then(async () => { await charger(); setSucces('Disponibilité mise à jour.'); }).catch(e => setErreur(e.message)).finally(() => setEnvoi(false)); }} />
-    </View></Carte>)}
+    {produits.map((p, i) => <EntreeAnimee key={p.id} rang={i + 1}><Carte style={id === p.id ? { borderWidth: 1.5, borderColor: t.accent } : undefined}>
+      <View style={styles.produit}>
+        <View style={[styles.initiale, { backgroundColor: p.disponible ? t.accentDoux : t.surfaceAlt }]}><Text style={[styles.initialeTexte, { color: p.disponible ? '#7A4D00' : t.secondaire }]}>{p.nom.charAt(0).toUpperCase()}</Text></View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.nom, { color: t.texte }]} numberOfLines={2}>{p.nom}</Text>
+          <Text style={[styles.prix, { color: t.texte }]}>{formatMontant(p.prix)}</Text>
+        </View>
+        <Pilule texte={p.disponible ? 'Disponible' : 'Indisponible'} ton={p.disponible ? 'succes' : 'neutre'} />
+      </View>
+      <View style={styles.actions}>
+        <Pressionnable onPress={() => { setId(p.id); setNom(p.nom); setPrix(String(p.prix)); setDisponible(p.disponible); }} disabled={envoi}
+          accessibilityRole="button" accessibilityLabel={'Modifier ' + p.nom} style={[styles.action, { backgroundColor: t.surfaceAlt, borderColor: t.bordure }]}>
+          <Ionicons name="create-outline" size={16} color={t.texte} /><Text style={[styles.actionTexte, { color: t.texte }]}>Modifier</Text>
+        </Pressionnable>
+        <Pressionnable onPress={() => { setEnvoi(true); api.sauverProduit(p.id, { ...p, disponible: !p.disponible }).then(async () => { await charger(); setSucces('Disponibilité mise à jour.'); }).catch(e => setErreur(e.message)).finally(() => setEnvoi(false)); }}
+          disabled={envoi} accessibilityRole="button" accessibilityLabel={(p.disponible ? 'Rendre indisponible ' : 'Rendre disponible ') + p.nom}
+          style={[styles.action, { backgroundColor: t.surfaceAlt, borderColor: t.bordure }]}>
+          <Ionicons name={p.disponible ? 'eye-off-outline' : 'eye-outline'} size={16} color={t.texte} /><Text style={[styles.actionTexte, { color: t.texte }]}>{p.disponible ? 'Rendre indisponible' : 'Rendre disponible'}</Text>
+        </Pressionnable>
+      </View>
+    </Carte></EntreeAnimee>)}
   </ScrollView></SafeAreaView>;
 }
+
+const styles = StyleSheet.create({
+  produit: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  initiale: { width: 46, height: 46, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  initialeTexte: { fontSize: 18, fontWeight: '800' },
+  nom: { fontSize: 17, fontWeight: '700' },
+  prix: { fontSize: 15, fontWeight: '600', marginTop: 2, fontVariant: ['tabular-nums'] },
+  actions: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 9, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1 },
+  actionTexte: { fontSize: 13, fontWeight: '700' },
+});

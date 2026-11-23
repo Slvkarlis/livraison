@@ -60,14 +60,19 @@ export default function EcranEtiquette() {
         <View accessibilityLabel={`QR de collecte de la commande ${etiquette.codeSuivi}`}>
           <SvgXml xml={qrSvg} width={TAILLE_QR} height={TAILLE_QR} />
         </View>
-        <Text style={styles.code} accessibilityLabel={`Code de collecte ${etiquette.codeCollecte.split('').join(' ')}`}>
-          {etiquette.codeCollecte}
-        </Text>
+        <View style={styles.codeFond}>
+          <Text style={styles.code} accessibilityLabel={`Code de collecte ${etiquette.codeCollecte.split('').join(' ')}`}>
+            {etiquette.codeCollecte}
+          </Text>
+        </View>
         <Text style={styles.aide}>Code de collecte · à scanner ou saisir par le livreur</Text>
         <Text style={styles.client}>
           {etiquette.clientPrenom} · {etiquette.nbArticles} article{etiquette.nbArticles > 1 ? 's' : ''}
         </Text>
         <Text style={styles.aide}>Commande {etiquette.codeSuivi}</Text>
+        {/* Encoches de ticket de part et d'autre de la ligne de decoupe */}
+        <View style={[styles.encoche, styles.encocheG]} />
+        <View style={[styles.encoche, styles.encocheD]} />
       </View>
 
       <MessageErreur message={erreur} />
@@ -89,15 +94,20 @@ const styles = StyleSheet.create({
   etiquette: {
     alignItems: 'center',
     gap: 6,
-    padding: 20,
-    borderRadius: 20,
+    padding: 24,
+    borderRadius: 28,
     backgroundColor: theme.surface,
     borderWidth: 2,
     borderColor: theme.bordure,
     borderStyle: 'dashed',
+    overflow: 'hidden',
   },
-  commerce: { fontSize: 16, fontWeight: '700', color: theme.texte, marginBottom: 6 },
-  code: { fontSize: 30, fontWeight: '800', letterSpacing: 6, color: theme.texte, marginTop: 8 },
+  encoche: { position: 'absolute', top: '58%', width: 28, height: 28, borderRadius: 14, backgroundColor: theme.fond },
+  encocheG: { left: -15 },
+  encocheD: { right: -15 },
+  codeFond: { marginTop: 10, paddingVertical: 10, paddingHorizontal: 22, borderRadius: 999, backgroundColor: '#1B1C1F' },
+  commerce: { fontSize: 20, fontWeight: '800', color: theme.texte, letterSpacing: -0.4, marginBottom: 8 },
+  code: { fontSize: 30, fontWeight: '800', letterSpacing: 6, color: theme.accent, fontVariant: ['tabular-nums'] },
   aide: { fontSize: 13, color: theme.secondaire, textAlign: 'center' },
   client: { fontSize: 17, fontWeight: '700', color: theme.texte, marginTop: 6 },
   bouton: { marginTop: 20 },

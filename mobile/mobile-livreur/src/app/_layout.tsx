@@ -39,7 +39,7 @@ function Navigation() {
       </Stack.Protected>
       <Stack.Protected guard={actif}>
         <Stack.Screen name="(onglets)" />
-        <Stack.Screen name="mission/[id]" options={{ title: 'Mission', headerShown: true }} />
+        <Stack.Screen name="mission/[id]" options={{ title: 'Mission', headerShown: false }} />
       </Stack.Protected>
     </Stack>
     </SuiviPositionAvecCompte>

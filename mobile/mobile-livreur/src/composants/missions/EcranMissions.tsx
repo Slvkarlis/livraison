@@ -103,7 +103,7 @@ export default function EcranMissions() {
         ListHeaderComponent={
           <View style={styles.entete}>
             <View style={styles.hero}>
-              <Ville3D ton="nuit" style={styles.heroVille} />
+              <Ville3D ton="nuit" fondu="#1B1C1F" style={styles.heroVille} />
               <View style={styles.heroHaut}>
                 <View>
                   <Text style={styles.bonjour}>Bonjour {profil?.prenom}</Text>
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   direct: { fontSize: 12, fontWeight: '700' },
   titre: { fontSize: 40, fontWeight: '800', color: '#FFFFFF', letterSpacing: -1.2, marginTop: 2 },
   hero: { backgroundColor: '#1B1C1F', borderRadius: 28, padding: 20, marginTop: 8, marginBottom: 18, minHeight: 230, overflow: 'hidden', justifyContent: 'space-between', borderWidth: 1, borderColor: theme.bordure },
-  heroVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '30%', opacity: 0.95 },
+  heroVille: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '30%' },
   heroHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   heroSous: { color: theme.secondaire, fontSize: 14, fontWeight: '600', marginTop: 10 },
   pilule: { borderRadius: 999, paddingVertical: 7, paddingHorizontal: 12 },

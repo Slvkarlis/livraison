@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MessageErreur, api, type BoutiqueEtat } from '@fleetpulse/shared';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
 
@@ -12,12 +12,13 @@ export function PanneauBoutique() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
 
-  const charger = useCallback(async () => {
-    try { setEtat(await api.boutique()); setErreur(null); }
-    catch (e) { setErreur(e instanceof Error ? e.message : 'Boutique indisponible.'); }
+  useEffect(() => {
+    let actif = true;
+    api.boutique()
+      .then((e) => { if (actif) { setEtat(e); setErreur(null); } })
+      .catch((e: unknown) => { if (actif) setErreur(e instanceof Error ? e.message : 'Boutique indisponible.'); });
+    return () => { actif = false; };
   }, []);
-
-  useEffect(() => { void charger(); }, [charger]);
 
   async function action(faire: () => Promise<BoutiqueEtat>) {
     setEnvoi(true);

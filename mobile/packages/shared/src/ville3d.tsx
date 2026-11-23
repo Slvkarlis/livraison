@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Easing, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { AccessibilityInfo, Animated, Easing, Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Path, Polygon, Rect, Stop } from 'react-native-svg';
 
 /*
@@ -48,13 +48,21 @@ function useMouvementReduit() {
   return reduit;
 }
 
-export function Ville3D({ ton = 'nuit', style, progression = 0.55 }: {
+/** Sur le web, react-native-svg anime mal ses attributs (avertissements « collapsable ») : trace fixe. */
+const SVG_ANIME = Platform.OS !== 'web';
+
+export function Ville3D({ ton = 'nuit', style, progression = 0.55, fondu }: {
   ton?: 'nuit' | 'jour';
+  /** Couleur du support : le fond prend cette couleur et la ville s'y fond par la gauche (bandeaux). */
+  fondu?: string;
   style?: StyleProp<ViewStyle>;
   /** Part du trajet deja parcourue (0 a 1) : place le livreur sur l'itineraire. */
   progression?: number;
 }) {
   const c = TONS[ton];
+  // Identifiants de degrade propres a chaque ville : sur le web, deux villes ne doivent pas partager « #fond »
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const idFond = `fond-${uid}`; const idFondu = `fondu-${uid}`;
   const reduit = useMouvementReduit();
   const [anime, setAnime] = useState(0);
   const elevation = reduit ? 1 : anime;
@@ -74,8 +82,10 @@ export function Ville3D({ ton = 'nuit', style, progression = 0.55 }: {
     };
     image = requestAnimationFrame(pas);
     const boucles = [
-      Animated.loop(Animated.timing(defile, { toValue: 1, duration: 1200, easing: Easing.linear, useNativeDriver: false })),
-      Animated.loop(Animated.timing(onde, { toValue: 1, duration: 1800, easing: Easing.out(Easing.quad), useNativeDriver: false })),
+      ...(SVG_ANIME ? [
+        Animated.loop(Animated.timing(defile, { toValue: 1, duration: 1200, easing: Easing.linear, useNativeDriver: false })),
+        Animated.loop(Animated.timing(onde, { toValue: 1, duration: 1800, easing: Easing.out(Easing.quad), useNativeDriver: false })),
+      ] : []),
       Animated.loop(Animated.sequence([
         Animated.timing(derive, { toValue: 1, duration: 9000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
         Animated.timing(derive, { toValue: 0, duration: 9000, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
@@ -99,7 +109,7 @@ export function Ville3D({ ton = 'nuit', style, progression = 0.55 }: {
   const sol = poly([projeter(0, 0), projeter(600, 0), projeter(600, 600), projeter(0, 600)]);
 
   return (
-    <View style={[styles.cadre, style]} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+    <View style={[styles.cadre, fondu ? { backgroundColor: fondu } : null, style]} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Animated.View style={[StyleSheet.absoluteFill, {
         transform: [
           { translateX: derive.interpolate({ inputRange: [0, 1], outputRange: [-10, 10] }) },
@@ -109,19 +119,21 @@ export function Ville3D({ ton = 'nuit', style, progression = 0.55 }: {
       }]}>
         <Svg width="100%" height="100%" viewBox="0 0 800 520" preserveAspectRatio="xMidYMid slice">
           <Defs>
-            <LinearGradient id="fond" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={c.fond[0]} /><Stop offset="1" stopColor={c.fond[1]} />
+            <LinearGradient id={idFond} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={fondu ?? c.fond[0]} /><Stop offset="1" stopColor={fondu ?? c.fond[1]} />
             </LinearGradient>
+            {fondu ? (
+              <LinearGradient id={idFondu} x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0" stopColor={fondu} stopOpacity={1} /><Stop offset="0.52" stopColor={fondu} stopOpacity={0} />
+              </LinearGradient>
+            ) : null}
           </Defs>
-          <Rect x="0" y="0" width="800" height="520" fill="url(#fond)" />
+          <Rect x="0" y="0" width="800" height="520" fill={`url(#${idFond})`} />
           <Polygon points={sol} fill={c.rue} />
           {blocs.map(({ i, j, h }) => {
             const x = i * CELLULE + MARGE; const y = j * CELLULE + MARGE; const t = CELLULE - 2 * MARGE;
             return <Polygon key={`s${i}-${j}`} points={poly([projeter(x, y), projeter(x + t, y), projeter(x + t, y + t), projeter(x, y + t)])} fill={h ? c.sol : c.place} />;
           })}
-          <Path d={trace} stroke="rgba(242,178,51,0.22)" strokeWidth={16} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          <AnimatedPath d={trace} stroke="#F2B233" strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" fill="none"
-            strokeDasharray="16 11" strokeDashoffset={defile.interpolate({ inputRange: [0, 1], outputRange: [0, -27] })} />
           {blocs.filter((b) => b.h > 0).map(({ i, j, h }) => {
             const x = i * CELLULE + MARGE; const y = j * CELLULE + MARGE; const t = CELLULE - 2 * MARGE; const z = h * elevation;
             return (
@@ -132,11 +144,22 @@ export function Ville3D({ ton = 'nuit', style, progression = 0.55 }: {
               </G>
             );
           })}
+          {/* Itineraire par-dessus les immeubles : il reste lisible meme dans un quartier dense */}
+          <Path d={trace} stroke="rgba(242,178,51,0.25)" strokeWidth={16} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          {SVG_ANIME ? (
+            <AnimatedPath d={trace} stroke="#F2B233" strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" fill="none"
+              strokeDasharray="16 11" strokeDashoffset={defile.interpolate({ inputRange: [0, 1], outputRange: [0, -27] })} />
+          ) : (
+            <Path d={trace} stroke="#F2B233" strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" fill="none" strokeDasharray="16 11" />
+          )}
           <Repere x={dx} y={dy} couleur="#F2B233" centre="#15171A" />
           <Repere x={ax} y={ay} couleur="#15171A" centre="#F2B233" bord="#F2B233" />
-          <AnimatedCircle cx={px} cy={py} fill="none" stroke="#F2B233" strokeWidth={3}
-            r={onde.interpolate({ inputRange: [0, 1], outputRange: [10, 34] })} opacity={onde.interpolate({ inputRange: [0, 1], outputRange: [0.8, 0] })} />
+          {SVG_ANIME ? (
+            <AnimatedCircle cx={px} cy={py} fill="none" stroke="#F2B233" strokeWidth={3}
+              r={onde.interpolate({ inputRange: [0, 1], outputRange: [10, 34] })} opacity={onde.interpolate({ inputRange: [0, 1], outputRange: [0.8, 0] })} />
+          ) : <Circle cx={px} cy={py} r={24} fill="none" stroke="rgba(242,178,51,0.4)" strokeWidth={3} />}
           <Circle cx={px} cy={py} r={12} fill="#F2B233" stroke="#15171A" strokeWidth={4} />
+          {fondu ? <Rect x="0" y="0" width="800" height="520" fill={`url(#${idFondu})`} /> : null}
         </Svg>
       </Animated.View>
       <View style={[StyleSheet.absoluteFill, { backgroundColor: 'transparent' }]} />
@@ -233,6 +256,13 @@ const PILULES: Record<string, { fond: string; texte: string; point?: string; bor
 
 const styles = StyleSheet.create({
   cadre: { overflow: 'hidden', backgroundColor: '#1B1C1F' },
+  bandeau: { minHeight: 210, borderRadius: 28, backgroundColor: '#1B1C1F', overflow: 'hidden', padding: 20, justifyContent: 'space-between', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  bandeauVille: { position: 'absolute', top: 0, bottom: 0, left: '34%', right: 0 },
+  bandeauHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 18 },
+  bandeauSurtitre: { color: '#9A9EA6', fontSize: 12, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' },
+  bandeauTitre: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', letterSpacing: -1.1, lineHeight: 38, maxWidth: '78%' },
+  bandeauValeur: { color: '#F2B233', fontSize: 40, fontWeight: '800', letterSpacing: -1.2, marginTop: 6, fontVariant: ['tabular-nums'] },
+  bandeauNote: { color: '#C9CCD2', fontSize: 14, marginTop: 4, maxWidth: '80%' },
   frise: { gap: 14 },
   friseLigne: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
   friseHeure: { color: '#9A9EA6', fontSize: 14, fontVariant: ['tabular-nums'] },
@@ -248,3 +278,35 @@ const styles = StyleSheet.create({
   piluleRond: { width: 7, height: 7, borderRadius: 4 },
   piluleTexte: { fontSize: 12, fontWeight: '700' },
 });
+
+/**
+ * Bandeau nuit avec la ville 3D qui se fond par la gauche : surtitre, grand titre, valeur vedette en ambre.
+ * Sert d'en-tete commun aux ecrans des trois applications.
+ */
+export function BandeauVille({ surtitre, titre, valeur, note, pastille, progression = 0.55, enfants, style }: {
+  surtitre?: string;
+  titre: string;
+  /** Chiffre vedette affiche en ambre sous le titre (montant, compteur). */
+  valeur?: string;
+  note?: string;
+  pastille?: ReactNode;
+  progression?: number;
+  enfants?: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <View style={[styles.bandeau, style]}>
+      <Ville3D ton="nuit" fondu="#1B1C1F" progression={progression} style={styles.bandeauVille} />
+      <View style={styles.bandeauHaut}>
+        {surtitre ? <Text style={styles.bandeauSurtitre}>{surtitre}</Text> : <View />}
+        {pastille}
+      </View>
+      <View>
+        <Text accessibilityRole="header" style={styles.bandeauTitre}>{titre}</Text>
+        {valeur ? <Text style={styles.bandeauValeur} adjustsFontSizeToFit numberOfLines={1}>{valeur}</Text> : null}
+        {note ? <Text style={styles.bandeauNote}>{note}</Text> : null}
+        {enfants}
+      </View>
+    </View>
+  );
+}

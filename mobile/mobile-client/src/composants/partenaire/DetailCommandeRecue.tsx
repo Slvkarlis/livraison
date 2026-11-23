@@ -5,7 +5,9 @@ import {
   Chargement,
   Ligne,
   MessageErreur,
-  PastilleStatut,
+  BandeauVille,
+  EntreeAnimee,
+  Pilule,
   PanneauNotation,
   ROLES_ACTEUR,
   api,
@@ -69,12 +71,12 @@ export default function DetailCommandeRecue() {
       refreshControl={<RefreshControl refreshing={rafraichissement} onRefresh={rafraichir} tintColor={theme.accent} />}
     >
       <MessageErreur message={erreur} />
-      <PastilleStatut statut={commande.statut} libelle={libelleStatutPartenaire(commande.statut)} />
-      <Text style={styles.client}>{commande.clientPrenom}</Text>
-      <Text style={styles.meta}>
-        Commande {commande.codeSuivi} · reçue {formatJour(recue).toLowerCase()} à {formatHeure(recue)}
-      </Text>
-      {commande.zoneNom ? <Text style={styles.meta}>Zone : {commande.zoneNom}</Text> : null}
+      <EntreeAnimee rang={0}>
+        <BandeauVille surtitre={`Commande ${commande.codeSuivi}`} titre={commande.clientPrenom}
+          progression={({ PENDING_PARTNER: 0.05, ACCEPTEE: 0.2, EN_PREPARATION: 0.3, PRETE: 0.4, AFFECTEE: 0.5, RECUPEREE: 0.7, LIVREE: 1 } as Record<string, number>)[commande.statut] ?? 0.1}
+          note={`Reçue ${formatJour(recue).toLowerCase()} à ${formatHeure(recue)}${commande.zoneNom ? ` · ${commande.zoneNom}` : ''}`}
+          pastille={<Pilule texte={libelleStatutPartenaire(commande.statut)} ton={['ANNULEE', 'REFUSEE'].includes(commande.statut) ? 'danger' : 'verre'} pulse={enCours} />} />
+      </EntreeAnimee>
       {succes ? <Text accessibilityLiveRegion="polite" style={styles.succes}>{succes}</Text> : null}
       {enCours && prevue ? (
         <View style={[styles.bandeau, styles.bandeauAccepte]}>
@@ -174,12 +176,12 @@ const styles = StyleSheet.create({
   erreur: { flex: 1, padding: 20, backgroundColor: theme.fond },
   client: { fontSize: 24, fontWeight: '800', color: theme.texte, letterSpacing: -0.4, marginTop: 12 },
   meta: { fontSize: 14, color: theme.secondaire, marginTop: 4 },
-  section: { fontSize: 17, fontWeight: '700', color: theme.texte, marginTop: 24, marginBottom: 8 },
+  section: { fontSize: 20, fontWeight: '800', color: theme.texte, letterSpacing: -0.4, marginTop: 26, marginBottom: 10 },
   succes: { color: theme.succes, fontWeight: '600', marginTop: 12 },
-  bandeau: { marginTop: 14, padding: 14, borderRadius: 16 },
-  bandeauAccepte: { backgroundColor: '#E0F2FE' },
-  bandeauRefuse: { backgroundColor: '#FEE2E2' },
-  bandeauPrete: { backgroundColor: '#D1FAE5' },
+  bandeau: { marginTop: 14, padding: 16, paddingLeft: 18, borderRadius: 20, borderLeftWidth: 4 },
+  bandeauAccepte: { backgroundColor: '#FDF3DC', borderLeftColor: '#F2B233' },
+  bandeauRefuse: { backgroundColor: '#FBE9E7', borderLeftColor: '#C8312B' },
+  bandeauPrete: { backgroundColor: '#E3F4EC', borderLeftColor: '#1F6F43' },
   bandeauTitre: { fontSize: 16, fontWeight: '700', color: theme.texte },
   bandeauTexte: { fontSize: 14, color: theme.secondaire, marginTop: 2 },
   decision: { marginTop: 24 },

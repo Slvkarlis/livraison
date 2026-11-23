@@ -10,8 +10,8 @@ export default function OngletsLivreurLayout() {
         headerShown: false,
         tabBarActiveTintColor: theme.accent,
         tabBarInactiveTintColor: theme.secondaire,
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
-        tabBarStyle: { position: 'absolute', left: 16, right: 16, bottom: 18, height: 66, borderRadius: 22, backgroundColor: '#1F2126', borderTopWidth: 0, elevation: 14, shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, paddingBottom: 10, paddingTop: 8 },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '700', marginTop: 2 },
+        tabBarStyle: { position: 'absolute', left: 16, right: 16, bottom: 18, height: 76, borderRadius: 26, backgroundColor: '#1F2126', borderTopWidth: 0, elevation: 14, shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, paddingBottom: 12, paddingTop: 10 },
         sceneStyle: { backgroundColor: theme.fond },
       }}
     >
