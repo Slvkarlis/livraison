@@ -21,7 +21,7 @@ export default function Profil() {
                 <Text style={styles.initiales}>{initiales}</Text>
               </View>
               <View style={styles.flex}>
-                <Text style={styles.nom} numberOfLines={1}>{profil.prenom} {profil.nom}</Text>
+                <Text style={styles.nom} numberOfLines={2}>{profil.prenom} {profil.nom}</Text>
                 <Text style={styles.email} numberOfLines={1}>{profil.email}</Text>
               </View>
             </View>

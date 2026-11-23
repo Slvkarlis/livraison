@@ -37,6 +37,9 @@ export default function EcranQrRemise() {
       setErreur(null);
     } catch (e) {
       setSvg(null);
+      // Commande deja remise : on montre la confirmation plutot qu'un cadre vide et une erreur
+      const detail = (await api.mesLivraisons().catch(() => [])).find((l) => l.id === commandeId);
+      if (detail?.statut === 'LIVREE') { setLivree(true); setErreur(null); return; }
       setErreur(e instanceof Error ? e.message : 'QR indisponible.');
     }
   }, [commandeId]);
@@ -88,13 +91,13 @@ export default function EcranQrRemise() {
           ne l’envoyez à personne.
         </Text>
       </EntreeAnimee>
-      <EntreeAnimee rang={1} style={styles.scene}>
+      {erreur && !svg ? null : <EntreeAnimee rang={1} style={styles.scene}>
         <Halo actif={!!svg} />
         <View style={styles.cadre}>
           {svg ? <SvgXml xml={svg} width={248} height={248} /> : erreur ? null : <ActivityIndicator color={theme.accent} />}
           {(['hg', 'hd', 'bg', 'bd'] as const).map((c) => <View key={c} style={[styles.coin, styles[c]]} />)}
         </View>
-      </EntreeAnimee>
+      </EntreeAnimee>}
       <MessageErreur message={erreur} />
       {expireLe && svg ? <Text style={styles.discret}>Valable jusqu’à {formatHeure(new Date(expireLe))}, renouvelé automatiquement.</Text> : null}
 

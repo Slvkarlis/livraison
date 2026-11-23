@@ -34,7 +34,7 @@ function Page({ titre, children, entete }: { titre: string; children: ReactNode;
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 12, maxWidth: 640, width: '100%', alignSelf: 'center' }}>
       <EntreeAnimee rang={0}>
         <View style={{ minHeight: 180, borderRadius: 28, overflow: 'hidden', backgroundColor: '#1B1C1F', padding: 20, justifyContent: 'flex-end', marginBottom: 8 }}>
-          <Ville3D ton="nuit" fondu="#1B1C1F" progression={0.35} style={{ position: 'absolute', top: 0, bottom: 0, left: '30%', right: 0 }} />
+          <Ville3D ton="nuit" fondu="#1B1C1F" progression={0.35} style={{ position: 'absolute', top: -10, bottom: '44%', left: '30%', right: 0 }} />
           {entete}
           <Text accessibilityRole="header" style={{ color: '#FFFFFF', fontSize: 32, fontWeight: '800', letterSpacing: -1, lineHeight: 36, maxWidth: '70%' }}>{titre}</Text>
         </View>

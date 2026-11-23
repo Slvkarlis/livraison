@@ -56,7 +56,7 @@ export default function EcranMission() {
   const phase = livree ? 'Livrée' : enRoute ? 'Livraison' : 'Collecte';
   const cible = enRoute ? itineraireClient : itineraire;
   const avance = livree ? 1 : mission.statut === 'A_PROXIMITE' ? 0.85 : enRoute ? 0.55 : 0.15;
-  const heureDe = (iso: string | null) => (iso ? formatHeure(new Date(iso)) : '—');
+  const heureDe = (iso: string | null) => (iso ? formatHeure(new Date(iso)) : '--:--');
   return (
     <View style={styles.page}>
       {/* Carte plein ecran fixe ; la feuille blanche defile par-dessus (conception Doop « Direction 3 ») */}
@@ -82,7 +82,7 @@ export default function EcranMission() {
           </EntreeAnimee>
         ) : null}
 
-        <EntreeAnimee rang={1}>
+        <EntreeAnimee rang={1} style={{ flexGrow: 1 }}>
           <View style={styles.feuille}>
             <View style={styles.encoche}><View style={styles.poignee} /></View>
             <View style={styles.feuilleTete}>
@@ -124,7 +124,8 @@ export default function EcranMission() {
                   </Text>
                 </View>
               ) : null}
-              {livree ? <PanneauNotation commandeId={mission.id} /> : null}
+              {/* La notation suit le theme sombre du livreur : on la pose dans un bloc nuit */}
+              {livree ? <View style={styles.nuit}><PanneauNotation commandeId={mission.id} /></View> : null}
             </View>
           </View>
         </EntreeAnimee>
@@ -150,11 +151,11 @@ const styles = StyleSheet.create({
   barre: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 10, backgroundColor: '#1B1C1F', borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
   rond: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(27,28,31,0.72)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
   rondVide: { width: 44 },
-  contenu: { paddingBottom: 40 },
+  contenu: { flexGrow: 1 },
   guidage: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center', marginBottom: 28, paddingVertical: 8, paddingLeft: 8, paddingRight: 14, borderRadius: 999, backgroundColor: 'rgba(27,28,31,0.78)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
   guidageIcone: { width: 26, height: 26, borderRadius: 13, backgroundColor: theme.accent, alignItems: 'center', justifyContent: 'center' },
   guidageTexte: { color: '#F4F3EF', fontSize: 13, fontWeight: '700' },
-  feuille: { minHeight: 520, backgroundColor: CLAIR.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 20, paddingTop: 26, gap: 6 },
+  feuille: { minHeight: 520, backgroundColor: CLAIR.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 20, paddingTop: 26, paddingBottom: 48, gap: 6, flexGrow: 1 },
   encoche: { position: 'absolute', top: -18, alignSelf: 'center', width: 150, height: 38, borderTopLeftRadius: 75, borderTopRightRadius: 75, backgroundColor: CLAIR.surface, alignItems: 'center', paddingTop: 10 },
   poignee: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#DADAD5' },
   feuilleTete: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },

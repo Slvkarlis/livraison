@@ -15,6 +15,7 @@ import {
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
+import { EnteteCarte, heureDans } from './EnteteCarte';
 import { Puce } from './Puce';
 
 // US-2B2 : le partenaire accepte (avec temps de preparation) ou refuse (avec motif) une commande en attente
@@ -63,8 +64,7 @@ export function DecisionCommande({ commande, onDecision }: {
   if (mode === 'refuser') {
     return (
       <Carte>
-        <Text style={styles.titre}>Refuser la commande</Text>
-        <Text style={styles.aide}>Le client verra le motif choisi.</Text>
+        <EnteteCarte icone="close-circle-outline" ton="danger" titre="Refuser la commande" aide="Le client verra le motif choisi." />
         <View style={styles.motifs}>
           {MOTIFS_REFUS.map((m) => (
             <Puce key={m.id} libelle={m.libelle} actif={motif === m.id} desactive={envoi} onPress={() => setMotif(m.id)} />
@@ -87,8 +87,7 @@ export function DecisionCommande({ commande, onDecision }: {
 
   return (
     <Carte>
-      <Text style={styles.titre}>Votre décision</Text>
-      <Text style={styles.aide}>Temps de préparation annoncé au client</Text>
+      <EnteteCarte icone="timer-outline" titre="Votre décision" aide="Temps de préparation annoncé au client" />
       <View style={styles.temps}>
         {TEMPS_PREPARATION_PROPOSES.map((t) => (
           <Puce key={t} libelle={`${t} min`} actif={temps === t} desactive={envoi} onPress={() => setTemps(t)} />
@@ -98,6 +97,10 @@ export function DecisionCommande({ commande, onDecision }: {
       {temps === 'autre' ? (
         <Champ libelle="Minutes (1 à 180)" value={tempsSaisi} onChangeText={setTempsSaisi} keyboardType="number-pad" maxLength={3} editable={!envoi} />
       ) : null}
+      <View style={styles.apercu}>
+        <Text style={styles.apercuLibelle}>PRÊTE VERS</Text>
+        <Text style={styles.apercuHeure}>{heureDans(minutes)}</Text>
+      </View>
       <MessageErreur message={erreur} />
       <Bouton
         titre={temps === 'autre' && !tempsSaisi.trim() ? 'Accepter la commande' : `Accepter · prête dans ${minutes} min`}
@@ -111,8 +114,9 @@ export function DecisionCommande({ commande, onDecision }: {
 }
 
 const styles = StyleSheet.create({
-  titre: { fontSize: 17, fontWeight: '700', color: theme.texte },
-  aide: { fontSize: 14, color: theme.secondaire, marginTop: 4, marginBottom: 12 },
+  apercu: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1B1C1F', borderRadius: 20, paddingVertical: 12, paddingHorizontal: 18, marginBottom: 6 },
+  apercuLibelle: { color: '#9A9EA6', fontSize: 12, fontWeight: '700', letterSpacing: 1.4 },
+  apercuHeure: { color: theme.accent, fontSize: 30, fontWeight: '800', letterSpacing: -0.8, fontVariant: ['tabular-nums'] },
   temps: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   motifs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   bouton: { marginTop: 8 },

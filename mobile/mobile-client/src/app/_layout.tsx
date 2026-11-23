@@ -38,9 +38,9 @@ function Navigation() {
         <Stack.Screen
           name="inscription"
           options={{
-            title: '',
-            headerStyle: { backgroundColor: theme.surface },
-            contentStyle: { backgroundColor: theme.surface },
+            title: 'Inscription',
+            headerStyle: { backgroundColor: theme.fond },
+            contentStyle: { backgroundColor: theme.fond },
           }}
         />
       </Stack.Protected>
@@ -55,7 +55,7 @@ function Navigation() {
         <Stack.Screen name="nouvelle-commande" options={{ title: 'Nouvelle commande' }} />
         <Stack.Screen
           name="choisir-adresse"
-          options={{ title: 'Adresse de livraison', headerStyle: { backgroundColor: theme.surface } }}
+          options={{ title: 'Adresse de livraison', headerStyle: { backgroundColor: theme.fond } }}
         />
         <Stack.Screen name="commande/[id]" options={{ title: '', headerTransparent: true }} />
         <Stack.Screen name="commande/remise/[id]" options={{ title: 'Remise du colis' }} />

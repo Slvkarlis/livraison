@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import { api } from './api';
 import { Bouton, Carte, MessageErreur, useTheme } from './ui';
 import { ciblesRestantes, LIBELLES_CIBLES, verifierNotation, type CibleNotation, type NotesVue } from './notation';
@@ -47,13 +47,22 @@ function Formulaire({ cible, commandeId, onNote }: { cible: CibleNotation; comma
   }
   return <Carte>
     <Text style={{ color: theme.texte, fontWeight: '700' }}>{LIBELLES_CIBLES[cible]}</Text>
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 8 }}>
-      {[1, 2, 3, 4, 5].map(n => <Bouton key={n} titre={`${n} ${note === n ? '★' : '☆'}`} variante={note === n ? 'primaire' : 'secondaire'} desactive={envoi} onPress={() => setNote(n)} />)}
+    {/* Cinq etoiles sur une ligne : toucher la n-ieme donne la note n */}
+    <View style={{ flexDirection: 'row', gap: 6, marginVertical: 10 }} accessibilityRole="radiogroup">
+      {[1, 2, 3, 4, 5].map(n => (
+        <Pressable key={n} accessibilityRole="radio" accessibilityState={{ checked: note === n, disabled: envoi }}
+          accessibilityLabel={`${n} étoile${n > 1 ? 's' : ''}`} disabled={envoi} onPress={() => setNote(n)}
+          style={({ pressed }) => ({ flex: 1, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
+            backgroundColor: n <= note ? 'rgba(242,178,51,0.16)' : theme.surfaceAlt, borderWidth: 1,
+            borderColor: n <= note ? theme.accent : theme.bordure, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
+          <Text style={{ fontSize: 24, color: n <= note ? theme.accent : theme.secondaire }}>{n <= note ? '★' : '☆'}</Text>
+        </Pressable>
+      ))}
     </View>
     <TextInput accessibilityLabel={`Commentaire pour ${LIBELLES_CIBLES[cible]}`} placeholder="Commentaire facultatif" multiline maxLength={500} editable={!envoi}
-      value={commentaire} onChangeText={setCommentaire} style={{ color: theme.texte, borderColor: theme.bordure, borderWidth: 1, borderRadius: 8, padding: 12, minHeight: 80 }} />
+      value={commentaire} onChangeText={setCommentaire} placeholderTextColor={theme.secondaire} style={{ color: theme.texte, borderColor: theme.bordure, borderWidth: 1, borderRadius: 16, padding: 14, minHeight: 84, textAlignVertical: 'top' }} />
     <Text style={{ color: theme.secondaire }}>{commentaire.length}/500 caractères</Text>
     <MessageErreur message={erreur} />
-    <Bouton titre="Enregistrer cet avis définitivement" chargement={envoi} onPress={() => void envoyer()} />
+    <Bouton titre="Enregistrer l’avis (définitif)" chargement={envoi} onPress={() => void envoyer()} />
   </Carte>;
 }

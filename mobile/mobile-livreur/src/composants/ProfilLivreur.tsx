@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   contenu: { padding: 20 },
   flex: { flex: 1 },
   entete: { flexDirection: 'row', alignItems: 'flex-end', gap: 14, marginBottom: 28, marginTop: 8, minHeight: 200, padding: 20, borderRadius: 28, backgroundColor: '#1B1C1F', overflow: 'hidden', borderWidth: 1, borderColor: theme.bordure },
-  enteteVille: { position: 'absolute', top: 0, bottom: 0, left: '38%', right: 0 },
+  enteteVille: { position: 'absolute', top: -10, bottom: '42%', left: '38%', right: 0 },
   avatar: {
     width: 60,
     height: 60,

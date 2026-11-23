@@ -206,10 +206,10 @@ export function MessageErreur({ message }: { message: string | null }) {
 /** libelle : remplace le libelle client (ex. vue partenaire, voir libelleStatutPartenaire). */
 export function PastilleStatut({ statut, libelle: remplacement }: { statut: StatutLivraison; libelle?: string }) {
   const s = useStyles(fabriqueStyles);
-  const { couleur } = STATUTS[statut];
+  const { couleur, fond } = STATUTS[statut];
   const libelle = remplacement ?? STATUTS[statut].libelle;
   return (
-    <View style={[s.pastille, { backgroundColor: couleur + '1F' }]}>
+    <View style={[s.pastille, { backgroundColor: fond }]}>
       <View style={[s.pastillePoint, { backgroundColor: couleur }]} />
       <Text style={[s.pastilleTexte, { color: couleur }]}>{libelle}</Text>
     </View>
@@ -263,7 +263,7 @@ function fabriqueStyles(t: Theme) {
     boutonPrimaire: { shadowColor: t.accent, shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
     boutonSecondaire: { borderWidth: 1, borderColor: t.bordure },
     boutonContenu: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    boutonTexte: { fontSize: 16, fontWeight: '700', letterSpacing: 0.1 },
+    boutonTexte: { fontSize: 16, fontWeight: '700', letterSpacing: 0.1, textAlign: 'center', flexShrink: 1 },
     champBloc: { marginBottom: 16 },
     champLibelle: { fontSize: 14, fontWeight: '500', color: t.texte, marginBottom: 6 },
     champ: {

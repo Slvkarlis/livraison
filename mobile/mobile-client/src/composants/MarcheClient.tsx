@@ -215,7 +215,8 @@ function Choix({ titre, detail, icone, initiale, actif, desactive, onPress }: {
 
 const styles = StyleSheet.create({
   hero: { minHeight: 240, borderRadius: 28, backgroundColor: '#1B1C1F', overflow: 'hidden', padding: 20, justifyContent: 'space-between' },
-  heroVille: { position: 'absolute', top: 0, bottom: 0, left: '30%', right: 0 },
+  // La ville occupe le haut du bandeau : la route passe au-dessus du titre, jamais a travers
+  heroVille: { position: 'absolute', top: -10, bottom: '42%', left: '34%', right: 0 },
   heroTitre: { color: '#FFFFFF', fontSize: 36, fontWeight: '800', letterSpacing: -1.2 },
   heroSous: { color: '#C9CCD2', fontSize: 14, marginTop: 4, maxWidth: '80%' },
   progression: { flexDirection: 'row', gap: 6, marginTop: 16 },

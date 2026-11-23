@@ -16,7 +16,7 @@ export default function Connexion() {
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.defilement} keyboardShouldPersistTaps="handled" bounces={false}>
         <View style={[styles.hero, { paddingTop: insets.top + 28 }]}>
-          <Ville3D ton="nuit" progression={0.6} style={StyleSheet.absoluteFill} />
+          <Ville3D ton="nuit" progression={0.6} style={styles.ville} />
           <View style={styles.voile} pointerEvents="none" />
           <EntreeAnimee rang={0}>
             <View style={styles.logo}>
@@ -70,6 +70,8 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: '#1B1C1F' },
   defilement: { flexGrow: 1 },
   hero: { paddingHorizontal: 24, paddingBottom: 62, minHeight: 380, justifyContent: 'space-between', overflow: 'hidden' },
+  // Ville decalee vers le bas : la route passe sous la frise, pas a travers le slogan
+  ville: { position: 'absolute', top: 70, bottom: -50, left: 0, right: 0 },
   voile: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(27,28,31,0.35)' },
   frise: { marginTop: 24, padding: 16, borderRadius: 24, backgroundColor: 'rgba(27,28,31,0.82)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   encoche: { position: 'absolute', top: -18, alignSelf: 'center', width: 150, height: 38, borderTopLeftRadius: 75, borderTopRightRadius: 75, backgroundColor: theme.surface, alignItems: 'center', paddingTop: 10 },
@@ -84,7 +86,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   marque: { fontSize: 40, fontWeight: '800', color: '#FFFFFF', letterSpacing: -1.4 },
-  slogan: { fontSize: 17, color: '#C9CCD2', marginTop: 6 },
+  slogan: { fontSize: 17, color: '#E4E5E8', marginTop: 6, textShadowColor: '#1B1C1F', textShadowRadius: 10 },
   formulaire: {
     flexGrow: 1,
     backgroundColor: theme.surface,

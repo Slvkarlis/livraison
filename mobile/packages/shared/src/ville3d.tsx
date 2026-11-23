@@ -257,7 +257,8 @@ const PILULES: Record<string, { fond: string; texte: string; point?: string; bor
 const styles = StyleSheet.create({
   cadre: { overflow: 'hidden', backgroundColor: '#1B1C1F' },
   bandeau: { minHeight: 210, borderRadius: 28, backgroundColor: '#1B1C1F', overflow: 'hidden', padding: 20, justifyContent: 'space-between', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
-  bandeauVille: { position: 'absolute', top: 0, bottom: 0, left: '34%', right: 0 },
+  // Ville dans le haut du bandeau : la route reste au-dessus du titre et de la valeur
+  bandeauVille: { position: 'absolute', top: -10, bottom: '48%', left: '34%', right: 0 },
   bandeauHaut: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 18 },
   bandeauSurtitre: { color: '#9A9EA6', fontSize: 12, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' },
   bandeauTitre: { color: '#FFFFFF', fontSize: 34, fontWeight: '800', letterSpacing: -1.1, lineHeight: 38, maxWidth: '78%' },

@@ -1,30 +1,39 @@
 import type { StatutLivraison } from './types';
 
+// Palette de la refonte : ambre = en attente / en cours chez le commerce, graphite = colis en mouvement,
+// vert = pret ou livre, rouge = echec, gris = clos sans livraison.
+const ATTENTE = { couleur: '#7A4D00', fond: '#FDF3DC' };
+const PRIS = { couleur: '#15171A', fond: '#ECEBE7' };
+const MOUVEMENT = { couleur: '#F2B233', fond: '#1B1C1F' };
+const SUCCES = { couleur: '#1F6F43', fond: '#E3F4EC' };
+const DANGER = { couleur: '#C8312B', fond: '#FBE9E7' };
+const NEUTRE = { couleur: '#6B6F76', fond: '#ECEBE7' };
+
 export const STATUTS: Record<StatutLivraison, { libelle: string; couleur: string; fond: string }> = {
-  PENDING_PARTNER: { libelle: 'En attente du partenaire', couleur: '#B45309', fond: '#FEF3C7' },
-  ACCEPTEE: { libelle: 'Acceptée', couleur: '#0369A1', fond: '#E0F2FE' },
-  REFUSEE: { libelle: 'Refusée', couleur: '#B91C1C', fond: '#FEE2E2' },
-  EN_PREPARATION: { libelle: 'En préparation', couleur: '#B45309', fond: '#FEF3C7' },
-  PRETE: { libelle: 'Prête', couleur: '#047857', fond: '#D1FAE5' },
-  AFFECTEE: { libelle: 'Livreur assigné', couleur: '#1D4ED8', fond: '#DBEAFE' },
-  RECUPEREE: { libelle: 'Récupérée', couleur: '#6D28D9', fond: '#EDE9FE' },
-  ANNULEE: { libelle: 'Annulée', couleur: '#4B5563', fond: '#F3F4F6' },
-  EN_COURS: { libelle: 'En route', couleur: '#6D28D9', fond: '#EDE9FE' },
-  A_PROXIMITE: { libelle: 'À proximité', couleur: '#6D28D9', fond: '#EDE9FE' },
-  ARRIVEE: { libelle: 'Livreur arrivé', couleur: '#0F766E', fond: '#CCFBF1' },
-  LIVREE: { libelle: 'Livrée', couleur: '#15803D', fond: '#DCFCE7' },
-  ECHEC: { libelle: 'Échec', couleur: '#B91C1C', fond: '#FEE2E2' },
-  RETOURNEE: { libelle: 'Retournée', couleur: '#4B5563', fond: '#F3F4F6' },
+  PENDING_PARTNER: { libelle: 'En attente du partenaire', ...ATTENTE },
+  ACCEPTEE: { libelle: 'Acceptée', ...PRIS },
+  REFUSEE: { libelle: 'Refusée', ...DANGER },
+  EN_PREPARATION: { libelle: 'En préparation', ...ATTENTE },
+  PRETE: { libelle: 'Prête', ...SUCCES },
+  AFFECTEE: { libelle: 'Livreur assigné', ...PRIS },
+  RECUPEREE: { libelle: 'Récupérée', ...MOUVEMENT },
+  ANNULEE: { libelle: 'Annulée', ...NEUTRE },
+  EN_COURS: { libelle: 'En route', ...MOUVEMENT },
+  A_PROXIMITE: { libelle: 'À proximité', ...MOUVEMENT },
+  ARRIVEE: { libelle: 'Livreur arrivé', ...MOUVEMENT },
+  LIVREE: { libelle: 'Livrée', ...SUCCES },
+  ECHEC: { libelle: 'Échec', ...DANGER },
+  RETOURNEE: { libelle: 'Retournée', ...NEUTRE },
 };
 
 export const MODES_PAIEMENT = { COD: 'Paiement à la livraison', CARTE: 'Carte bancaire' } as const;
 
 export const STATUTS_PAIEMENT = {
-  A_LA_LIVRAISON: { libelle: 'À régler au livreur', couleur: '#6E6B85' },
-  ENCAISSE: { libelle: 'Réglée au livreur', couleur: '#16A34A' },
-  EN_ATTENTE: { libelle: 'Paiement en attente', couleur: '#B45309' },
-  PAYE: { libelle: 'Payée par carte', couleur: '#16A34A' },
-  ECHOUE: { libelle: 'Paiement échoué', couleur: '#C2410C' },
+  A_LA_LIVRAISON: { libelle: 'À régler au livreur', couleur: '#6B6F76' },
+  ENCAISSE: { libelle: 'Réglée au livreur', couleur: '#1F6F43' },
+  EN_ATTENTE: { libelle: 'Paiement en attente', couleur: '#7A4D00' },
+  PAYE: { libelle: 'Payée par carte', couleur: '#1F6F43' },
+  ECHOUE: { libelle: 'Paiement échoué', couleur: '#C8312B' },
 } as const;
 
 export const TYPES_LIVRAISON = { IMMEDIATE: 'Immédiate', PLANIFIEE: 'Créneau planifié' } as const;

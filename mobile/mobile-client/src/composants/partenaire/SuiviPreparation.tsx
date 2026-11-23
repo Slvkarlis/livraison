@@ -2,6 +2,7 @@ import {
   AJUSTEMENTS_PREPARATION_MAX,
   Bouton,
   Carte,
+  GlisserPourConfirmer,
   Champ,
   MessageErreur,
   TEMPS_PREPARATION_PROPOSES,
@@ -12,7 +13,11 @@ import {
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { EnteteCarte } from './EnteteCarte';
 import { Puce } from './Puce';
+
+const ETAPES = ['Acceptée', 'En préparation', 'Prête'];
 
 // US-2B4 / US-2B5 : debut de preparation, nouveau delai (au plus 2 fois), commande prete
 export function SuiviPreparation({ commande, onMaj }: {
@@ -51,8 +56,8 @@ export function SuiviPreparation({ commande, onMaj }: {
   if (panneau === 'ajuster') {
     return (
       <Carte>
-        <Text style={styles.titre}>Nouveau délai</Text>
-        <Text style={styles.aide}>Temps restant à partir de maintenant · {restants} ajustement{restants > 1 ? 's' : ''} possible{restants > 1 ? 's' : ''}</Text>
+        <EnteteCarte icone="hourglass-outline" titre="Nouveau délai"
+          aide={`Temps restant à partir de maintenant · ${restants} ajustement${restants > 1 ? 's' : ''} possible${restants > 1 ? 's' : ''}`} />
         <View style={styles.choix}>
           {TEMPS_PREPARATION_PROPOSES.map((t) => (
             <Puce key={t} libelle={`encore ${t} min`} actif={temps === t} desactive={envoi} onPress={() => setTemps(t)} />
@@ -72,14 +77,13 @@ export function SuiviPreparation({ commande, onMaj }: {
   if (panneau === 'prete') {
     return (
       <Carte>
-        <Text style={styles.titre}>Commande prête ?</Text>
-        <Text style={styles.aide}>Confirmez quand la commande est emballée et prête à être récupérée par le livreur.</Text>
+        <EnteteCarte icone="bag-check-outline" titre="Commande prête ?" aide="Confirmez quand la commande est emballée et prête à être récupérée par le livreur." />
         <MessageErreur message={erreur} />
-        <Bouton
-          titre="Oui, commande prête"
+        <GlisserPourConfirmer
+          libelle="Glisser : commande prête"
           chargement={envoi}
-          onPress={() => void executer(() => api.marquerPrete(commande.id), 'Commande prête : le livreur peut venir la récupérer.')}
-          style={styles.bouton}
+          icone={<Ionicons name="bag-check" size={22} color="#15171A" />}
+          onConfirmer={() => void executer(() => api.marquerPrete(commande.id), 'Commande prête : le livreur peut venir la récupérer.')}
         />
         <Bouton titre="Pas encore" variante="discret" desactive={envoi} onPress={() => { setPanneau('actions'); setErreur(null); }} />
       </Carte>
@@ -88,8 +92,19 @@ export function SuiviPreparation({ commande, onMaj }: {
 
   return (
     <Carte>
-      <Text style={styles.titre}>Préparation</Text>
-      <Text style={styles.aide}>{enPreparation ? 'En cours de préparation.' : 'Commande acceptée, préparation pas encore commencée.'}</Text>
+      <EnteteCarte icone="restaurant-outline" ton="nuit" titre="Préparation"
+        aide={enPreparation ? 'En cours de préparation.' : 'Commande acceptée, préparation pas encore commencée.'} />
+      <View style={styles.etapes} accessibilityLabel={`Étape ${enPreparation ? 2 : 1} sur 3`}>
+        {ETAPES.map((e, i) => {
+          const fait = i < (enPreparation ? 2 : 1);
+          return (
+            <View key={e} style={styles.etape}>
+              <View style={[styles.barre, fait && styles.barreFaite]} />
+              <Text style={[styles.etapeTexte, fait && styles.etapeFaite]}>{e}</Text>
+            </View>
+          );
+        })}
+      </View>
       <MessageErreur message={erreur} />
       {!enPreparation ? (
         <Bouton
@@ -117,8 +132,12 @@ export function SuiviPreparation({ commande, onMaj }: {
 }
 
 const styles = StyleSheet.create({
-  titre: { fontSize: 17, fontWeight: '700', color: theme.texte },
-  aide: { fontSize: 14, color: theme.secondaire, marginTop: 4, marginBottom: 12 },
+  etapes: { flexDirection: 'row', gap: 6, marginBottom: 10 },
+  etape: { flex: 1, gap: 6 },
+  barre: { height: 5, borderRadius: 3, backgroundColor: theme.bordure },
+  barreFaite: { backgroundColor: theme.accent },
+  etapeTexte: { fontSize: 12, fontWeight: '700', color: theme.secondaire },
+  etapeFaite: { color: theme.texte },
   choix: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   bouton: { marginTop: 8 },
 });
