@@ -70,7 +70,7 @@ export function EtatTableau({ chargement, erreur, vide, messageVide, onReessayer
     );
   }
   if (chargement) return <div aria-busy="true" aria-label="Chargement">{[0, 1, 2].map(i => <div key={i} className="squelette" style={{ opacity: 1 - i * 0.25 }} />)}</div>;
-  if (vide) return <div className="vide"><span className="vide-icone" aria-hidden="true">○</span><p>{messageVide}</p></div>;
+  if (vide) return <div className="vide"><span className="vide-icone" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="4" y="5" width="16" height="14" rx="3" /><path d="M8 10h8M8 14h5" /></svg></span><p>{messageVide}</p></div>;
   return null;
 }
 

@@ -32,7 +32,7 @@ export function peutRole(p: Droits | null, role: RoleCompte): boolean {
 }
 export function destination(p: Droits): string {
   if (p.statut !== 'ACTIF' || p.role === 'PARTENAIRE') return '/dossier';
-  if (p.role === 'RESPONSABLE') return peutOperations(p) ? '/dossiers' : '/audit';
+  if (p.role === 'RESPONSABLE') return peutOperations(p) ? '/accueil' : '/audit';
   return p.role === 'CLIENT' ? '/(onglets)' : '/';
 }
 export const telephoneValide = (v: string) => /^\+[1-9]\d{7,14}$/.test(v.trim());

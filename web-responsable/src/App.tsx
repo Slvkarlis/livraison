@@ -11,6 +11,7 @@ import Reclamations from './pages/Reclamations';
 import Pilote from './pages/Pilote';
 import Previsions from './pages/Previsions';
 import Prospection from './pages/Prospection';
+import Accueil from './pages/Accueil';
 import Simulateur from './pages/Simulateur';
 import Comptes from './pages/Comptes';
 import Audit from './pages/Audit';
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="/zones" element={<Guard operations><Zones /></Guard>} />
         <Route path="/livreurs" element={<Guard operations><Livreurs /></Guard>} />
         <Route path="/vehicules" element={<Guard operations><Vehicules /></Guard>} />
+        <Route path="/accueil" element={<Guard operations><Accueil /></Guard>} />
         <Route path="/echecs" element={<Guard operations><Echecs /></Guard>} />
         <Route path="/reclamations" element={<Guard finance><Reclamations /></Guard>} />
         <Route path="/pilote" element={<Guard operations><Pilote /></Guard>} />
