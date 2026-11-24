@@ -28,6 +28,7 @@ function fixtures() {
     const route = url.pathname, methode = options.method || 'GET';
     const corps = options.body ? JSON.parse(options.body) : {};
     window.__verification.requetes.push({ route, methode, corps });
+    if (window.__verification.delai && route.includes('/produits/') && methode === 'PUT') await new Promise(r => setTimeout(r, window.__verification.delai));
     if (window.__verification.echec && route.includes(window.__verification.echec)) return new Response(JSON.stringify({ message: 'Connexion interrompue. Réessayez.' }), { status: 503 });
     let data;
     if (route === '/api/auth/login') data = { token: 'fixture', refreshToken: 'fixture' };
@@ -76,7 +77,10 @@ async function main() {
   await cdp('Page.navigate', { url: 'http://localhost:8092' });
   await texte('Se connecter'); await remplir('Email ou téléphone', 'demo@example.test'); await remplir('Mot de passe', 'fixture-password'); await cliquer('Se connecter');
   await texte('Commandes'); await texte('FP-00101'); await capture('01-commandes');
-  for (const [onglet, attendu, fichier] of [['Catalogue', 'Couscous maison', '02-catalogue'], ['Ventes', 'Mes ventes', '03-ventes'], ['Commerce', 'Maison du Jasmin', '04-profil']]) { await cliquer(onglet); await texte(attendu); await capture(fichier); }
+  for (const [onglet, attendu, fichier] of [['Catalogue', 'Couscous maison', '02-catalogue'], ['Ventes', 'Mes ventes', '03-ventes'], ['Commerce', 'Maison du Jasmin', '04-profil']]) {
+    await cliquer(onglet); await texte(attendu); await capture(fichier);
+    if (onglet === 'Catalogue' && (phase === 'etape3' || phase === 'apres')) await verifierCatalogue({ evaluer, attendre, texte, cliquer, remplir, capture });
+  }
   await cliquer('Commandes');
   await evaluer("[...document.querySelectorAll('[role=button]')].find(e=>e.getAttribute('aria-label')?.includes('FP-00101')).click()");
   await texte('Sans piment'); await capture('05-detail');
@@ -109,5 +113,26 @@ async function verifierActions({ cdp, evaluer, attendre, texte, cliquer, capture
   await cliquer('Ouvrir et imprimer l’étiquette'); await texte('Imprimer l’étiquette'); await capture('07-etiquette');
   assert.ok(await evaluer("[...document.querySelectorAll('svg')].length>0"), 'QR présent');
   console.log('OK : 3 positions et geste du panneau, acceptation avec erreur/reprise, préparation, ajustement, confirmation prête et code de remise.');
+}
+async function verifierCatalogue({ evaluer, attendre, texte, cliquer, remplir, capture }) {
+  await remplir('Rechercher un produit', 'inexistant'); await texte('Aucun résultat');
+  await cliquer('Effacer les filtres'); await texte('Couscous maison');
+  await cliquer('En rupture');
+  assert.equal(await evaluer("[...document.querySelectorAll('[aria-label=\"Disponible : Couscous maison\"]')].some(e=>e.getBoundingClientRect().width>0)"), false);
+  await cliquer('Tous');
+  await evaluer("window.__verification.echec='/produits/1';window.__verification.delai=1200");
+  await evaluer("document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').click()");
+  await attendre("!document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').checked");
+  await texte('La disponibilité précédente est rétablie');
+  assert.equal(await evaluer("document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').checked"), true);
+  await evaluer("window.__verification.echec='';window.__verification.delai=0");
+  await evaluer("document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').click()");
+  await texte('Couscous maison : rupture');
+  await cliquer('Annuler la modification'); await texte('Couscous maison : disponible');
+  await cliquer('Nouveau produit'); await cliquer('Enregistrer le produit'); await texte('Saisissez un nom');
+  await remplir('Nom du produit', 'Salade du jour'); await remplir('Prix en DT', '9,500');
+  await capture('08-formulaire-produit'); await cliquer('Enregistrer le produit'); await texte('Produit enregistré');
+  assert.ok(await evaluer("window.__verification.produits.some(p=>p.nom==='Salade du jour'&&p.prix===9.5)"));
+  console.log('OK : recherche, filtre, disponibilité optimiste avec restauration après échec, annulation et création avec validation.');
 }
 main().catch(e => { console.error(e); process.exit(1); });

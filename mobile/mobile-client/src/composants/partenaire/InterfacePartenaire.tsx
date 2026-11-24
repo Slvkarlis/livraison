@@ -1,13 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ApiError, Bouton, EntreeAnimee, useMouvementReduit, useStyles, useTheme, type Theme } from '@fleetpulse/shared';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode, type SetStateAction } from 'react';
 import { Animated, AppState, Platform, Text, View } from 'react-native';
 
 export const POLICE_MONO = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 
 /** Les lectures peuvent être répétées ; aucune mutation n'est rejouée automatiquement. */
-export function useRessourcePartenaire<T>(lire: () => Promise<T>) {
+export function useRessourcePartenaire<T>(lire: () => Promise<T>, intervalle = 30000) {
   const [donnees, setDonnees] = useState<T | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [horsConnexion, setHorsConnexion] = useState(false);
@@ -29,11 +29,12 @@ export function useRessourcePartenaire<T>(lire: () => Promise<T>) {
   }, [lire]);
   useFocusEffect(useCallback(() => {
     actif.current = true; void charger();
-    const timer = setInterval(() => { if (AppState.currentState === 'active') void charger(); }, 30000);
+    const timer = setInterval(() => { if (AppState.currentState === 'active') void charger(); }, intervalle);
     const ecoute = AppState.addEventListener('change', etat => { if (etat === 'active') void charger(); });
     return () => { actif.current = false; sequence.current++; clearInterval(timer); ecoute.remove(); };
-  }, [charger]));
-  return { donnees, setDonnees, erreur, chargement, horsConnexion, charger };
+  }, [charger, intervalle]));
+  const appliquer = useCallback((valeur: SetStateAction<T | null>) => { sequence.current++; setDonnees(valeur); setChargement(false); }, []);
+  return { donnees, setDonnees: appliquer, erreur, chargement, horsConnexion, charger };
 }
 
 export function ErreurPartenaire({ message, horsConnexion = false, reessayer }: { message: string | null; horsConnexion?: boolean; reessayer: () => void }) {

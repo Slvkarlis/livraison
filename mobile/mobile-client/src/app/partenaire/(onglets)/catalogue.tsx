@@ -1,1 +1,1 @@
-export { default } from '../../../composants/CataloguePartenaire';
+export { default } from '../../../composants/partenaire/CataloguePartenaire';
