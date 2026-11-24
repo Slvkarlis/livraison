@@ -85,15 +85,19 @@ Prérequis : Node 20.19+, l'application **Expo Go** sur le téléphone, téléph
 ```bash
 cd mobile
 npm install          # une seule fois, dans mobile/ (npm workspaces)
-npm run client       # application client
-npm run livreur      # application livreur (dans un autre terminal, Expo proposera un autre port)
+npm run client       # client : QR sur le port 8081
+npm run partenaire   # partenaire : QR sur le port 8082 (dans un autre terminal)
+npm run livreur      # livreur : QR sur le port 8084 (dans un autre terminal)
 ```
 
-Scannez le QR code avec Expo Go. Les apps appellent automatiquement le backend sur
-`http://<IP du PC>:8083` (même IP que le serveur Expo). Pour une autre adresse :
+Ces commandes détectent l'adresse réseau du PC et la transmettent à Expo et au client API.
+Scannez le QR code avec Expo Go. Le backend doit tourner sur `http://<IP du PC>:8083`.
+Après un changement de réseau, relancez ces commandes et scannez les nouveaux QR.
+Pour une autre adresse dans PowerShell :
 
-```bash
-EXPO_PUBLIC_API_URL=http://192.168.1.20:8083 npm run client
+```powershell
+$env:EXPO_PUBLIC_API_URL="http://192.168.1.20:8083"
+npm run client
 ```
 
 Si le téléphone n'arrive pas à joindre le backend, autorisez le port 8083 dans le pare-feu Windows.

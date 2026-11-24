@@ -3,8 +3,9 @@
   "private": true,
   "workspaces": ["mobile-client", "mobile-livreur", "packages/*"],
   "scripts": {
-    "client": "npm run start -w mobile-client",
-    "livreur": "npm run start -w mobile-livreur",
+    "client": "node scripts/demarrer-expo.cjs client",
+    "partenaire": "node scripts/demarrer-expo.cjs partenaire",
+    "livreur": "node scripts/demarrer-expo.cjs livreur",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint -w mobile-client -w mobile-livreur && eslint packages/shared/src --config mobile-client/eslint.config.js"
   },

@@ -40,3 +40,7 @@ node_modules/
 docs/SPRINT2BIS_PLAN.md
 docs/ASSESSMENT.md
 docs/SPRINT3_PLAN.md
+
+# Journaux de plantage JVM (extension Java de VS Code)
+hs_err_pid*.log
+replay_pid*.log

@@ -30,6 +30,12 @@
 		<java.version>25</java.version>
 	</properties>
 	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
         <!-- Géométrie robuste commune à MySQL et H2 ; persistance WKT portable. -->
         <dependency>
             <groupId>org.locationtech.jts</groupId>
