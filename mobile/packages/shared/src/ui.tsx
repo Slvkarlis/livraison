@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { STATUTS } from './format';
 import type { StatutLivraison } from './types';
+import { useMouvementReduit } from './mouvement';
 
 /** Identite visuelle d'une application : chaque app fournit la sienne. */
 export interface Theme {
@@ -122,12 +123,14 @@ export function Bouton({
     : variante === 'secondaire' ? theme.texte
     : variante === 'danger' ? theme.erreur : theme.accent;
   const [echelle] = useState(() => new Animated.Value(1));
+  const reduit = useMouvementReduit();
   // La mise en page (marges, flex, largeur) va a la zone tactile ; l'apparence (bord, fond) au bouton dessine
   const { disposition, apparence } = separerStyle(style);
-  const presser = (vers: number) => Animated.spring(echelle, { toValue: vers, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
+  const presser = (vers: number) => { if (!reduit) Animated.spring(echelle, { toValue: vers, useNativeDriver: true, speed: 40, bounciness: 6 }).start(); };
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={titre}
       accessibilityState={{ disabled: inactif }}
       onPress={onPress}
       disabled={inactif}

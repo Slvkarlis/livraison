@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
+import { ReglagesAlertes } from './ReglagesAlertes';
 
 // Commerce du partenaire : informations, ouverture / fermeture (US-203), deconnexion
 export default function ProfilPartenaire() {
@@ -73,6 +74,7 @@ export default function ProfilPartenaire() {
           </>
         ) : null}
 
+        <ReglagesAlertes />
         <Bouton
           titre="Se déconnecter"
           variante="danger"

@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Animated, Easing, Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Path, Polygon, Rect, Stop } from 'react-native-svg';
+import { useMouvementReduit as usePreferenceMouvement } from './mouvement';
 
 /*
  * Ville 3D (conception Doop « CityMap3D », version mobile) : quartier en projection isometrique,
@@ -51,19 +52,24 @@ function useMouvementReduit() {
 /** Sur le web, react-native-svg anime mal ses attributs (avertissements « collapsable ») : trace fixe. */
 const SVG_ANIME = Platform.OS !== 'web';
 
-export function Ville3D({ ton = 'nuit', style, progression = 0.55, fondu }: {
+export function Ville3D({ ton = 'nuit', style, progression = 0.55, fondu, statique = false, pointsActifs = 0 }: {
   ton?: 'nuit' | 'jour';
   /** Couleur du support : le fond prend cette couleur et la ville s'y fond par la gauche (bandeaux). */
   fondu?: string;
   style?: StyleProp<ViewStyle>;
   /** Part du trajet deja parcourue (0 a 1) : place le livreur sur l'itineraire. */
   progression?: number;
+  /** Mode léger : géométrie fixe et aucune boucle JS. */
+  statique?: boolean;
+  pointsActifs?: number;
 }) {
   const c = TONS[ton];
   // Identifiants de degrade propres a chaque ville : sur le web, deux villes ne doivent pas partager « #fond »
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const idFond = `fond-${uid}`; const idFondu = `fondu-${uid}`;
-  const reduit = useMouvementReduit();
+  const systeme = useMouvementReduit();
+  const preference = usePreferenceMouvement();
+  const reduit = systeme || preference || statique;
   const [anime, setAnime] = useState(0);
   const elevation = reduit ? 1 : anime;
   const defile = useState(() => new Animated.Value(0))[0];
@@ -159,6 +165,10 @@ export function Ville3D({ ton = 'nuit', style, progression = 0.55, fondu }: {
               r={onde.interpolate({ inputRange: [0, 1], outputRange: [10, 34] })} opacity={onde.interpolate({ inputRange: [0, 1], outputRange: [0.8, 0] })} />
           ) : <Circle cx={px} cy={py} r={24} fill="none" stroke="rgba(242,178,51,0.4)" strokeWidth={3} />}
           <Circle cx={px} cy={py} r={12} fill="#F2B233" stroke="#15171A" strokeWidth={4} />
+          {Array.from({ length: Math.min(8, Math.max(0, pointsActifs)) }, (_, i) => {
+            const [x, y] = projeter(100 + (i % 4) * 100, 200 + Math.floor(i / 4) * 200);
+            return <Circle key={`commande-${i}`} cx={x} cy={y} r={8} fill="#F2B233" stroke={c.rue} strokeWidth={3} />;
+          })}
           {fondu ? <Rect x="0" y="0" width="800" height="520" fill={`url(#${idFondu})`} /> : null}
         </Svg>
       </Animated.View>

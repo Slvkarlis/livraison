@@ -1,45 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../../theme';
+import { useTheme } from '@fleetpulse/shared';
+import { Pressable, Text } from 'react-native';
 
-/** Choix compact (filtre, temps de preparation, motif) ; compteur facultatif. */
-export function Puce({ libelle, actif, onPress, compteur, desactive }: {
-  libelle: string; actif: boolean; onPress: () => void; compteur?: number; desactive?: boolean;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: actif, disabled: desactive }}
-      disabled={desactive}
-      onPress={onPress}
-      style={[styles.puce, actif && styles.puceActive, desactive && styles.desactive]}
-    >
-      <Text style={[styles.texte, actif && styles.texteActif]}>{libelle}</Text>
-      {compteur ? (
-        <View style={[styles.compteur, actif && styles.compteurActif]}>
-          <Text style={styles.compteurTexte}>{compteur}</Text>
-        </View>
-      ) : null}
-    </Pressable>
-  );
+export function Puce({ libelle, actif, compteur, desactive = false, onPress }: { libelle: string; actif: boolean; compteur?: number; desactive?: boolean; onPress: () => void }) {
+  const t = useTheme();
+  return <Pressable accessibilityRole="button" accessibilityLabel={`${libelle}${compteur !== undefined ? `, ${compteur} commande(s)` : ''}`} accessibilityState={{ selected: actif, disabled: desactive }} disabled={desactive} onPress={onPress}
+    style={({ pressed }) => ({ minHeight: 48, minWidth: 48, paddingHorizontal: 10, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, borderWidth: 1, backgroundColor: actif ? t.accent : t.surface, borderColor: actif ? t.accent : t.bordure, opacity: desactive ? 0.5 : pressed ? 0.8 : 1 })}>
+    <Text style={{ color: actif ? t.surAccent : t.texte, fontWeight: '700', fontSize: 14 }}>{libelle}</Text>
+    {compteur !== undefined ? <Text style={{ color: actif ? t.surAccent : t.texte, fontWeight: '800', fontSize: 14, fontVariant: ['tabular-nums'] }}>{compteur}</Text> : null}
+  </Pressable>;
 }
-
-const styles = StyleSheet.create({
-  puce: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.bordure,
-  },
-  puceActive: { backgroundColor: theme.accent, borderColor: theme.accent },
-  desactive: { opacity: 0.45 },
-  texte: { fontSize: 14, fontWeight: '600', color: theme.texte },
-  texteActif: { color: theme.surAccent },
-  compteur: { minWidth: 20, paddingHorizontal: 6, borderRadius: 10, backgroundColor: theme.accentDoux, alignItems: 'center' },
-  compteurActif: { backgroundColor: theme.surAccent },
-  compteurTexte: { fontSize: 12, fontWeight: '700', color: theme.accent },
-});

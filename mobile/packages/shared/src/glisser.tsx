@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Animated, Easing, PanResponder, StyleSheet, Text, View } from 'react-native';
+import { useMouvementReduit } from './mouvement';
 
 const POUCE = 52;
 const MARGE = 4;
@@ -23,10 +24,11 @@ export function GlisserPourConfirmer({ libelle, onConfirmer, desactive = false, 
   const [reflet] = useState(() => new Animated.Value(0));
   const course = Math.max(0, largeur - POUCE - 2 * MARGE);
   const bloque = desactive || chargement;
+  const reduit = useMouvementReduit();
 
   // Reflet qui balaie le libelle tant que le geste est possible
   useEffect(() => {
-    if (bloque) return;
+    if (bloque || reduit) return;
     const boucle = Animated.loop(Animated.sequence([
       Animated.timing(reflet, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
       Animated.delay(900),
@@ -34,7 +36,7 @@ export function GlisserPourConfirmer({ libelle, onConfirmer, desactive = false, 
     ]));
     boucle.start();
     return () => boucle.stop();
-  }, [bloque, reflet]);
+  }, [bloque, reflet, reduit]);
 
   // Fin d'envoi (succes ou echec) : le pouce revient au depart
   useEffect(() => {
@@ -72,7 +74,7 @@ export function GlisserPourConfirmer({ libelle, onConfirmer, desactive = false, 
       <Animated.View style={[styles.rempli, { width: Animated.add(position, POUCE + MARGE * 2) }]} />
       <Animated.View style={[styles.libelleCadre, { opacity: position.interpolate({ inputRange: [0, max * 0.6], outputRange: [1, 0], extrapolate: 'clamp' }) }]}>
         <Text style={[styles.libelle, desactive && styles.libelleInactif]} numberOfLines={1}>{chargement ? 'Envoi…' : libelle}</Text>
-        {!bloque && largeur > 0 ? (
+        {!bloque && !reduit && largeur > 0 ? (
           <Animated.View pointerEvents="none" style={[styles.reflet, {
             transform: [{ translateX: reflet.interpolate({ inputRange: [0, 1], outputRange: [-80, largeur] }) }, { skewX: '-20deg' }],
           }]} />

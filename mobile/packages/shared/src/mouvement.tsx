@@ -1,18 +1,41 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, Easing, Pressable, type StyleProp, type ViewStyle } from 'react-native';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { AccessibilityInfo, Animated, Easing, Pressable, type StyleProp, type ViewStyle } from 'react-native';
+
+const MouvementContext = createContext(false);
+
+/** La préférence locale ne peut jamais annuler la réduction demandée par le système. */
+export function MouvementProvider({ reduit, children }: { reduit: boolean; children: ReactNode }) {
+  return <MouvementContext.Provider value={reduit}>{children}</MouvementContext.Provider>;
+}
+
+export function useMouvementReduit() {
+  const preference = useContext(MouvementContext);
+  const [systeme, setSysteme] = useState(true);
+  useEffect(() => {
+    let actif = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then(v => { if (actif) setSysteme(v); }).catch(() => {});
+    const ecoute = AccessibilityInfo.addEventListener('reduceMotionChanged', setSysteme);
+    return () => { actif = false; ecoute.remove(); };
+  }, []);
+  return preference || systeme;
+}
 
 /** Entree en fondu avec montee douce, decalee selon le rang (liste echelonnee). */
 export function EntreeAnimee({ rang = 0, children, style }: { rang?: number; children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const valeur = useState(() => new Animated.Value(0))[0];
+  const reduit = useMouvementReduit();
   useEffect(() => {
-    Animated.timing(valeur, {
+    if (reduit) { valeur.setValue(1); return; }
+    const animation = Animated.timing(valeur, {
       toValue: 1,
       duration: 480,
       delay: Math.min(rang, 8) * 70,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-    }).start();
-  }, [rang, valeur]);
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [rang, valeur, reduit]);
   return (
     <Animated.View
       style={[style, {
@@ -35,7 +58,8 @@ export function Pressionnable({ onPress, children, style, disabled, accessibilit
   accessibilityLabel?: string;
 }) {
   const echelle = useState(() => new Animated.Value(1))[0];
-  const animer = (vers: number) => Animated.spring(echelle, { toValue: vers, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
+  const reduit = useMouvementReduit();
+  const animer = (vers: number) => { if (!reduit) Animated.spring(echelle, { toValue: vers, useNativeDriver: true, speed: 40, bounciness: 6 }).start(); };
   return (
     <Pressable
       onPress={onPress}

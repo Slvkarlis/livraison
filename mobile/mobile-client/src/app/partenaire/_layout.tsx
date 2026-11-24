@@ -2,11 +2,13 @@ import { Stack } from 'expo-router';
 import { View } from 'react-native';
 import { AlerteNouvelleCommande } from '../../composants/partenaire/AlerteNouvelleCommande';
 import { theme } from '../../theme';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PreferencesPartenaireProvider } from '../../composants/partenaire/PreferencesPartenaire';
 
 // Espace partenaire (Sprint 2 bis) : onglets + detail d'une commande recue ; alerte temps reel par-dessus tous les ecrans.
 export default function PartenaireLayout() {
   return (
-    <View style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }}><PreferencesPartenaireProvider><View style={{ flex: 1 }}>
       <Stack
         screenOptions={{
           headerShadowVisible: false,
@@ -22,6 +24,6 @@ export default function PartenaireLayout() {
         <Stack.Screen name="etiquette/[id]" options={{ title: 'Étiquette du colis' }} />
       </Stack>
       <AlerteNouvelleCommande />
-    </View>
+    </View></PreferencesPartenaireProvider></GestureHandlerRootView>
   );
 }
