@@ -1,0 +1,21 @@
+.closing-reglement {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  padding: 22px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--accent-doux);
+  margin-bottom: 18px;
+}
+.closing-reglement h3 { font-size: 19px; margin-bottom: 10px; }
+.closing-reglement p + p { margin-top: 8px; }
+.closing-montants { display: grid; gap: 16px; margin: 0; align-content: center; }
+.closing-montants dt { font-size: 13px; color: var(--discret); }
+.closing-montants dd { margin: 4px 0 0; font: 700 25px/1.3 var(--mono); }
+.closing-confirmation { padding: 16px 18px; border-radius: 16px; background: var(--succes-doux); color: var(--succes); margin-bottom: 16px; font-weight: 600; }
+@media (max-width: 640px) {
+  .closing-reglement { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 18px; }
+  .closing-montants { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .closing-montants dd { font-size: 21px; overflow-wrap: anywhere; }
+}

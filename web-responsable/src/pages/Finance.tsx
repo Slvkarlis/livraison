@@ -1,9 +1,10 @@
-import { useCallback, useState, type FormEvent } from 'react';
+import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { Chiffre, StatHero, StatTuile } from '../composants/luxe';
 import { api } from '../api';
 import { Alerte, Badge, Champ, EnTete, EtatTableau, Modale, useDonnees } from '../composants/ui';
 import { formatDate, formatMontant } from '../format';
 import type { Bareme, Closing, PorteeCommission, SoldeCoursier } from '../types';
+import './Finance.css';
 
 type Onglet = 'caisses' | 'closing' | 'parametres' | 'ledger';
 const ONGLETS: { id: Onglet; libelle: string }[] = [
@@ -163,32 +164,50 @@ function FormulaireDepot({ coursier, onFermer, onFait }: { coursier: SoldeCoursi
 // US-506 / US-512 : apercu puis validation du closing d'une semaine terminee
 function ClosingHebdomadaire() {
   const [semaine, setSemaine] = useState(lundiPrecedent);
-  const charger = useCallback(() => api.apercuClosing(semaine), [semaine]);
+  const charger = useCallback(async () => ({ semaine, closing: await api.apercuClosing(semaine) }), [semaine]);
   const apercu = useDonnees(charger);
   const historique = useDonnees(api.closings);
+  const [resultatValide, setResultatValide] = useState<{ semaine: string; closing: Closing } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [erreurValidation, setErreurValidation] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
+  const verrouValidation = useRef(false);
+
+  function choisirSemaine(valeur: string) {
+    setSemaine(valeur);
+    setMessage(null);
+    setErreurValidation(null);
+  }
 
   async function valider() {
+    if (verrouValidation.current) return;
+    verrouValidation.current = true;
     setEnvoi(true);
+    setErreurValidation(null);
+    setMessage(null);
     try {
       const c = await api.validerClosing(semaine);
-      setMessage(`Closing de la semaine du ${c.semaine} validé : ${formatMontant(c.totalReversements)} à reverser, ${formatMontant(c.totalRemunerations)} de rémunérations.`);
+      // Le résultat du POST est disponible même si une lecture de rafraîchissement échoue ensuite.
+      setResultatValide({ semaine, closing: c });
+      setMessage(`Clôture de la semaine du ${c.semaine} validée. Les montants sont calculés : effectuez ensuite les virements manuellement depuis votre banque.`);
       await Promise.all([apercu.recharger(), historique.recharger()]);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Validation impossible.');
+      setErreurValidation(e instanceof Error ? e.message : 'Validation impossible.');
     } finally {
+      verrouValidation.current = false;
       setEnvoi(false);
     }
   }
 
-  const c = apercu.donnees;
+  const c = resultatValide?.semaine === semaine ? resultatValide.closing
+    : apercu.donnees?.semaine === semaine ? apercu.donnees.closing : null;
   return (
     <>
-      {message && <Alerte message={message} onFermer={() => setMessage(null)} />}
+      {message && <p className="closing-confirmation" role="status">{message}</p>}
+      {erreurValidation && <Alerte message={erreurValidation} onFermer={() => setErreurValidation(null)} />}
       <div className="filtres">
-        <Champ libelle="Semaine (un jour de la semaine)"><input type="date" value={semaine} onChange={(e) => setSemaine(e.target.value)} /></Champ>
-        {c && !c.id && <button className="bouton plein" disabled={envoi} onClick={() => void valider()}>Valider le closing</button>}
+        <Champ libelle="Semaine (un jour de la semaine)"><input type="date" value={semaine} disabled={envoi} onChange={(e) => choisirSemaine(e.target.value)} /></Champ>
+        {c && !c.id && <button className="bouton plein" disabled={envoi || apercu.chargement} onClick={() => void valider()}>{envoi ? 'Validation en cours…' : 'Valider le closing'}</button>}
       </div>
       <EtatTableau chargement={apercu.chargement && !c} erreur={apercu.erreur} vide={false} messageVide="" onReessayer={() => void apercu.recharger()} />
       {c && <ResumeClosing closing={c} />}
@@ -198,11 +217,11 @@ function ClosingHebdomadaire() {
         <EtatTableau chargement={historique.chargement && !historique.donnees} erreur={historique.erreur} vide={!historique.donnees?.length} messageVide="Aucun closing validé." onReessayer={() => void historique.recharger()} />
         {!!historique.donnees?.length && (
           <table>
-            <thead><tr><th>Semaine du</th><th>Validé le</th><th>Par</th><th className="nombre">Reversements</th><th className="nombre">Rémunérations</th></tr></thead>
+            <thead><tr><th>Semaine du</th><th>Validé le</th><th>Par</th><th className="nombre">Net partenaires calculé</th><th className="nombre">Rémunérations</th></tr></thead>
             <tbody>
               {historique.donnees.map((h) => (
-                <tr key={h.id ?? h.semaine} className="cliquable" onClick={() => setSemaine(h.semaine)}>
-                  <td>{h.semaine}</td>
+                <tr key={h.id ?? h.semaine}>
+                  <td><button type="button" className="bouton-lien" disabled={envoi} aria-label={`Consulter la clôture du ${h.semaine}`} onClick={() => choisirSemaine(h.semaine)}>{h.semaine}</button></td>
                   <td className="discret">{h.valideLe ? formatDate(h.valideLe) : '—'}</td>
                   <td>{h.validePar}</td>
                   <td className="nombre">{formatMontant(h.totalReversements)}</td>
@@ -224,22 +243,36 @@ function ResumeClosing({ closing }: { closing: Closing }) {
         {closing.id ? `Closing validé le ${closing.valideLe ? formatDate(closing.valideLe) : ''}` : 'Aperçu (rien n’est encore enregistré)'}
         {' · '}du {formatDate(closing.debut)} au {formatDate(closing.fin)}
       </h2>
+      <section className="closing-reglement" aria-label="Virements manuels aux partenaires">
+        <div>
+          <h3>{closing.id ? 'Montants à virer manuellement' : 'Montants prévisionnels avant clôture'}</h3>
+          <p>{closing.id ? 'La clôture calcule les montants nets par partenaire. Réalisez les virements depuis votre banque.' : 'Vérifiez les montants, puis validez la clôture pour établir les relevés.'}</p>
+          <p><strong>Aucun virement bancaire n’est déclenché par FleetPulse.</strong></p>
+          {closing.id && <p className="discret">Ce relevé conserve les montants calculés à la clôture ; il ne confirme pas les paiements effectués hors application.</p>}
+        </div>
+        <dl className="closing-montants">
+          <div><dt>Total net partenaires</dt><dd>{formatMontant(closing.totalReversements)}</dd></div>
+          <div><dt>Partenaires concernés</dt><dd>{closing.partenaires.length}</dd></div>
+        </dl>
+      </section>
       {!closing.id && closing.commandesNonRapprochees > 0 && (
         <Alerte message={`${closing.commandesNonRapprochees} commande(s) livrée(s) attendent le dépôt de leur cash (${formatMontant(closing.cashNonRapproche)}) : elles seront reversées à un prochain closing.`} />
       )}
+      <h3 className="section">{closing.id ? 'Virements à effectuer par partenaire' : 'Aperçu des montants par partenaire'}</h3>
       <div className="carte">
         <table>
-          <thead><tr><th>Partenaire</th><th className="nombre">Commandes</th><th className="nombre">Ventes</th><th className="nombre">Commission</th><th className="nombre">Net à reverser</th></tr></thead>
+          <thead><tr><th scope="col">Partenaire</th><th scope="col" className="nombre">Net à virer (DT)</th><th scope="col" className="nombre">Commandes</th><th scope="col" className="nombre">Ventes</th><th scope="col" className="nombre">Commission</th></tr></thead>
           <tbody>
             {closing.partenaires.map((p) => (
-              <tr key={p.partenaireId}><td>{p.nomCommerce}</td><td className="nombre">{p.nbCommandes}</td><td className="nombre">{formatMontant(p.ventes)}</td>
-                <td className="nombre">{formatMontant(p.commission)}</td><td className="nombre"><strong>{formatMontant(p.net)}</strong></td></tr>
+              <tr key={p.partenaireId}><td>{p.nomCommerce}</td><td className="nombre"><strong>{formatMontant(p.net)}</strong></td><td className="nombre">{p.nbCommandes}</td><td className="nombre">{formatMontant(p.ventes)}</td>
+                <td className="nombre">{formatMontant(p.commission)}</td></tr>
             ))}
-            {!closing.partenaires.length && <tr><td colSpan={5} className="discret">Aucun reversement.</td></tr>}
+            {!closing.partenaires.length && <tr><td colSpan={5} className="discret">Aucun montant à virer aux partenaires pour cette clôture.</td></tr>}
           </tbody>
         </table>
       </div>
-      <div className="carte" style={{ marginTop: 12 }}>
+      <h3 className="section">Rémunérations des livreurs</h3>
+      <div className="carte">
         <table>
           <thead><tr><th>Livreur</th><th className="nombre">Missions</th><th className="nombre">Distance</th><th className="nombre">Rémunération</th></tr></thead>
           <tbody>

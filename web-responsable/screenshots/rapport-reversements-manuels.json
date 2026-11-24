@@ -1,0 +1,21 @@
+{
+  "mode": "Interface avec réponses API simulées ; aucune clôture réelle ni virement effectué",
+  "controles": [
+    "Aperçu : 110,440 DT pour Chez Amira et 180,000 DT pour l’épicerie",
+    "Un échec de validation ne produit aucun message de clôture réussie",
+    "Une validation réussie supplémentaire malgré un double clic",
+    "Total net 290,440 DT et mention de virement manuel",
+    "Vue 390 px sans débordement horizontal de la page",
+    "Le montant individuel est immédiatement après le nom du partenaire",
+    "Changement de semaine : les anciens montants ne sont pas affichés pendant la lecture",
+    "La clôture historique affiche son propre montant 88,000 DT",
+    "État vide explicite pour une clôture sans partenaire à régler",
+    "Le résultat du POST reste visible si le rafraîchissement échoue",
+    "Aucune requête de paiement ni d’intégration bancaire"
+  ],
+  "exceptions": [],
+  "largeurs": [
+    1440,
+    390
+  ]
+}
