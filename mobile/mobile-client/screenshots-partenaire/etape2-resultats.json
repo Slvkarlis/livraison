@@ -1,0 +1,141 @@
+{
+  "mode": "Frontend avec réponses API simulées ; backend non testé",
+  "largeur": 390,
+  "erreurs": [],
+  "resultats": [
+    {
+      "route": "/api/auth/config",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/auth/login",
+      "methode": "POST",
+      "corps": {
+        "email": "demo@example.test",
+        "motDePasse": "fixture-password"
+      }
+    },
+    {
+      "route": "/api/me",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/boutique",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/ventes",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commerce",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes/101",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commerce",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/produits",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/ventes",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commerce",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/boutique",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/ventes",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes/101",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commerce",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes/101",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes/101/accepter",
+      "methode": "PUT",
+      "corps": {
+        "tempsPreparationMinutes": 15
+      }
+    },
+    {
+      "route": "/api/partenaire/commandes/101/accepter",
+      "methode": "PUT",
+      "corps": {
+        "tempsPreparationMinutes": 15
+      }
+    },
+    {
+      "route": "/api/partenaire/commandes/101/preparation/debut",
+      "methode": "PUT",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes/101/preparation/temps",
+      "methode": "PUT",
+      "corps": {
+        "tempsPreparationMinutes": 10
+      }
+    },
+    {
+      "route": "/api/partenaire/commandes/101/prete",
+      "methode": "PUT",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes/101/etiquette",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes/101/etiquette",
+      "methode": "GET",
+      "corps": {}
+    }
+  ]
+}

@@ -67,7 +67,7 @@ async function main() {
   const evaluer = async expression => { const r = await cdp('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }); if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description); return r.result.value; };
   const attendre = async expression => { for (let i = 0; i < 120; i++) { if (await evaluer(expression)) return; await new Promise(r => setTimeout(r, 500)); } throw new Error('Attente : ' + expression + '\n' + await evaluer('document.body.innerText')); };
   const texte = t => attendre('document.body.innerText.includes(' + JSON.stringify(t) + ')');
-  const cliquer = async t => { await evaluer("(()=>{const e=[...document.querySelectorAll('[role=button],[role=tab],button')].find(e=>e.innerText===" + JSON.stringify(t) + "||e.getAttribute('aria-label')===" + JSON.stringify(t) + "||(e.getAttribute('role')==='tab'&&e.innerText.endsWith(" + JSON.stringify(t) + ")));if(!e)throw Error('Bouton absent : '+" + JSON.stringify(t) + ");e.click();})()"); };
+  const cliquer = async t => { await evaluer("(()=>{const e=[...document.querySelectorAll('[role=button],[role=tab],button')].filter(e=>e.getBoundingClientRect().width>0).find(e=>e.innerText===" + JSON.stringify(t) + "||e.getAttribute('aria-label')===" + JSON.stringify(t) + "||(e.getAttribute('role')==='tab'&&e.innerText.endsWith(" + JSON.stringify(t) + ")));if(!e)throw Error('Bouton absent : '+" + JSON.stringify(t) + ");e.scrollIntoView({block:'nearest'});e.click();})()"); };
   const remplir = (label, valeur) => evaluer("(()=>{const e=document.querySelector('input[aria-label=" + JSON.stringify(label) + "]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e," + JSON.stringify(valeur) + ");e.dispatchEvent(new Event('input',{bubbles:true}));})()");
   const capture = async nom => { await new Promise(r => setTimeout(r, 600)); const r = await cdp('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(path.join(dossier, phase + '-' + nom + '.png'), Buffer.from(r.data, 'base64')); };
   await cdp('Page.enable'); await cdp('Runtime.enable');
@@ -80,9 +80,34 @@ async function main() {
   await cliquer('Commandes');
   await evaluer("[...document.querySelectorAll('[role=button]')].find(e=>e.getAttribute('aria-label')?.includes('FP-00101')).click()");
   await texte('Sans piment'); await capture('05-detail');
-  if (phase === 'apres') await verifierActions({ cdp, evaluer, attendre, texte, cliquer, remplir, capture });
+  if (phase === 'apres' || phase === 'etape2') await verifierActions({ cdp, evaluer, attendre, texte, cliquer, remplir, capture });
   fs.writeFileSync(path.join(dossier, phase + '-resultats.json'), JSON.stringify({ mode: 'Frontend avec réponses API simulées ; backend non testé', largeur: 390, erreurs, resultats: await evaluer('window.__verification.requetes') }, null, 2));
   ws.close(); assert.deepEqual(erreurs, []); console.log('OK : 4 onglets et détail à 390 px, captures ' + phase + ', aucune exception JavaScript.');
 }
-async function verifierActions() {}
+async function verifierActions({ cdp, evaluer, attendre, texte, cliquer, capture }) {
+  await cliquer('Résumé');
+  await attendre("!document.body.innerText.includes('Sans piment')");
+  await cliquer('Articles'); await texte('Sans piment');
+  await cliquer('Tout voir');
+  await new Promise(r => setTimeout(r, 350));
+  const poignee = await evaluer("(()=>{const r=document.querySelector('[data-testid=poignee-commande]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()");
+  await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', ...poignee, button: 'left', clickCount: 1 });
+  for (let i = 1; i <= 10; i++) await cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x: poignee.x, y: poignee.y + i * 25, button: 'left', buttons: 1 });
+  await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', x: poignee.x, y: poignee.y + 250, button: 'left', clickCount: 1 });
+  await attendre("document.querySelector('[data-testid=poignee-commande]').getBoundingClientRect().top > " + (poignee.y + 40));
+  await cliquer('Tout voir');
+  await evaluer("window.__verification.echec='/accepter'");
+  await cliquer('Accepter · 15 min'); await texte('Connexion interrompue');
+  assert.equal(await evaluer("window.__verification.commandes[0].statut"), 'PENDING_PARTNER');
+  await evaluer("window.__verification.echec=''");
+  await cliquer('Accepter · 15 min'); await texte('Commande acceptée');
+  assert.equal(await evaluer("window.__verification.commandes[0].tempsPreparationMinutes"), 15);
+  await cliquer('Commencer la préparation'); await texte('Préparation commencée');
+  await cliquer('Ajuster le délai (2 restants)'); await cliquer('encore 10 min'); await cliquer('Annoncer ce nouveau délai'); await texte('Nouveau délai annoncé');
+  await cliquer('Commande prête'); await cliquer('Confirmer sans glisser'); await cliquer('Oui, confirmer la commande prête');
+  await texte('CODE DE REMISE'); await texte('482917'); await capture('06-remise');
+  await cliquer('Ouvrir et imprimer l’étiquette'); await texte('Imprimer l’étiquette'); await capture('07-etiquette');
+  assert.ok(await evaluer("[...document.querySelectorAll('svg')].length>0"), 'QR présent');
+  console.log('OK : 3 positions et geste du panneau, acceptation avec erreur/reprise, préparation, ajustement, confirmation prête et code de remise.');
+}
 main().catch(e => { console.error(e); process.exit(1); });

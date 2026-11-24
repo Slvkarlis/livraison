@@ -1,10 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Bouton, Chargement, MessageErreur, api, type EtiquetteColis } from '@fleetpulse/shared';
+import { Bouton, MessageErreur, api, useStyles, useTheme, type Theme } from '@fleetpulse/shared';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
-import { theme } from '../../../theme';
+import { ErreurPartenaire, SquelettePartenaire, useRessourcePartenaire } from '../InterfacePartenaire';
+import { AnimationEtat } from '../AnimationEtat';
 import { etiquetteHtml } from './etiquetteHtml';
 import { imprimerEtiquette } from './imprimerEtiquette';
 import { genererQrSvg } from '../../qrSvg';
@@ -14,47 +15,39 @@ const TAILLE_QR = 240;
 // US-2B10 : etiquette du colis a imprimer et coller ; le livreur scanne le QR (ou saisit le code) a la collecte
 export default function EcranEtiquette() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [etiquette, setEtiquette] = useState<EtiquetteColis | null>(null);
-  const [qrSvg, setQrSvg] = useState<string | null>(null);
+  const theme = useTheme(), styles = useStyles(fabriqueStyles);
   const [erreur, setErreur] = useState<string | null>(null);
   const [impression, setImpression] = useState(false);
-
-  useEffect(() => {
-    let actif = true;
-    async function charger() {
-      try {
-        const e = await api.etiquetteColis(Number(id));
-        const svg = await genererQrSvg(e.contenuQr);
-        if (!actif) return;
-        setEtiquette(e);
-        setQrSvg(svg);
-      } catch (e) {
-        if (actif) setErreur(e instanceof Error ? e.message : 'Étiquette indisponible.');
-      }
-    }
-    void charger();
-    return () => { actif = false; };
+  const [dialogueOuvert, setDialogueOuvert] = useState(false), verrou = useRef(false);
+  const lire = useCallback(async () => {
+    const etiquette = await api.etiquetteColis(Number(id));
+    return { etiquette, qrSvg: await genererQrSvg(etiquette.contenuQr) };
   }, [id]);
+  const r = useRessourcePartenaire(lire), etiquette = r.donnees?.etiquette, qrSvg = r.donnees?.qrSvg;
 
   async function imprimer() {
-    if (!etiquette || !qrSvg) return;
+    if (!etiquette || !qrSvg || verrou.current) return;
+    verrou.current = true;
     setImpression(true);
     setErreur(null);
     try {
       await imprimerEtiquette(etiquetteHtml(etiquette, qrSvg));
+      setDialogueOuvert(true);
     } catch (e) {
       setErreur(e instanceof Error ? e.message : 'Impression impossible.');
     } finally {
+      verrou.current = false;
       setImpression(false);
     }
   }
 
   if (!etiquette || !qrSvg) {
-    return erreur ? <View style={styles.page}><View style={styles.contenu}><MessageErreur message={erreur} /></View></View> : <Chargement />;
+    return <View style={styles.page}><View style={styles.contenu}><ErreurPartenaire message={r.erreur} horsConnexion={r.horsConnexion} reessayer={() => void r.charger()} />{r.chargement ? <SquelettePartenaire /> : null}</View></View>;
   }
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.contenu}>
+      <ErreurPartenaire message={r.erreur} horsConnexion={r.horsConnexion} reessayer={() => void r.charger()} />
       <View style={styles.etiquette}>
         <Text style={styles.commerce}>{etiquette.nomCommerce}</Text>
         <View accessibilityLabel={`QR de collecte de la commande ${etiquette.codeSuivi}`}>
@@ -76,6 +69,7 @@ export default function EcranEtiquette() {
       </View>
 
       <MessageErreur message={erreur} />
+      {dialogueOuvert ? <View style={{ alignItems: 'center', gap: 8, padding: 16 }}><AnimationEtat etat="impression" /><Text accessibilityLiveRegion="polite" style={{ color: theme.texte, textAlign: 'center' }}>Dialogue d’impression ouvert. Vérifiez votre imprimante ou votre fichier PDF.</Text></View> : null}
       <Bouton
         titre="Imprimer l’étiquette"
         chargement={impression}
@@ -88,7 +82,7 @@ export default function EcranEtiquette() {
   );
 }
 
-const styles = StyleSheet.create({
+function fabriqueStyles(theme: Theme) { return {
   page: { flex: 1, backgroundColor: theme.fond },
   contenu: { padding: 20, paddingBottom: 48, alignItems: 'stretch' },
   etiquette: {
@@ -105,11 +99,11 @@ const styles = StyleSheet.create({
   encoche: { position: 'absolute', top: '58%', width: 28, height: 28, borderRadius: 14, backgroundColor: theme.fond },
   encocheG: { left: -15 },
   encocheD: { right: -15 },
-  codeFond: { marginTop: 10, paddingVertical: 10, paddingHorizontal: 22, borderRadius: 999, backgroundColor: '#1B1C1F' },
+  codeFond: { marginTop: 10, paddingVertical: 10, paddingHorizontal: 22, borderRadius: 999, backgroundColor: theme.texte },
   commerce: { fontSize: 20, fontWeight: '800', color: theme.texte, letterSpacing: -0.4, marginBottom: 8 },
   code: { fontSize: 30, fontWeight: '800', letterSpacing: 6, color: theme.accent, fontVariant: ['tabular-nums'] },
   aide: { fontSize: 13, color: theme.secondaire, textAlign: 'center' },
   client: { fontSize: 17, fontWeight: '700', color: theme.texte, marginTop: 6 },
   bouton: { marginTop: 20 },
   note: { fontSize: 13, color: theme.secondaire, textAlign: 'center', marginTop: 12 },
-});
+} as const; }

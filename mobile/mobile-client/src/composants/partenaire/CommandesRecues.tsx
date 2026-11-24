@@ -8,6 +8,7 @@ import { DecisionCommande } from './DecisionCommande';
 import { ErreurPartenaire, EtatPartenaire, MinuteurCommande, PointDirect, POLICE_MONO, SquelettePartenaire, useMaintenant, useRessourcePartenaire } from './InterfacePartenaire';
 import { PanneauBoutique } from './PanneauBoutique';
 import { Puce } from './Puce';
+import { AnimationEtat } from './AnimationEtat';
 
 const SEGMENTS = [
   { id: 'nouvelles', titre: 'Nouvelles', statuts: ['PENDING_PARTNER'] },
@@ -69,7 +70,7 @@ export default function CommandesRecues() {
 function NouvellePrioritaire({ resume, maintenant, onDecision }: { resume: CommandeResume; maintenant: number; onDecision: (maj: CommandeDetail, message: string) => void }) {
   const t = useTheme(), lire = useCallback(() => api.commandeRecue(resume.id), [resume.id]), r = useRessourcePartenaire(lire);
   return <View style={{ borderWidth: 2, borderColor: t.accent, backgroundColor: t.accentDoux, borderRadius: 24, padding: 12, gap: 10 }}>
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 4 }}><Ionicons name="notifications" size={28} color={t.texte} /><View style={{ flex: 1 }}><Text accessibilityRole="header" style={{ color: t.texte, fontSize: 21, fontWeight: '800' }}>Nouvelle commande</Text><Text style={{ color: t.texte, fontFamily: POLICE_MONO, marginTop: 4 }}>{resume.codeSuivi} · {formatMontant(resume.total)}</Text></View></View>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 4 }}><AnimationEtat etat="nouvelle" /><View style={{ flex: 1 }}><Text accessibilityRole="header" style={{ color: t.texte, fontSize: 21, fontWeight: '800' }}>Nouvelle commande</Text><Text style={{ color: t.texte, fontFamily: POLICE_MONO, marginTop: 4 }}>{resume.codeSuivi} · {formatMontant(resume.total)}</Text></View></View>
     <View style={{ paddingHorizontal: 4 }}><MinuteurCommande depuis={resume.dateCreation} maintenant={maintenant} /><Text style={{ color: t.texte, fontSize: 13, marginTop: 4 }}>Répondez dès que possible.</Text></View>
     <ErreurPartenaire message={r.erreur} horsConnexion={r.horsConnexion} reessayer={() => void r.charger()} />
     {r.donnees?.statut === 'PENDING_PARTNER' ? <DecisionCommande commande={r.donnees} onDecision={onDecision} /> : r.chargement ? <SquelettePartenaire /> : <Bouton titre="Actualiser la commande" onPress={() => void r.charger()} />}
