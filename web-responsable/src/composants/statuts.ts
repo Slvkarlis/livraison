@@ -1,13 +1,5 @@
 import type { Livraison, StatutLivraison } from '../types';
 import type { Ton, Etape } from './luxe';
-import type { TonBadge } from './ui';
-
-export function tonBadgeStatut(s: StatutLivraison): TonBadge {
-  if (s === 'LIVREE' || s === 'PRETE') return 'succes';
-  if (s === 'ECHEC' || s === 'REFUSEE') return 'danger';
-  if (s === 'PENDING_PARTNER' || s === 'EN_PREPARATION') return 'attention';
-  return 'neutre';
-}
 
 export const EN_COURS: StatutLivraison[] = ['ACCEPTEE', 'EN_PREPARATION', 'PRETE', 'AFFECTEE', 'RECUPEREE', 'EN_COURS', 'A_PROXIMITE', 'ARRIVEE'];
 export const EN_ROUTE: StatutLivraison[] = ['RECUPEREE', 'EN_COURS', 'A_PROXIMITE', 'ARRIVEE'];

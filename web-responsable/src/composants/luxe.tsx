@@ -1,12 +1,35 @@
-import { type ReactNode } from 'react';
-import { StatCard } from './ui';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { CarteVille3D } from './CarteVille3D';
 
 /* Composants de la refonte (systeme Doop : StatHero, StatTile, RouteTimeline, Pill, OrderRow,
    CounterTile, FilterChip, StepTimeline). Les styles sont dans refonte.css. */
 
-/** Compatibilité : les chiffres affichent immédiatement leur valeur réelle. */
+const reduit = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** Compte de 0 jusqu'a la valeur (ease-out), une fois a l'apparition. */
+export function useCompteur(cible: number, duree = 1100) {
+  const [valeur, setValeur] = useState(reduit() ? cible : 0);
+  const depart = useRef(0);
+  useEffect(() => {
+    if (reduit()) { setValeur(cible); return; }
+    const de = depart.current;
+    let image = 0;
+    const t0 = performance.now();
+    const pas = (t: number) => {
+      const p = Math.min(1, (t - t0) / duree);
+      const v = de + (cible - de) * (1 - Math.pow(1 - p, 3));
+      setValeur(v);
+      if (p < 1) image = requestAnimationFrame(pas); else depart.current = cible;
+    };
+    image = requestAnimationFrame(pas);
+    return () => cancelAnimationFrame(image);
+  }, [cible, duree]);
+  return valeur;
+}
+
+/** Nombre anime ; format recoit la valeur courante. */
 export function Chiffre({ valeur, format = (v) => Math.round(v).toLocaleString('fr-FR') }: { valeur: number; format?: (v: number) => string }) {
-  return <>{format(valeur)}</>;
+  return <>{format(useCompteur(valeur))}</>;
 }
 
 export type Ton = 'accent' | 'succes' | 'danger' | 'neutre' | 'nuit' | 'verre';
@@ -16,13 +39,37 @@ export function Pastille({ ton = 'accent', children, pulse = false }: { ton?: To
 }
 
 export function StatHero({ legende, valeur, note, pastille = 'En direct' }: { legende: string; valeur: ReactNode; note?: ReactNode; pastille?: string }) {
-  return <StatCard titre={legende} valeur={valeur} note={note} variation={pastille} />;
+  return (
+    <article className="sh inclinable">
+      <div className="sh-carte"><CarteVille3D ton="nuit" /></div>
+      <div className="sh-in">
+        <div className="sh-haut"><span className="sh-leg">{legende}</span><Pastille ton="verre" pulse>{pastille}</Pastille></div>
+        <strong className="sh-v">{valeur}</strong>
+        {note && <p className="sh-n">{note}</p>}
+      </div>
+    </article>
+  );
+}
+
+/** Courbe miniature tracee a l'apparition. Sans serie, une tendance montante neutre. */
+function Etincelle({ serie }: { serie?: number[] }) {
+  const pts = serie && serie.length > 1 ? serie : [3, 4, 3.6, 5, 4.8, 6, 6.6];
+  const min = Math.min(...pts); const max = Math.max(...pts); const amp = max - min || 1;
+  const d = pts.map((v, i) => `${i ? 'L' : 'M'}${(i / (pts.length - 1)) * 100} ${26 - ((v - min) / amp) * 22}`).join(' ');
+  return <svg className="st-et" viewBox="0 0 100 30" width="110" height="34" aria-hidden="true"><path d={d} /></svg>;
 }
 
 export function StatTuile({ legende, valeur, unite, delta, ton = 'succes', note, serie }: {
   legende: string; valeur: ReactNode; unite?: string; delta?: string; ton?: Ton; note?: string; serie?: number[];
 }) {
-  return <StatCard titre={legende} valeur={<>{valeur}{unite && <small> {unite}</small>}</>} note={note} variation={delta} ton={ton === 'danger' || ton === 'succes' ? ton : 'neutre'} serie={serie} />;
+  return (
+    <article className="st inclinable">
+      <span className="st-leg">{legende}</span>
+      <strong className="st-v">{valeur}{unite && <small> {unite}</small>}</strong>
+      {note && <p className="st-note">{note}</p>}
+      <div className="st-b">{delta ? <Pastille ton={ton}>{delta}</Pastille> : <span />}<Etincelle serie={serie} /></div>
+    </article>
+  );
 }
 
 /** Frise de trajet (reference « Ride complete ») : heures, duree, piste avec disque ambre en mouvement. */

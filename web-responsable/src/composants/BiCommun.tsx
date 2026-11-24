@@ -1,5 +1,5 @@
 import { type FormEvent } from 'react';
-import { StatCard } from './ui';
+import { CarteVille3D } from './CarteVille3D';
 import { valeurBi } from '../../../mobile/packages/shared/src/bi';
 
 export function FiltresBi({ debut, fin, onDebut, onFin, onValider, chargement, children }: {
@@ -15,5 +15,5 @@ export function FiltresBi({ debut, fin, onDebut, onFin, onValider, chargement, c
   </form>;
 }
 export function Indicateur({ titre, valeur, unite = '', legende }: { titre: string; valeur: number | null; unite?: string; legende: string }) {
-  return <StatCard titre={titre} valeur={valeurBi(valeur, unite)} note={legende} />;
+  return <article className="bi-indicateur"><CarteVille3D /><h2>{titre}</h2><strong>{valeurBi(valeur, unite)}</strong><p>{legende}</p></article>;
 }
