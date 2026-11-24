@@ -1,0 +1,65 @@
+{
+  "mode": "Frontend avec réponses API simulées ; backend non testé",
+  "largeur": 390,
+  "erreurs": [],
+  "resultats": [
+    {
+      "route": "/api/auth/config",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/auth/login",
+      "methode": "POST",
+      "corps": {
+        "email": "demo@example.test",
+        "motDePasse": "fixture-password"
+      }
+    },
+    {
+      "route": "/api/me",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/boutique",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commerce",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/produits",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/ventes",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commerce",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes",
+      "methode": "GET",
+      "corps": {}
+    },
+    {
+      "route": "/api/partenaire/commandes/101",
+      "methode": "GET",
+      "corps": {}
+    }
+  ]
+}
