@@ -80,6 +80,7 @@ async function main() {
   for (const [onglet, attendu, fichier] of [['Catalogue', 'Couscous maison', '02-catalogue'], ['Ventes', 'Mes ventes', '03-ventes'], ['Commerce', 'Maison du Jasmin', '04-profil']]) {
     await cliquer(onglet); await texte(attendu); await capture(fichier);
     if (onglet === 'Catalogue' && (phase === 'etape3' || phase === 'apres')) await verifierCatalogue({ evaluer, attendre, texte, cliquer, remplir, capture });
+    if (onglet === 'Ventes' && (phase === 'etape4' || phase === 'apres')) await verifierVentes({ evaluer, attendre, texte, cliquer, remplir, capture });
   }
   await cliquer('Commandes');
   await evaluer("[...document.querySelectorAll('[role=button]')].find(e=>e.getAttribute('aria-label')?.includes('FP-00101')).click()");
@@ -134,5 +135,22 @@ async function verifierCatalogue({ evaluer, attendre, texte, cliquer, remplir, c
   await capture('08-formulaire-produit'); await cliquer('Enregistrer le produit'); await texte('Produit enregistré');
   assert.ok(await evaluer("window.__verification.produits.some(p=>p.nom==='Salade du jour'&&p.prix===9.5)"));
   console.log('OK : recherche, filtre, disponibilité optimiste avec restauration après échec, annulation et création avec validation.');
+}
+async function verifierVentes({ evaluer, attendre, texte, cliquer, remplir, capture }) {
+  await cliquer('7 jours');
+  await attendre("document.body.innerText.includes('56')&&!document.body.innerText.includes('actualisation…')");
+  await capture('09-ventes-7jours');
+  assert.ok(await evaluer("[...document.querySelectorAll('svg rect')].length>=7"));
+  await cliquer('30 jours');
+  await attendre("document.body.innerText.includes('240')&&!document.body.innerText.includes('actualisation…')");
+  await cliquer('Choisir des dates');
+  await remplir('Du (AAAA-MM-JJ)', '2026-11-99'); await cliquer('Appliquer les dates'); await texte('Saisissez les dates au format');
+  await remplir('Du (AAAA-MM-JJ)', '2026-11-20'); await remplir('Au inclus (AAAA-MM-JJ)', '2026-11-22'); await cliquer('Appliquer les dates');
+  await texte('Du 2026-11-20 au 2026-11-22');
+  await evaluer("window.__verification.echec='/ventes'");
+  await cliquer('7 jours'); await texte('Connexion interrompue');
+  await evaluer("window.__verification.echec=''");
+  await cliquer('Réessayer'); await attendre("document.body.innerText.includes('56')&&!document.body.innerText.includes('actualisation…')");
+  console.log('OK : périodes 1/7/30 jours, graphique SVG, dates validées et reprise après erreur.');
 }
 main().catch(e => { console.error(e); process.exit(1); });
