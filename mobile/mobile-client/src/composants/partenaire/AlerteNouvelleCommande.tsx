@@ -14,19 +14,20 @@ export function AlerteNouvelleCommande() {
   const t = useTheme(), { preferences, pret } = usePreferencesPartenaire(), marges = useSafeAreaInsets();
   const [file, setFile] = useState<number[]>([]), [erreurSon, setErreurSon] = useState(false);
   const recus = useRef(new Set<number>()), modeAudio = useRef<Promise<void>>(Promise.resolve());
+  const sonAutorise = useRef(false);
   const son = useAudioPlayer(SON);
   useEffect(() => {
     modeAudio.current = setAudioModeAsync({ playsInSilentMode: false, shouldPlayInBackground: false, interruptionMode: 'mixWithOthers' });
     void modeAudio.current.catch(() => setErreurSon(true));
   }, []);
-  useEffect(() => { if (!preferences.son) son.pause(); }, [preferences.son, son]);
+  useEffect(() => { sonAutorise.current = pret && preferences.son; if (!sonAutorise.current) son.pause(); }, [pret, preferences.son, son]);
   useEvenementsCommandes(e => {
     if (e.ancien !== null) { setFile(avant => avant.filter(id => id !== e.commandeId)); return; }
     if (recus.current.has(e.commandeId)) return;
     recus.current.add(e.commandeId); setFile(avant => [...avant, e.commandeId]);
     if (AppState.currentState !== 'active') return;
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
-    if (pret && preferences.son) void modeAudio.current.then(async () => { await son.seekTo(0); son.play(); }).catch(() => setErreurSon(true));
+    if (sonAutorise.current) void modeAudio.current.then(async () => { await son.seekTo(0); if (sonAutorise.current && AppState.currentState === 'active') son.play(); }).catch(() => setErreurSon(true));
   });
   if (!file.length) return null;
   return <View style={{ position: 'absolute', top: marges.top + 8, left: 12, right: 12, zIndex: 20, borderRadius: 20, backgroundColor: t.accent, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>

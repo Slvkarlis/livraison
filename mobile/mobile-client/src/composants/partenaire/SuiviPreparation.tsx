@@ -79,7 +79,7 @@ export function SuiviPreparation({ commande, onMaj }: {
         ) : null}
         <MessageErreur message={erreur} />
         <Bouton titre="Annoncer ce nouveau délai" chargement={envoi} onPress={ajuster} style={styles.bouton} />
-        <Bouton titre="Annuler" variante="discret" desactive={envoi} onPress={() => { setPanneau('actions'); setErreur(null); }} />
+        <Bouton titre="Annuler" variante="secondaire" desactive={envoi} onPress={() => { setPanneau('actions'); setErreur(null); }} />
       </Carte>
     );
   }
@@ -99,7 +99,7 @@ export function SuiviPreparation({ commande, onMaj }: {
           if (!confirmationTactile) { setConfirmationTactile(true); return; }
           void executer(() => api.marquerPrete(commande.id), 'Commande prête : le livreur peut venir la récupérer.');
         }} style={styles.bouton} />
-        <Bouton titre="Pas encore" variante="discret" desactive={envoi} onPress={() => { setPanneau('actions'); setErreur(null); }} />
+        <Bouton titre="Pas encore" variante="secondaire" desactive={envoi} onPress={() => { setPanneau('actions'); setErreur(null); }} />
       </Carte>
     );
   }
@@ -137,7 +137,7 @@ export function SuiviPreparation({ commande, onMaj }: {
       />
       <Bouton
         titre={restants > 0 ? `Ajuster le délai (${restants} restant${restants > 1 ? 's' : ''})` : 'Délai déjà ajusté 2 fois'}
-        variante="discret"
+        variante="secondaire"
         desactive={envoi || restants === 0}
         onPress={() => { setPanneau('ajuster'); setErreur(null); }}
       />

@@ -25,7 +25,7 @@ export default function DetailCommandeRecue() {
   function majAction(maj: CommandeDetail, message: string) { r.setDonnees(maj); setSucces(message); }
   return <View style={[s.page, { paddingBottom: marges.bottom }]}>
     <View style={s.entete}><Text style={s.code}>{commande.codeSuivi}</Text><Text style={s.client}>{commande.clientPrenom}</Text><Text style={s.meta}>Reçue à {formatHeure(new Date(commande.dateCreation))}{commande.zoneNom ? ` · ${commande.zoneNom}` : ''}</Text></View>
-    <PanneauCoulissant key={id} resume={<View accessibilityLiveRegion="polite" style={{ gap: 6 }}><Text style={s.statut}>{libelleStatutPartenaire(commande.statut)}</Text>{['PENDING_PARTNER', 'ACCEPTEE', 'EN_PREPARATION', 'PRETE', 'AFFECTEE'].includes(commande.statut) ? <MinuteurCommande depuis={commande.dateCreation} echeance={enCours ? commande.pretePrevueLe : null} maintenant={maintenant} /> : null}</View>}>
+    <PanneauCoulissant key={id} initial={2} resume={<View accessibilityLiveRegion="polite" style={{ gap: 6 }}><Text style={s.statut}>{libelleStatutPartenaire(commande.statut)}</Text>{['PENDING_PARTNER', 'ACCEPTEE', 'EN_PREPARATION', 'PRETE', 'AFFECTEE'].includes(commande.statut) ? <MinuteurCommande depuis={commande.dateCreation} echeance={enCours ? commande.pretePrevueLe : null} maintenant={maintenant} /> : null}</View>}>
       <ScrollView contentContainerStyle={s.contenu} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={r.chargement} onRefresh={() => void r.charger()} tintColor={t.texte} />}>
         <ErreurPartenaire message={r.erreur} horsConnexion={r.horsConnexion} reessayer={() => void r.charger()} />
         {succes ? <Text accessibilityLiveRegion="polite" style={s.succes}>{succes}</Text> : null}

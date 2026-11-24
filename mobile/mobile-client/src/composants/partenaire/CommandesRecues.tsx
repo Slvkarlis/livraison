@@ -47,7 +47,7 @@ export default function CommandesRecues() {
           <View><Text style={s.bonjour}>Bonjour {profil?.prenom}</Text><Text accessibilityRole="header" style={s.titre}>Aux commandes.</Text></View>
           <View style={s.chiffres}><View style={{ flex: 1 }}><Text style={s.valeur}>{r.donnees ? commandes.filter(c => jourTunis(new Date(c.dateCreation)) === jour).length : '—'}</Text><Text style={s.legende}>commandes du jour</Text></View><View style={{ flex: 1 }}><Text style={[s.valeur, { color: t.accent }]}>{chiffres?.jour === jour ? formatMontant(chiffres.chiffreAffaires) : '—'}</Text><Text style={s.legende}>ventes livrées · hors frais</Text></View></View>
         </View>
-        <PanneauBoutique />
+        <PanneauBoutique compact />
         {!direct ? <Text accessibilityLiveRegion="polite" style={s.aide}>Temps réel interrompu · actualisation toutes les 30 s.</Text> : null}
         {erreurVentes ? <Bouton titre="Réessayer les chiffres du jour" variante="secondaire" onPress={() => void chargerVentes()} /> : null}
         <ErreurPartenaire message={r.erreur} horsConnexion={r.horsConnexion} reessayer={() => void r.charger()} />
@@ -81,7 +81,6 @@ function NouvellePrioritaire({ resume, maintenant, onDecision }: { resume: Comma
 function styles(t: Theme) { return {
   page: { flex: 1, backgroundColor: t.fond }, liste: { padding: 16, paddingBottom: 32, flexGrow: 1 }, hero: { borderRadius: 26, padding: 20, minHeight: 180, backgroundColor: t.texte, overflow: 'hidden', justifyContent: 'space-between', gap: 14 }, ville: { position: 'absolute', top: 26, right: -20, width: 170, height: 110, opacity: 0.65 },
   ligne: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, surtitre: { color: t.fond, fontSize: 10, letterSpacing: 1, fontWeight: '800', flexShrink: 1 }, bonjour: { fontSize: 14, color: t.fond, marginBottom: 4 }, titre: { fontSize: 30, lineHeight: 36, letterSpacing: -1, fontWeight: '800', color: t.surface },
-  chiffres: { flexDirection: 'row', gap: 14, borderTopWidth: 1, borderTopColor: t.secondaire, paddingTop: 16 }, valeur: { color: t.surface, fontSize: 21, fontWeight: '800', fontVariant: ['tabular-nums'], flexShrink: 1 }, legende: { color: t.fond, fontSize: 11, lineHeight: 17, marginTop: 4 }, aide: { color: t.texte, fontSize: 13, lineHeight: 19 }, section: { color: t.texte, fontSize: 22, fontWeight: '800' }, annonce: { color: t.succes, fontSize: 15, fontWeight: '700' },
+  chiffres: { flexDirection: 'row', gap: 14, borderTopWidth: 1, borderTopColor: t.secondaire, paddingTop: 16 }, valeur: { color: t.surface, fontSize: 21, fontWeight: '800', fontVariant: ['tabular-nums'], flexShrink: 1 }, legende: { color: t.fond, fontSize: 11, lineHeight: 17, marginTop: 4 }, aide: { color: t.texte, fontSize: 13, lineHeight: 19 }, section: { color: t.texte, fontSize: 22, fontWeight: '800' }, annonce: { color: t.texte, fontSize: 15, fontWeight: '700' },
   carte: { backgroundColor: t.surface, borderRadius: 22, padding: 18, gap: 10 }, code: { color: t.texte, fontFamily: POLICE_MONO, fontSize: 16, fontWeight: '700', flexShrink: 1 }, client: { color: t.texte, fontSize: 20, fontWeight: '800' }, montant: { fontSize: 18, color: t.texte, fontFamily: POLICE_MONO, fontWeight: '700' }, pied: { borderTopWidth: 1, borderTopColor: t.bordure, paddingTop: 12 },
 } as const; }
-

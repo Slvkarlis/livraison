@@ -10,7 +10,7 @@ import { Puce } from './Puce';
 export function PanneauCoulissant({ resume, children, initial = 1, libelles = ['Résumé', 'Articles', 'Tout voir'] }: { resume: ReactNode; children: ReactNode; initial?: number; libelles?: readonly [string, string, string] }) {
   const t = useTheme(), reduit = useMouvementReduit();
   const [hauteur, setHauteur] = useState(600), [position, setPosition] = useState(initial);
-  const points = useMemo(() => [Math.max(0, hauteur - 190), Math.max(0, hauteur * 0.27), 0], [hauteur]);
+  const points = useMemo(() => [Math.max(0, hauteur - 190), Math.max(0, hauteur * 0.42), 0], [hauteur]);
   const y = useSharedValue(points[initial]), depart = useSharedValue(0);
   useEffect(() => { y.set(withTiming(points[position], { duration: reduit ? 0 : 220 })); }, [position, points, reduit, y]);
   const geste = useMemo(() => Gesture.Pan().activeOffsetY([-8, 8]).onBegin(() => { depart.set(y.get()); }).onUpdate(e => {

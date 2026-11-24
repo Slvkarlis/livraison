@@ -2,11 +2,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Bouton, Carte, Champ, EntreeAnimee, MessageErreur, api, formatMontant, nombreSaisi, useTheme, verifierProduit, type Produit } from '@fleetpulse/shared';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useRef, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, Switch, Text, View } from 'react-native';
+import { FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ErreurPartenaire, EtatPartenaire, POLICE_MONO, SquelettePartenaire, useRessourcePartenaire } from './InterfacePartenaire';
 import { PanneauCoulissant } from './PanneauCoulissant';
 import { Puce } from './Puce';
+import { InterrupteurPartenaire } from './InterrupteurPartenaire';
 
 type Filtre = 'tous' | 'disponibles' | 'rupture';
 export default function CataloguePartenaire() {
@@ -46,7 +47,7 @@ export default function CataloguePartenaire() {
       ListEmptyComponent={!r.donnees && r.chargement ? <SquelettePartenaire /> : !r.erreur ? <EtatPartenaire icone="search-outline" titre={produits.length ? 'Aucun résultat' : 'Votre première vitrine'} texte={produits.length ? 'Essayez un autre nom ou affichez tous vos produits.' : 'Ajoutez un produit pour commencer à recevoir des commandes.'} action={<Bouton titre={produits.length ? 'Effacer les filtres' : 'Ajouter mon premier produit'} onPress={() => { if (produits.length) { setRecherche(''); setFiltre('tous'); } else setEdition('nouveau'); }} />} /> : undefined}
       renderItem={({ item: p, index }) => <EntreeAnimee rang={index}><Carte style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: t.accentDoux, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: t.texte, fontSize: 24, fontWeight: '800' }}>{p.nom.charAt(0).toLocaleUpperCase('fr')}</Text></View><View style={{ flex: 1 }}><Text style={{ color: t.texte, fontSize: 18, fontWeight: '700' }}>{p.nom}</Text><Text style={{ color: t.texte, fontFamily: POLICE_MONO, fontSize: 16, marginTop: 5 }}>{formatMontant(p.prix)}</Text></View></View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 }}><Ionicons name={p.disponible ? 'checkmark-circle-outline' : 'remove-circle-outline'} size={22} color={t.texte} /><Text style={{ flex: 1, color: t.texte, fontSize: 15 }}>{p.disponible ? 'Disponible' : 'Rupture de stock'}</Text><View style={{ minHeight: 48, justifyContent: 'center' }}><Switch accessibilityRole="switch" accessibilityLabel={`Disponible : ${p.nom}`} value={p.disponible} disabled={occupes.has(p.id)} onValueChange={valeur => void disponibilite(p, valeur)} trackColor={{ false: t.bordure, true: t.accent }} thumbColor={t.surface} /></View></View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 }}><Ionicons name={p.disponible ? 'checkmark-circle-outline' : 'remove-circle-outline'} size={22} color={t.texte} /><Text style={{ flex: 1, color: t.texte, fontSize: 15 }}>{p.disponible ? 'Disponible' : 'Rupture de stock'}</Text><InterrupteurPartenaire libelle={`Disponible : ${p.nom}`} valeur={p.disponible} desactive={occupes.has(p.id)} onChanger={valeur => void disponibilite(p, valeur)} /></View>
         <View style={{ flexDirection: 'row', gap: 8 }}><View style={{ flex: 1 }}><Bouton titre="Modifier" variante="secondaire" desactive={occupes.has(p.id)} onPress={() => setEdition(p)} /></View>{p.disponible ? <View style={{ flex: 1 }}><Bouton titre="Rupture de stock" variante="secondaire" desactive={occupes.has(p.id)} onPress={() => void disponibilite(p, false)} /></View> : null}</View>
       </Carte></EntreeAnimee>} />
     <View style={{ position: 'absolute', bottom: 16, right: 16, left: 90 }}><Bouton titre="Nouveau produit" onPress={() => setEdition('nouveau')} icone={<Ionicons name="add" size={22} color={t.surAccent} />} style={{ minHeight: 60 }} /></View>
@@ -74,9 +75,9 @@ function FormulaireProduit({ produit, fermer, enregistrer }: { produit: Produit 
       <View style={{ height: '94%', paddingBottom: marges.bottom, backgroundColor: t.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28 }} accessibilityViewIsModal onAccessibilityEscape={() => { if (!envoi) fermer(); }}>
         <PanneauCoulissant initial={2} libelles={['Replier', 'Formulaire', 'Tout voir']} resume={<Text accessibilityRole="header" style={{ color: t.texte, fontSize: 21, fontWeight: '800' }}>{produit ? 'Modifier le produit' : 'Nouveau produit'}</Text>}>
           <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, gap: 12 }} keyboardShouldPersistTaps="handled">
-            <Champ libelle="Nom du produit" value={nom} onChangeText={setNom} erreur={erreurNom} maxLength={120} editable={!envoi} autoFocus returnKeyType="next" />
-            <Champ libelle="Prix en DT" value={prix} onChangeText={setPrix} erreur={erreurPrix} keyboardType="decimal-pad" maxLength={12} editable={!envoi} placeholder="Ex. 12,500" />
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 }}><Text style={{ color: t.texte, fontSize: 16 }}>Disponible à la commande</Text><Switch accessibilityRole="switch" accessibilityLabel="Disponible à la commande" value={disponible} onValueChange={setDisponible} disabled={envoi} trackColor={{ false: t.bordure, true: t.accent }} thumbColor={t.surface} /></View>
+            <Champ libelle="Nom du produit" value={nom} onChangeText={texte => { setNom(texte); setErreur(null); }} erreur={erreurNom} maxLength={120} editable={!envoi} autoFocus returnKeyType="next" />
+            <Champ libelle="Prix en DT" value={prix} onChangeText={texte => { setPrix(texte); setErreur(null); }} erreur={erreurPrix} keyboardType="decimal-pad" maxLength={12} editable={!envoi} placeholder="Ex. 12,500" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 }}><Text style={{ color: t.texte, fontSize: 16 }}>Disponible à la commande</Text><InterrupteurPartenaire libelle="Disponible à la commande" valeur={disponible} onChanger={setDisponible} desactive={envoi} /></View>
             <MessageErreur message={erreur} /><Bouton titre="Enregistrer le produit" chargement={envoi} onPress={() => void sauver()} style={{ minHeight: 60 }} /><Bouton titre="Annuler" variante="secondaire" desactive={envoi} onPress={fermer} />
           </ScrollView>
         </PanneauCoulissant>

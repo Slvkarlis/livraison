@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Animated, Easing, Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Path, Polygon, Rect, Stop } from 'react-native-svg';
 import { useMouvementReduit as usePreferenceMouvement } from './mouvement';
+import { useTheme } from './ui';
 
 /*
  * Ville 3D (conception Doop « CityMap3D », version mobile) : quartier en projection isometrique,
@@ -63,7 +64,7 @@ export function Ville3D({ ton = 'nuit', style, progression = 0.55, fondu, statiq
   statique?: boolean;
   pointsActifs?: number;
 }) {
-  const c = TONS[ton];
+  const c = TONS[ton], theme = useTheme();
   // Identifiants de degrade propres a chaque ville : sur le web, deux villes ne doivent pas partager « #fond »
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const idFond = `fond-${uid}`; const idFondu = `fondu-${uid}`;
@@ -167,7 +168,7 @@ export function Ville3D({ ton = 'nuit', style, progression = 0.55, fondu, statiq
           <Circle cx={px} cy={py} r={12} fill="#F2B233" stroke="#15171A" strokeWidth={4} />
           {Array.from({ length: Math.min(8, Math.max(0, pointsActifs)) }, (_, i) => {
             const [x, y] = projeter(100 + (i % 4) * 100, 200 + Math.floor(i / 4) * 200);
-            return <Circle key={`commande-${i}`} cx={x} cy={y} r={8} fill="#F2B233" stroke={c.rue} strokeWidth={3} />;
+            return <Circle key={`commande-${i}`} cx={x} cy={y} r={8} fill={theme.accent} stroke={c.rue} strokeWidth={3} />;
           })}
           {fondu ? <Rect x="0" y="0" width="800" height="520" fill={`url(#${idFondu})`} /> : null}
         </Svg>

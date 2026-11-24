@@ -28,6 +28,7 @@ function fixtures() {
     const route = url.pathname, methode = options.method || 'GET';
     const corps = options.body ? JSON.parse(options.body) : {};
     window.__verification.requetes.push({ route, methode, corps });
+    if (window.__verification.echecReseau && route.includes(window.__verification.echecReseau)) throw new TypeError('Failed to fetch');
     if (window.__verification.delai && route.includes('/produits/') && methode === 'PUT') await new Promise(r => setTimeout(r, window.__verification.delai));
     if (window.__verification.echec && route.includes(window.__verification.echec)) return new Response(JSON.stringify({ message: 'Connexion interrompue. Réessayez.' }), { status: 503 });
     let data;
@@ -59,7 +60,7 @@ function fixtures() {
 }
 async function main() {
   const cibles = await fetch('http://127.0.0.1:9235/json').then(r => r.json());
-  const cible = cibles.find(t => t.type === 'page');
+  const cible = cibles.find(t => t.type === 'page' && t.url.includes('localhost:8092')) ?? cibles.find(t => t.type === 'page');
   const ws = new WebSocket(cible.webSocketDebuggerUrl);
   await new Promise(resolve => ws.addEventListener('open', resolve, { once: true }));
   let sequence = 0; const attente = new Map(); const erreurs = [];
@@ -71,21 +72,34 @@ async function main() {
   const cliquer = async t => { await evaluer("(()=>{const e=[...document.querySelectorAll('[role=button],[role=tab],button')].filter(e=>e.getBoundingClientRect().width>0).find(e=>e.innerText===" + JSON.stringify(t) + "||e.getAttribute('aria-label')===" + JSON.stringify(t) + "||(e.getAttribute('role')==='tab'&&e.innerText.endsWith(" + JSON.stringify(t) + ")));if(!e)throw Error('Bouton absent : '+" + JSON.stringify(t) + ");e.scrollIntoView({block:'nearest'});e.click();})()"); };
   const remplir = (label, valeur) => evaluer("(()=>{const e=document.querySelector('input[aria-label=" + JSON.stringify(label) + "]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e," + JSON.stringify(valeur) + ");e.dispatchEvent(new Event('input',{bubbles:true}));})()");
   const capture = async nom => { await new Promise(r => setTimeout(r, 600)); const r = await cdp('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(path.join(dossier, phase + '-' + nom + '.png'), Buffer.from(r.data, 'base64')); };
-  await cdp('Page.enable'); await cdp('Runtime.enable');
+  await cdp('Page.enable');
+  // Efface uniquement les anciens événements de la session CDP (ex. rechargement pendant une édition).
+  // Les exceptions de la navigation propre ci-dessous restent toutes enregistrées et font échouer le test.
+  await cdp('Runtime.discardConsoleEntries'); await cdp('Runtime.enable');
   await cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: false });
   await cdp('Page.addScriptToEvaluateOnNewDocument', { source: '(' + fixtures.toString() + ')()' });
   await cdp('Page.navigate', { url: 'http://localhost:8092' });
   await texte('Se connecter'); await remplir('Email ou téléphone', 'demo@example.test'); await remplir('Mot de passe', 'fixture-password'); await cliquer('Se connecter');
   await texte('Commandes'); await texte('FP-00101'); await capture('01-commandes');
-  for (const [onglet, attendu, fichier] of [['Catalogue', 'Couscous maison', '02-catalogue'], ['Ventes', 'Mes ventes', '03-ventes'], ['Commerce', 'Maison du Jasmin', '04-profil']]) {
+  for (const [onglet, attendu, fichier] of [['Catalogue', 'Couscous maison', '02-catalogue'], ['Ventes', 'Mes ventes', '03-ventes'], ['Profil du commerce', 'Maison du Jasmin', '04-profil']]) {
     await cliquer(onglet); await texte(attendu); await capture(fichier);
     if (onglet === 'Catalogue' && (phase === 'etape3' || phase === 'apres')) await verifierCatalogue({ evaluer, attendre, texte, cliquer, remplir, capture });
     if (onglet === 'Ventes' && (phase === 'etape4' || phase === 'apres')) await verifierVentes({ evaluer, attendre, texte, cliquer, remplir, capture });
+    if (onglet === 'Profil du commerce' && phase === 'apres') await verifierProfil({ evaluer, attendre, texte, cliquer, capture });
   }
   await cliquer('Commandes');
   await evaluer("[...document.querySelectorAll('[role=button]')].find(e=>e.getAttribute('aria-label')?.includes('FP-00101')).click()");
   await texte('Sans piment'); await capture('05-detail');
   if (phase === 'apres' || phase === 'etape2') await verifierActions({ cdp, evaluer, attendre, texte, cliquer, remplir, capture });
+  if (phase === 'apres') {
+    await cdp('Page.navigate', { url: 'http://localhost:8092' });
+    await texte('Se connecter'); await remplir('Email ou téléphone', 'demo@example.test'); await remplir('Mot de passe', 'fixture-password'); await cliquer('Se connecter');
+    await texte('Aux commandes.'); await cliquer('Profil du commerce'); await texte('Confort de travail');
+    assert.equal(await evaluer("[...document.querySelectorAll('[aria-label=\"Son des nouvelles commandes\"]')].find(e=>e.getBoundingClientRect().width>0).getAttribute('aria-checked')"), 'false');
+    assert.equal(await evaluer("[...document.querySelectorAll('[aria-label=\"Animations réduites\"]')].find(e=>e.getBoundingClientRect().width>0).getAttribute('aria-checked')"), 'true');
+    await cliquer('Se déconnecter'); await texte('Se connecter');
+    console.log('OK : préférences conservées après rechargement et reconnexion ; déconnexion opérationnelle dans le frontend.');
+  }
   fs.writeFileSync(path.join(dossier, phase + '-resultats.json'), JSON.stringify({ mode: 'Frontend avec réponses API simulées ; backend non testé', largeur: 390, erreurs, resultats: await evaluer('window.__verification.requetes') }, null, 2));
   ws.close(); assert.deepEqual(erreurs, []); console.log('OK : 4 onglets et détail à 390 px, captures ' + phase + ', aucune exception JavaScript.');
 }
@@ -123,9 +137,9 @@ async function verifierCatalogue({ evaluer, attendre, texte, cliquer, remplir, c
   await cliquer('Tous');
   await evaluer("window.__verification.echec='/produits/1';window.__verification.delai=1200");
   await evaluer("document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').click()");
-  await attendre("!document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').checked");
+  await attendre("document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').getAttribute('aria-checked')==='false'");
   await texte('La disponibilité précédente est rétablie');
-  assert.equal(await evaluer("document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').checked"), true);
+  assert.equal(await evaluer("document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').getAttribute('aria-checked')"), 'true');
   await evaluer("window.__verification.echec='';window.__verification.delai=0");
   await evaluer("document.querySelector('[aria-label=\"Disponible : Couscous maison\"]').click()");
   await texte('Couscous maison : rupture');
@@ -152,5 +166,23 @@ async function verifierVentes({ evaluer, attendre, texte, cliquer, remplir, capt
   await evaluer("window.__verification.echec=''");
   await cliquer('Réessayer'); await attendre("document.body.innerText.includes('56')&&!document.body.innerText.includes('actualisation…')");
   console.log('OK : périodes 1/7/30 jours, graphique SVG, dates validées et reprise après erreur.');
+}
+async function verifierProfil({ evaluer, attendre, texte, cliquer, capture }) {
+  await texte('09:00 – 22:00');
+  const basculer = async (libelle, valeur) => {
+    await evaluer("(()=>{const e=[...document.querySelectorAll('[aria-label=\"" + libelle + "\"]')].find(e=>e.getBoundingClientRect().width>0);e.scrollIntoView({block:'center'});if((e.getAttribute('aria-checked')==='true')!==" + valeur + ")e.click()})()");
+    await attendre("[...document.querySelectorAll('[aria-label=\"" + libelle + "\"]')].find(e=>e.getBoundingClientRect().width>0).getAttribute('aria-checked')==='" + valeur + "'");
+  };
+  await basculer('Son des nouvelles commandes', false);
+  await attendre("JSON.parse(localStorage.getItem('fleetpulse.partenaire.preferences.7')).son===false");
+  await basculer('Animations réduites', true);
+  await attendre("JSON.parse(localStorage.getItem('fleetpulse.partenaire.preferences.7')).mouvementReduit===true");
+  await capture('10-preferences');
+  await evaluer("window.__verification.echecReseau='/partenaire/commandes'");
+  await cliquer('Commandes'); await texte('Hors connexion, nouvelle tentative');
+  await capture('11-hors-connexion');
+  await evaluer("window.__verification.echecReseau=''");
+  await cliquer('Réessayer'); await attendre("!document.body.innerText.includes('Hors connexion, nouvelle tentative')");
+  console.log('OK : horaires, préférences persistées et bandeau hors connexion avec reprise.');
 }
 main().catch(e => { console.error(e); process.exit(1); });

@@ -3,6 +3,7 @@ import { ApiError, Bouton, EntreeAnimee, useMouvementReduit, useStyles, useTheme
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode, type SetStateAction } from 'react';
 import { Animated, AppState, Platform, Text, View } from 'react-native';
+import { AnimationEtat } from './AnimationEtat';
 
 export const POLICE_MONO = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 
@@ -55,7 +56,7 @@ export function SquelettePartenaire() {
 export function EtatPartenaire({ icone = 'receipt-outline', titre, texte, action }: { icone?: keyof typeof Ionicons.glyphMap; titre: string; texte: string; action?: ReactNode }) {
   const t = useTheme();
   return <EntreeAnimee><View style={{ alignItems: 'center', gap: 12, padding: 24 }}>
-    <View style={{ padding: 20, backgroundColor: t.accentDoux, borderRadius: 32 }}><Ionicons name={icone} size={36} color={t.texte} /></View>
+    <View style={{ padding: 20, backgroundColor: t.accentDoux, borderRadius: 32 }}>{icone === 'search-outline' ? <AnimationEtat etat="vide" /> : <Ionicons name={icone} size={36} color={t.texte} />}</View>
     <Text accessibilityRole="header" style={{ fontSize: 20, fontWeight: '800', color: t.texte, textAlign: 'center' }}>{titre}</Text>
     <Text style={{ fontSize: 15, lineHeight: 22, color: t.texte, textAlign: 'center' }}>{texte}</Text>{action}
   </View></EntreeAnimee>;

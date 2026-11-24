@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Animated, Easing, PanResponder, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, PanResponder, Text, View } from 'react-native';
 import { useMouvementReduit } from './mouvement';
+import { useStyles, useTheme, type Theme } from './ui';
 
 const POUCE = 52;
 const MARGE = 4;
@@ -19,6 +20,7 @@ export function GlisserPourConfirmer({ libelle, onConfirmer, desactive = false, 
   /** Icone du pouce (une fleche par defaut). */
   icone?: ReactNode;
 }) {
+  const theme = useTheme(), styles = useStyles(fabriqueStyles);
   const [largeur, setLargeur] = useState(0);
   const [position] = useState(() => new Animated.Value(0));
   const [reflet] = useState(() => new Animated.Value(0));
@@ -40,8 +42,8 @@ export function GlisserPourConfirmer({ libelle, onConfirmer, desactive = false, 
 
   // Fin d'envoi (succes ou echec) : le pouce revient au depart
   useEffect(() => {
-    if (!chargement) Animated.spring(position, { toValue: 0, useNativeDriver: false, bounciness: 6 }).start();
-  }, [chargement, position]);
+    if (!chargement) { if (reduit) position.setValue(0); else Animated.spring(position, { toValue: 0, useNativeDriver: false, bounciness: 6 }).start(); }
+  }, [chargement, position, reduit]);
 
   const geste = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => !bloque,
@@ -50,13 +52,13 @@ export function GlisserPourConfirmer({ libelle, onConfirmer, desactive = false, 
     onPanResponderMove: (_e, g) => position.setValue(Math.max(0, Math.min(course, g.dx))),
     onPanResponderRelease: (_e, g) => {
       if (course > 0 && g.dx >= course * SEUIL) {
-        Animated.timing(position, { toValue: course, duration: 140, useNativeDriver: false }).start(() => onConfirmer());
+        Animated.timing(position, { toValue: course, duration: reduit ? 0 : 140, useNativeDriver: false }).start(() => onConfirmer());
       } else {
         Animated.spring(position, { toValue: 0, useNativeDriver: false, bounciness: 8 }).start();
       }
     },
     onPanResponderTerminate: () => Animated.spring(position, { toValue: 0, useNativeDriver: false }).start(),
-  }), [bloque, course, onConfirmer, position]);
+  }), [bloque, course, onConfirmer, position, reduit]);
 
   const max = Math.max(1, course);
   return (
@@ -81,21 +83,21 @@ export function GlisserPourConfirmer({ libelle, onConfirmer, desactive = false, 
         ) : null}
       </Animated.View>
       <Animated.View {...geste.panHandlers} style={[styles.pouce, desactive && styles.pouceInactif, { transform: [{ translateX: position }] }]}>
-        {chargement ? <ActivityIndicator color="#15171A" /> : (icone ?? <Text style={[styles.fleche, desactive && styles.libelleInactif]}>→</Text>)}
+        {chargement ? <ActivityIndicator color={theme.surAccent} /> : (icone ?? <Text style={[styles.fleche, desactive && styles.libelleInactif]}>→</Text>)}
       </Animated.View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  piste: { height: POUCE + MARGE * 2, borderRadius: 999, backgroundColor: '#2A2B2F', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(242,178,51,0.35)' },
-  pisteInactive: { borderColor: 'rgba(255,255,255,0.08)' },
-  rempli: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999, backgroundColor: 'rgba(242,178,51,0.22)' },
+function fabriqueStyles(t: Theme) { return {
+  piste: { height: POUCE + MARGE * 2, borderRadius: 999, backgroundColor: t.sombre ? t.surfaceAlt : t.texte, justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: t.accent },
+  pisteInactive: { borderColor: t.bordure },
+  rempli: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999, backgroundColor: t.accent, opacity: 0.22 },
   libelleCadre: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center', paddingLeft: POUCE, overflow: 'hidden' },
-  libelle: { color: '#F4F3EF', fontSize: 15, fontWeight: '700', letterSpacing: 0.2 },
-  libelleInactif: { color: '#6B6F76' },
-  reflet: { position: 'absolute', top: 0, bottom: 0, left: 0, width: 46, backgroundColor: 'rgba(255,255,255,0.10)' },
-  pouce: { position: 'absolute', left: MARGE, width: POUCE, height: POUCE, borderRadius: POUCE / 2, backgroundColor: '#F2B233', alignItems: 'center', justifyContent: 'center', shadowColor: '#F2B233', shadowOpacity: 0.45, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
-  fleche: { fontSize: 24, fontWeight: '800', color: '#15171A', marginTop: -2 },
-  pouceInactif: { backgroundColor: '#3A3C42', shadowOpacity: 0, elevation: 0 },
-});
+  libelle: { color: t.sombre ? t.texte : t.surface, fontSize: 15, fontWeight: '700', letterSpacing: 0.2 },
+  libelleInactif: { color: t.secondaire },
+  reflet: { position: 'absolute', top: 0, bottom: 0, left: 0, width: 46, backgroundColor: t.surface, opacity: 0.1 },
+  pouce: { position: 'absolute', left: MARGE, width: POUCE, height: POUCE, borderRadius: POUCE / 2, backgroundColor: t.accent, alignItems: 'center', justifyContent: 'center', shadowColor: t.accent, shadowOpacity: 0.45, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  fleche: { fontSize: 24, fontWeight: '800', color: t.surAccent, marginTop: -2 },
+  pouceInactif: { backgroundColor: t.bordure, shadowOpacity: 0, elevation: 0 },
+} as const; }

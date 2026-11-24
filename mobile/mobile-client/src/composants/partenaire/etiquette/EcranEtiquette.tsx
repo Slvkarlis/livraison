@@ -105,5 +105,5 @@ function fabriqueStyles(theme: Theme) { return {
   aide: { fontSize: 13, color: theme.secondaire, textAlign: 'center' },
   client: { fontSize: 17, fontWeight: '700', color: theme.texte, marginTop: 6 },
   bouton: { marginTop: 20 },
-  note: { fontSize: 13, color: theme.secondaire, textAlign: 'center', marginTop: 12 },
+  note: { fontSize: 13, color: theme.texte, textAlign: 'center', marginTop: 12 },
 } as const; }
