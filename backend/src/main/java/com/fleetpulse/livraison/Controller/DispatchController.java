@@ -20,10 +20,18 @@ import org.springframework.web.bind.annotation.*;
 })
 public class DispatchController {
     private final DispatchService dispatch;
+    private final com.fleetpulse.livraison.Repository.PartenaireRepository partenaires;
 
     @GetMapping
     @Operation(summary = "Superviser le dispatch", description = "Commandes prêtes sans livreur (alerte au-delà du délai maximal de recherche), lots proposés ou en cours avec l'historique des offres, livreurs disponibles avec leur charge.")
     public SupervisionVue supervision() { return dispatch.supervision(); }
+
+    @GetMapping("/partenaires")
+    @Operation(summary = "Commerces sur la carte", description = "Partenaires géolocalisés (nom, catégorie, adresse, zone, ouvert) pour la carte de suivi du responsable. Lecture seule.")
+    public java.util.List<PartenaireCarteVue> partenaires() {
+        return partenaires.findAll().stream().filter(p -> p.getLatitude() != null && p.getLongitude() != null)
+                .map(PartenaireCarteVue::from).toList();
+    }
 
     @PutMapping("/commandes/{id}/forcer")
     @Operation(summary = "Forcer une assignation", description = "Commande PRETE sans livreur uniquement. livreurId et motif (5 à 300 caractères) obligatoires ; l'offre en cours est retirée, l'action est historisée et auditée (AFFECTATION_FORCEE).")

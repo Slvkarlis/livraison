@@ -12,6 +12,7 @@ export function CarteItineraire({ lot }: { lot: LotLivreur }) {
         <Text style={styles.titre}>Itinéraire du lot n°{lot.id}</Text>
       </View>
       <Text style={styles.resume}>{resumeOffre({ nbCommandes: lot.commandes.length, distanceKm: lot.distanceKm, dureeMinutes: lot.dureeMinutes })}</Text>
+      {lot.source === 'QUARTIER' ? <Text style={styles.titre}>Groupe de quartier</Text> : null}
       {lot.etapes.map((e) => (
         <View key={e.ordre} style={styles.ligne}>
           <Ionicons name={e.type === 'COLLECTE' ? 'storefront-outline' : 'home-outline'} size={14} color={theme.secondaire} />

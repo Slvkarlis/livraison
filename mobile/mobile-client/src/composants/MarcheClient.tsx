@@ -7,10 +7,14 @@ import { api, ApiError, Bouton, Carte, Champ, EntreeAnimee, GlisserPourConfirmer
   type Adresse, type Commerce, type Produit, type DevisCommande, type PanierEnvoi, type Livraison } from '@fleetpulse/shared';
 import { definirAdresse, useAdresseChoisie } from '../brouillon';
 import { useMarche } from '../marche-session';
+import { BandeauQuartier } from './BandeauQuartier';
+import * as Linking from 'expo-linking';
 
 export default function MarcheClient() {
   const t = useTheme();
   const { panier, changer, attente, confirmer } = useMarche();
+  const [modePaiement, setModePaiement] = useState<'COD' | 'CARTE'>('COD'), [carteActive, setCarteActive] = useState(false);
+  useFocusEffect(useCallback(() => { api.carteQuartier().then(c => setCarteActive(c.active)).catch(() => setCarteActive(false)); }, []));
   const [adresses, setAdresses] = useState<Adresse[]>([]), [adresseId, choisir] = useState<number | null>(null);
   const [edition, setEdition] = useState<number | null>(null);
   const [libelle, setLibelle] = useState('Maison'), [adresse, setAdresse] = useState('');
@@ -21,7 +25,7 @@ export default function MarcheClient() {
   const [recherche, setRecherche] = useState(''), [categorie, setCategorie] = useState('');
   const [devisCalcule, setDevis] = useState<DevisCommande | null>(null), [remplacement, remplacer] = useState<Produit | null>(null);
   const [devisPour, setDevisPour] = useState('');
-  const empreintePanier = JSON.stringify({ panier, adresseId, adresses });
+  const empreintePanier = JSON.stringify({ panier, adresseId, adresses, modePaiement });
   const devis = devisPour === empreintePanier ? devisCalcule : null;
   const [positionRecue, setPositionRecue] = useState(position);
   if (position !== positionRecue) {
@@ -65,7 +69,7 @@ export default function MarcheClient() {
     try { const r = ajouterProduit(panier, produit, confirme); if (r.confirmation) remplacer(produit); else { changer(r.panier); remplacer(null); setSucces('Produit ajouté au panier.'); } }
     catch (e) { setErreur((e as Error).message); }
   }
-  function corps(): PanierEnvoi { return { partenaireId: panier.partenaireId!, adresseId: adresseId!, lignes: panier.lignes, notes: panier.notes }; }
+  function corps(): PanierEnvoi { return { partenaireId: panier.partenaireId!, adresseId: adresseId!, lignes: panier.lignes, notes: panier.notes, modePaiement }; }
   async function calculer() {
     const invalide = verifierPanier(panier);
     if (invalide || !adresseId) { setErreur(invalide ?? 'Choisissez une adresse.'); return; }
@@ -79,7 +83,8 @@ export default function MarcheClient() {
     confirmer(requete);
     try {
       const commande = await api.commander<Livraison>(requete); confirmer(null); changer(panierVide()); setDevis(null);
-      router.replace({ pathname: '/commande/[id]', params: { id: String(commande.id), message: 'Commande COD enregistrée. En attente du partenaire.' } });
+      router.replace({ pathname: '/commande/[id]', params: { id: String(commande.id), message: modePaiement === 'CARTE' ? 'Autorisez le paiement carte. Seul le prix final sera débité après la fermeture du groupe.' : 'Commande COD enregistrée. En attente du partenaire.' } });
+      if (commande.urlPaiementCarte) await Linking.openURL(commande.urlPaiementCarte);
     } catch (e) {
       setErreur((e as Error).message);
       if (e instanceof ApiError && e.status >= 400 && e.status < 500 && e.status !== 401) { confirmer(null); setDevis(null); }
@@ -96,7 +101,7 @@ export default function MarcheClient() {
         <Pilule texte={nbArticles ? `${nbArticles} article${nbArticles > 1 ? 's' : ''} au panier` : 'Paiement à la livraison'} ton="verre" pulse={nbArticles > 0} />
         <View>
           <Text style={styles.heroTitre}>Commander</Text>
-          <Text style={styles.heroSous}>Articles et livraison, à régler en espèces à l’arrivée.</Text>
+          <Text style={styles.heroSous}>{modePaiement === 'CARTE' ? 'Autorisez le montant annoncé. Seul le prix final sera débité.' : 'Articles et livraison, à régler en espèces à l’arrivée.'}</Text>
           <View style={styles.progression}>
             {['Adresse', 'Commerce', 'Panier', 'Confirmer'].map((nom, i) => (
               <View key={nom} style={styles.progressionEtape}>
@@ -109,6 +114,8 @@ export default function MarcheClient() {
       </View>
     </EntreeAnimee>
     <MessageErreur message={erreur} />
+    {carteActive ? <Carte><Text style={texte}>Paiement</Text><Bouton titre={modePaiement === 'COD' ? 'Espèces sélectionnées · choisir la carte' : 'Carte sélectionnée · choisir les espèces'} variante="secondaire" desactive={bloque} onPress={() => setModePaiement(modePaiement === 'COD' ? 'CARTE' : 'COD')} /></Carte> : null}
+    <BandeauQuartier adresseId={adresseId} commerceId={selection?.id} />
     {succes ? <Text accessibilityLiveRegion="polite" style={[styles.succes, { color: t.succes }]}>{succes}</Text> : null}
     {attente ? <Carte><Text style={texte}>La confirmation attend une réponse certaine. Réessayez avec la même clé pour retrouver la commande sans doublon.</Text><Bouton titre="Réessayer la confirmation" onPress={() => void commander()} chargement={envoi} /></Carte> : null}
 
@@ -153,6 +160,7 @@ export default function MarcheClient() {
     {remplacement ? <Carte><Text accessibilityRole="alert" style={texte}>Ce produit appartient à un autre partenaire. Vider le panier et le remplacer ?</Text><Bouton titre="Vider et ajouter" desactive={bloque} onPress={() => ajouter(remplacement, true)} /><Bouton titre="Garder mon panier" variante="secondaire" onPress={() => remplacer(null)} /></Carte> : null}
 
     <EntreeAnimee rang={3}><Carte style={styles.carte}><Etape n={3} titre="Mon panier" fait={!!panier.lignes.length} />
+      {devis?.groupeDisponible ? <Text style={{ color: '#6D28D9', fontWeight: '800' }}>Quartier · livraison {devis.groupeDisponible.reduction === 1 ? 'gratuite' : `−${Math.round(devis.groupeDisponible.reduction * 100)} %`}</Text> : null}
       {!panier.lignes.length ? <Text style={texte}>Votre panier est vide.</Text> : null}
       {panier.lignes.map(l => <View key={l.produitId} style={[styles.ligne, { borderColor: t.bordure }]}>
         <Text style={[texte, { flex: 1 }]} numberOfLines={2}>{connus[l.produitId]?.nom ?? devis?.lignes.find(x => x.produitId === l.produitId)?.nomProduit ?? 'Produit #' + l.produitId}</Text>
@@ -170,13 +178,14 @@ export default function MarcheClient() {
     {devis ? <EntreeAnimee rang={0}><View style={styles.recap}>
       <Etape n={4} titre="Vérifier et confirmer" fait={false} sombre />
       <Text style={styles.recapCommerce}>{devis.nomPartenaire} · {devis.zoneNom}</Text>
+      {devis.groupeDisponible ? <Text style={{ color: '#DDD6FE', fontWeight: '800', marginVertical: 8 }}>Livraison de quartier · {devis.groupeDisponible.reduction === 1 ? 'gratuite' : `−${Math.round(devis.groupeDisponible.reduction * 100)} %`} · ce prix ne pourra pas augmenter</Text> : null}
       <Text style={styles.recapAdresse}>{adresses.find(a => a.id === adresseId)?.adresse}</Text>
       <View style={styles.recapLignes}>
         {devis.lignes.map(l => <View key={l.produitId} style={styles.recapLigne}><Text style={styles.recapLibelle}>{l.quantite} × {l.nomProduit}</Text><Text style={styles.recapValeur}>{formatMontant(l.sousTotal)}</Text></View>)}
         <View style={styles.recapLigne}><Text style={styles.recapLibelle}>Articles</Text><Text style={styles.recapValeur}>{formatMontant(devis.montantArticles)}</Text></View>
         <View style={styles.recapLigne}><Text style={styles.recapLibelle}>Livraison</Text><Text style={styles.recapValeur}>{formatMontant(devis.fraisLivraison)}</Text></View>
       </View>
-      <Text style={styles.recapTotalLibelle}>Total à payer à la livraison</Text>
+      <Text style={styles.recapTotalLibelle}>{modePaiement === 'CARTE' ? 'Montant maximal à autoriser par carte' : 'Total à payer à la livraison'}</Text>
       <Text style={styles.recapTotal}>{formatMontant(devis.total)}</Text>
       <GlisserPourConfirmer libelle="Glisser pour commander" chargement={envoi} desactive={bloque} onConfirmer={() => void commander()}
         icone={<Ionicons name="bag-check" size={22} color="#15171A" />} />

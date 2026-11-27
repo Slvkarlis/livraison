@@ -30,6 +30,25 @@ import org.springframework.transaction.event.TransactionalEventListener;
  */
 @Service @RequiredArgsConstructor @Transactional
 public class NotificationService {
+    @org.springframework.beans.factory.annotation.Autowired private org.springframework.context.ApplicationEventPublisher evenements;
+    public record InvitationEnvoyee(String email, Long groupeId, NotificationVue notification, List<String> jetons) { }
+
+    /** Persistée avec le quota ; diffusion et push seulement après le commit. */
+    public void inviterQuartier(Utilisateur client, Long groupeId, String texte) {
+        Notification n = notifications.save(new Notification(client, null, null, "Livraison de quartier", texte,
+                Instant.now().truncatedTo(ChronoUnit.MICROS)));
+        evenements.publishEvent(new InvitationEnvoyee(client.getEmail(), groupeId, NotificationVue.from(n),
+                appareils.findAllByUtilisateurId(client.getId()).stream().map(AppareilNotification::getJeton).toList()));
+    }
+
+    @TransactionalEventListener
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void pousserQuartier(InvitationEnvoyee e) {
+        try {
+            for (String invalide : push.envoyer(e.jetons(), e.notification().titre(), e.notification().message(), Map.of("groupeQuartierId", e.groupeId())))
+                appareils.findByJeton(invalide).ifPresent(appareils::delete);
+        } catch (RuntimeException ex) { log.warn("Push quartier indisponible : {}", ex.getClass().getSimpleName()); }
+    }
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
     static final String FILE = "/queue/notifications";
     static final int TAILLE_BOITE = 50;

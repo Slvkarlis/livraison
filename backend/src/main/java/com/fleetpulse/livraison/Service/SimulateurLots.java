@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
  */
 @Service @RequiredArgsConstructor
 public class SimulateurLots {
+    public SimulationQuartier.Comparaison comparerQuartier(SimulationQuartier.Scenario scenario) { return SimulationQuartier.comparer(scenario); }
     static final int COMMANDES_MAX = 300;
     static final List<Double> RAYONS_KM = List.of(0.5, 1.0, 1.5, 2.0);
     static final List<Integer> FENETRES_MIN = List.of(15, 30, 45);

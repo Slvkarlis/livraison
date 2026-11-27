@@ -26,6 +26,10 @@ public class Livraison {
     @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(20)")
     private StatutPaiement statutPaiement = StatutPaiement.A_LA_LIVRAISON;
     private String stripePaymentIntentId;
+    private String sessionCarte;
+    @Column(length = 2048) private String urlPaiementCarte;
+    @Column(precision = 14, scale = 3) private java.math.BigDecimal montantAutoriseCarte;
+    private boolean carteAnnulee;
     @Enumerated(EnumType.STRING) @Column(columnDefinition = "varchar(20)")
     private TypeLivraison typeLivraison = TypeLivraison.PLANIFIEE;
     private double distanceKm;             // depot -> adresse, calculee par le systeme
@@ -82,6 +86,12 @@ public class Livraison {
     private Boolean annuleeParService;   // US-311 : annulation par le responsable (null/false : par le client)
     // Sprint 4 : lot de collectes confie a un coursier (US-403) et promesse de livraison figee a l'acceptation (US-406)
     @ManyToOne private Lot lot;
+    @ManyToOne private GroupeQuartier groupeQuartier;
+    @Column(precision = 14, scale = 3) private java.math.BigDecimal fraisNormauxQuartier;
+    @Column(precision = 14, scale = 3) private java.math.BigDecimal fraisAnnoncesQuartier;
+    @Column(precision = 14, scale = 3) private java.math.BigDecimal fraisFinauxQuartier;
+    private boolean quartierSeule; // exclue de la tournée : départ unitaire sans nouvelle fenêtre d'attente
+    private int voisinsQuartier;
     private Instant promesseLivraison;
     @Column(length = 10) private String sourcePromesse;   // IA ou REGLES
 

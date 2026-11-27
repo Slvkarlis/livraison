@@ -6,7 +6,17 @@
 
 ---
 
-## 0. Current state (end of session 2026-10-26)
+## 0. Current state (session 2026-11-27)
+
+**Session 2026-11-27 — Sprint 9, livraison de quartier (branche `sprint-9-quartier`) :**
+- [x] Groupes de 3, rayon et fenêtre configurables, devis réduit, plafonds de prix et annulation sans reprise de réduction.
+- [x] Fermeture en lot `QUARTIER` conservé par le dispatch ; tournée sous contraintes de promesses et départ individuel des exclusions/singletons.
+- [x] Invitations anonymes en base, push/temps réel, quota de deux par jour et préférence client.
+- [x] API client/admin Swagger, activation par commerce et paramètres persistants intégrés à `ParametresDispatch`.
+- [x] Bandeaux et suivi client, mention côté coursier, page Quartier avec carte Leaflet dans le responsable.
+- [x] Initialiseur et script démo ; simulateur sans lots / lots / quartier, adhésion 10/25/40 %, résultats dans [docs/SPRINT9.md](docs/SPRINT9.md).
+- [x] Carte : autorisation Stripe Checkout puis capture du prix final ; tests avec passerelle simulée, aucun départ sans paiement confirmé.
+- Vérifiés : **432 tests backend**, **82 tests de contrats partagés**, TypeScript/lint des trois apps et build Vite du web, scénario HTTP et navigateur. Détails et limites dans [docs/SPRINT9.md](docs/SPRINT9.md). Restent à vérifier sur leurs services réels : Stripe, push/appareil Expo et migration MySQL.
 
 **Session 2026-10-26 — backend: cahier des charges sprint 1 completed (branch `corrections`):**
 - Java 25 in `pom.xml` (only JDK 17 installed on this machine: verified with `-Djava.version=17`). Field injection with `@Autowired` everywhere; JWT header carries the `profil`.

@@ -50,6 +50,7 @@ export function CarteOffre({ offre, onTraitee }: { offre: OffreLot; onTraitee: (
         <Text style={[styles.compteur, restant <= 10 && { color: theme.erreur }]}>{restant} s</Text>
       </View>
       <Text style={styles.resume}>{resumeOffre(offre)} · {formatMontant(offre.montantACollecter)} à encaisser</Text>
+      {offre.source === 'QUARTIER' ? <Text style={styles.titre}>Groupe de quartier</Text> : null}
       {offre.horsZone ? (
         <Text style={styles.horsZone}>Hors de vos zones : renfort d’une zone voisine.</Text>
       ) : null}

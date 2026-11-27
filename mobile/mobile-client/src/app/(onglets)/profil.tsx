@@ -3,6 +3,7 @@ import { Bouton, Carte, EntreeAnimee, Ligne, Pilule, Ville3D, apiBaseUrl, useAut
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
+import { PreferenceQuartier } from '../../composants/PreferenceQuartier';
 
 export default function Profil() {
   const { profil, logout } = useAuth();
@@ -31,6 +32,7 @@ export default function Profil() {
         <Carte>
           <Ligne libelle="Téléphone" valeur={profil.telephone || '—'} />
           <Ligne libelle="Paiement" valeur="À la livraison" />
+          <PreferenceQuartier />
         </Carte>
         <Carte style={styles.bloc}>
           <Ligne libelle="Serveur" valeur={apiBaseUrl()} />

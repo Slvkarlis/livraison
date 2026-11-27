@@ -1,8 +1,9 @@
 import {
   SUIVI_GPS,
   api,
+  calculerItineraire,
+  echantillonner,
   enMission,
-  pointsTrajet,
   useConfiguration,
   useEvenementsCommandes,
   type Mission,
@@ -19,6 +20,8 @@ interface SuiviPosition {
   actif: boolean;
   missions: Mission[];
   dernierEnvoi: Date | null;
+  /** Derniere position connue du telephone (ou simulee) : sert au guidage routier. */
+  position: Position | null;
   /** Dernier point ecarte par le serveur (imprecis, saut GPS) ; la position precedente reste valable. */
   ecarte: string | null;
   erreur: string | null;
@@ -38,10 +41,13 @@ export function SuiviPositionProvider({ children }: { children: ReactNode }) {
   const { demonstration } = useConfiguration();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [dernierEnvoi, setDernierEnvoi] = useState<Date | null>(null);
+  const [position, setPosition] = useState<Position | null>(null);
   const [ecarte, setEcarte] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [simulation, setSimulation] = useState(false);
   const minuterie = useRef<ReturnType<typeof setInterval> | null>(null);
+  /** Invalide un calcul de trajet encore en cours quand la simulation est arretee ou relancee. */
+  const jeton = useRef(0);
   const actif = enMission(missions.map((m) => m.statut));
   const actifRef = useRef(actif);
   useEffect(() => { actifRef.current = actif; }, [actif]);
@@ -51,6 +57,7 @@ export function SuiviPositionProvider({ children }: { children: ReactNode }) {
   useEvenementsCommandes(recharger);
 
   const envoyer = useCallback(async (position: Position, precision?: number | null) => {
+    setPosition(position);
     try {
       const reponse = await api.envoyerPosition(position, precision);
       setErreur(null);
@@ -84,6 +91,7 @@ export function SuiviPositionProvider({ children }: { children: ReactNode }) {
   }, [actif, demonstration, envoyer]);
 
   const arreterSimulation = useCallback(() => {
+    jeton.current += 1;
     if (minuterie.current) clearInterval(minuterie.current);
     minuterie.current = null;
     setSimulation(false);
@@ -91,23 +99,28 @@ export function SuiviPositionProvider({ children }: { children: ReactNode }) {
 
   const simuler = useCallback((depart: Position, arrivee: Position) => {
     arreterSimulation();
-    const points = pointsTrajet(depart, arrivee);
-    let i = 0;
+    const courant = jeton.current;
     setSimulation(true);
     void envoyer(depart);
-    minuterie.current = setInterval(() => {
-      // Livraison terminee ou annulee pendant la simulation : plus rien a transmettre
-      if (!actifRef.current) { arreterSimulation(); return; }
-      void envoyer(points[i]);
-      i += 1;
-      if (i >= points.length) arreterSimulation();
-    }, PAS_SIMULATION_MS);
+    // Le trajet simule suit les rues (comme un vrai livreur) : il ne declenche pas de faux recalculs d'itineraire.
+    void calculerItineraire([depart.longitude, depart.latitude], [[arrivee.longitude, arrivee.latitude]]).then((route) => {
+      if (courant !== jeton.current) return;
+      const points: Position[] = echantillonner(route.points, 50).map(([longitude, latitude]) => ({ latitude, longitude }));
+      let i = 0;
+      minuterie.current = setInterval(() => {
+        // Livraison terminee ou annulee pendant la simulation : plus rien a transmettre
+        if (!actifRef.current) { arreterSimulation(); return; }
+        void envoyer(points[i]);
+        i += 1;
+        if (i >= points.length) arreterSimulation();
+      }, PAS_SIMULATION_MS);
+    });
   }, [arreterSimulation, envoyer]);
 
   useEffect(() => arreterSimulation, [arreterSimulation]);
 
   return (
-    <Contexte.Provider value={{ actif, missions, dernierEnvoi, ecarte, erreur, simulation, simuler, arreterSimulation }}>
+    <Contexte.Provider value={{ actif, missions, dernierEnvoi, position, ecarte, erreur, simulation, simuler, arreterSimulation }}>
       {children}
     </Contexte.Provider>
   );

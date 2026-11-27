@@ -3,6 +3,6 @@ export async function enregistrerPush(): Promise<string | null> {
   return null;
 }
 
-export function ecouterTouches(_fn: (commandeId: number) => void): () => void {
+export function ecouterTouches(_fn: (commandeId: number) => void, _ouvrirQuartier?: () => void): () => void {
   return () => {};
 }

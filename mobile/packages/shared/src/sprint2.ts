@@ -9,8 +9,8 @@ export interface Adresse extends Position { id: number; libelle: string; adresse
 export interface LignePanier { produitId: number; quantite: number }
 export interface Panier { partenaireId: number | null; lignes: LignePanier[]; notes: string }
 export interface LigneCommande { produitId: number; nomProduit: string; quantite: number; prixUnitaire: number; sousTotal: number }
-export interface DevisCommande { partenaireId: number; nomPartenaire: string; zoneNom: string; lignes: LigneCommande[]; montantArticles: number; fraisLivraison: number; total: number; empreinte: string }
-export interface PanierEnvoi { partenaireId: number; adresseId: number; lignes: LignePanier[]; notes: string; cleIdempotence?: string; devisEmpreinte?: string }
+export interface DevisCommande { partenaireId: number; nomPartenaire: string; zoneNom: string; lignes: LigneCommande[]; montantArticles: number; fraisLivraison: number; total: number; empreinte: string; groupeDisponible?: import('./quartier').GroupeQuartierProche | null }
+export interface PanierEnvoi { partenaireId: number; adresseId: number; lignes: LignePanier[]; notes: string; cleIdempotence?: string; devisEmpreinte?: string; modePaiement?: 'COD' | 'CARTE' }
 export const panierVide = (): Panier => ({ partenaireId: null, lignes: [], notes: '' });
 /** Les claviers français peuvent fournir une virgule décimale. */
 export const nombreSaisi = (valeur: string): number => Number(valeur.trim().replace(',', '.'));

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "lint": "node ../mobile/node_modules/eslint/bin/eslint.js src"
   },
   "dependencies": {
     "maplibre-gl": "^6.19.0",

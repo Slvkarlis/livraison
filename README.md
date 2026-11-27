@@ -1,11 +1,14 @@
 # FleetPulse — Livraison
 
+Le [rapport Sprint 9 — Livraison de quartier](docs/SPRINT9.md) décrit les groupes,
+les remises, les nouveaux écrans, la démo et les résultats des simulations.
+
 | Dossier | Contenu |
 |---|---|
 | `backend/` | Backend Spring Boot 4 / Java 25 / MySQL (port `8083`) |
-| `mobile/mobile-client/` | Application client (Expo / React Native) : inscription OTP, candidature partenaire, espace partenaire, commandes COD, carte OpenStreetMap |
-| `mobile/mobile-livreur/` | Application livreur (Expo / React Native) : candidature, connexion, véhicule affecté |
-| `web-responsable/` | Application web du responsable (React + Vite) : connexion, commandes, livreurs, véhicules |
+| `mobile/mobile-client/` | Application client (Expo / React Native) : inscription OTP, espace partenaire, commandes COD/carte, livraison de quartier et carte OpenStreetMap |
+| `mobile/mobile-livreur/` | Application livreur (Expo / React Native) : candidature, offres, lots et groupes de quartier, véhicule affecté |
+| `web-responsable/` | Application web du responsable (React + Vite) : commandes, dispatch, Quartier, simulations, livreurs et véhicules |
 | `mobile/packages/shared/` | Code partagé : types API, client HTTP avec refresh, session JWT, formulaires, libellés, composants UI |
 | `scripts/e2e_mobile_api.py` | Vérification de bout en bout des appels API utilisés par les apps |
 

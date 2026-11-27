@@ -45,7 +45,10 @@ public record LivraisonResponse(
         Instant recupereeLe,               // US-2B9 : colis pris en charge a la boutique
         Instant livreeLe,                  // US-306 : remise validee
         java.math.BigDecimal montantEncaisse,
-        boolean annuleeParService) {       // US-311 : annulee par le responsable, pas par le client
+        boolean annuleeParService,
+        Long groupeQuartierId, int voisinsQuartier, java.math.BigDecimal fraisNormauxQuartier,
+        java.math.BigDecimal fraisAnnoncesQuartier, Instant expirationQuartier, String urlPaiementCarte,
+        Double latitudeCommerce, Double longitudeCommerce) {   // point de collecte : itineraire livreur -> commerce -> client
 
     public static LivraisonResponse from(Livraison livraison) {
         return new LivraisonResponse(
@@ -74,7 +77,12 @@ public record LivraisonResponse(
                 livraison.heurePretePrevue(), livraison.getPreparationDebutLe(), livraison.getPreteLe(),
                 livraison.getAnnuleeLe(), livraison.getMotifAnnulation(),
                 livraison.getLivreur() == null ? null : livraison.getLivreur().getPrenom(), livraison.getRecupereeLe(),
-                livraison.getLivreeLe(), livraison.getMontantEncaisse(), Boolean.TRUE.equals(livraison.getAnnuleeParService()));
+                livraison.getLivreeLe(), livraison.getMontantEncaisse(), Boolean.TRUE.equals(livraison.getAnnuleeParService()),
+                livraison.getGroupeQuartier() == null ? null : livraison.getGroupeQuartier().getId(), livraison.getVoisinsQuartier(),
+                livraison.getFraisNormauxQuartier(), livraison.getFraisAnnoncesQuartier(),
+                livraison.getGroupeQuartier() == null ? null : livraison.getGroupeQuartier().getExpiration(), livraison.getUrlPaiementCarte(),
+                livraison.getPartenaire() == null ? null : livraison.getPartenaire().getLatitude(),
+                livraison.getPartenaire() == null ? null : livraison.getPartenaire().getLongitude());
     }
 
     /** Commandes creees avant la tarification automatique : seul montantACollecter etait renseigne. */

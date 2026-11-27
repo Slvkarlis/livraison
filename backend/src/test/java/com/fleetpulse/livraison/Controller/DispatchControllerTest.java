@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @ExtendWith(MockitoExtension.class)
 class DispatchControllerTest extends ControleurTestSupport {
-    @Mock DispatchService dispatch; @InjectMocks DispatchController controleur; MockMvc http;
+    @Mock DispatchService dispatch; @Mock com.fleetpulse.livraison.Repository.PartenaireRepository partenaires; @InjectMocks DispatchController controleur; MockMvc http;
     final SupervisionVue vue = new SupervisionVue(Instant.now(), true, false, 60, 10,
             List.of(new CommandeAttenteVue(8L, "FP-1", "Chez Amira", "Tunis", Instant.now().minusSeconds(900), 15, true, null, null)),
             List.of(), List.of(new LivreurSupervisionVue(4L, "Sami", "Livreur", 0, false, 36.8, 10.18, Instant.now())));
@@ -41,6 +41,16 @@ class DispatchControllerTest extends ControleurTestSupport {
                 .content("{\"livreurId\":4}")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DONNEES_INVALIDES"));
         http.perform(put("/api/admin/dispatch/commandes/10/forcer").principal(utilisateur).contentType("application/json")
                 .content("{\"livreurId\":4,\"motif\":\"Client prioritaire\"}")).andExpect(status().isConflict());
+    }
+
+    @Test void partenairesGeolocalisesSeulement() throws Exception {
+        var situe = new com.fleetpulse.livraison.Model.Partenaire(); situe.setNomCommerce("Chez Amira"); situe.setLatitude(36.805); situe.setLongitude(10.18); situe.setOuvert(true);
+        var sansPosition = new com.fleetpulse.livraison.Model.Partenaire(); sansPosition.setNomCommerce("Sans GPS");
+        when(partenaires.findAll()).thenReturn(List.of(situe, sansPosition));
+        http.perform(get("/api/admin/dispatch/partenaires")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].nomCommerce").value("Chez Amira"))
+                .andExpect(jsonPath("$[0].ouvert").value(true));
     }
 
     @Test void cycleManuel() throws Exception {

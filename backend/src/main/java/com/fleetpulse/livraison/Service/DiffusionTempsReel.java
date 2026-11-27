@@ -10,6 +10,16 @@ import org.springframework.transaction.event.TransactionalEventListener;
 /** Pousse chaque changement de statut au partenaire, au client et au coursier de la commande, une fois la transaction validee. */
 @Component @RequiredArgsConstructor
 public class DiffusionTempsReel {
+    @TransactionalEventListener @org.springframework.core.annotation.Order(10)
+    public void actualiserMembresQuartier(QuartierService.GroupeChange e) {
+        for (var membre : e.membres()) messages.convertAndSendToUser(membre.email(), FILE,
+                new EvenementCommande(membre.commandeId(), membre.statut(), membre.statut()));
+    }
+    @TransactionalEventListener
+    public void diffuserQuartier(NotificationService.InvitationEnvoyee e) {
+        messages.convertAndSendToUser(e.email(), "/queue/notifications", e.notification());
+        messages.convertAndSendToUser(e.email(), "/queue/quartier", java.util.Map.of("groupeId", e.groupeId()));
+    }
     static final String FILE = "/queue/commandes";
     /** US-302 : positions du coursier, pour le client dont le colis est a bord. */
     static final String FILE_POSITIONS = "/queue/positions";

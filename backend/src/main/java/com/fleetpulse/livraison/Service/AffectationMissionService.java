@@ -38,6 +38,7 @@ public class AffectationMissionService {
 
     /** Appelee quand une commande devient prete. */
     public void affecterSiPossible(Livraison commande) {
+        if (!DispatchService.paiementValide(commande)) return;
         Zone zone = commande.getPartenaire() == null ? null : commande.getPartenaire().getZone();
         if (zone == null || commande.getLivreur() != null || commande.getStatut() != StatutLivraison.PRETE) return;
         choisirLivreur(zone.getId()).ifPresent(livreur -> affecter(commande, livreur));
@@ -50,7 +51,7 @@ public class AffectationMissionService {
             if (missionsEnCours(livreur) >= MISSIONS_MAX) return;
             // Verrou : la commande peut etre prise au meme moment par un autre coursier
             Livraison commande = commandes.verrouiller(c.getId()).orElseThrow();
-            if (commande.getLivreur() == null && commande.getStatut() == StatutLivraison.PRETE) affecter(commande, livreur);
+            if (commande.getLivreur() == null && commande.getStatut() == StatutLivraison.PRETE && DispatchService.paiementValide(commande)) affecter(commande, livreur);
         }
     }
 

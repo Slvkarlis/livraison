@@ -30,7 +30,7 @@ export function NotificationsClient({ actif }: { actif: boolean }) {
       jeton = j;
     }).catch(() => {});
     const retirer = surDeconnexion(async () => { if (jeton) await api.retirerAppareil(jeton); });
-    const touches = ecouterTouches(ouvrirCommande);
+    const touches = ecouterTouches(ouvrirCommande, () => router.push('/nouvelle-commande'));
     return () => { annule = true; retirer(); touches(); };
   }, [actif]);
 
@@ -49,7 +49,7 @@ export function NotificationsClient({ actif }: { actif: boolean }) {
         accessibilityRole="alert"
         accessibilityLabel={`${bandeau.titre}. ${bandeau.message}`}
         style={styles.bandeau}
-        onPress={() => { setBandeau(null); if (commandeId) ouvrirCommande(commandeId); }}
+        onPress={() => { setBandeau(null); if (commandeId) ouvrirCommande(commandeId); else if (bandeau.titre === 'Livraison de quartier') router.push('/nouvelle-commande'); }}
       >
         <Ionicons name="notifications" size={22} color={theme.accent} />
         <View style={styles.textes}>

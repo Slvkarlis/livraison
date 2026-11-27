@@ -42,3 +42,14 @@ recalcule l'heure d'arrivée.
 
 L'itinéraire vient du serveur OSRM public (gratuit). S'il est injoignable, un tracé en rues à angles droits est
 généré localement. Aucun service payant n'est utilisé.
+# Livraison de quartier (Sprint 9)
+
+`node outils/simulation/quartier.mjs` compare les trois modes sur les mêmes 60 demandes,
+pour 10 %, 25 % et 40 % d'adhésion. Définir `API_TOKEN` (responsable opérations) et,
+si nécessaire, `API_URL`. Le calcul ne crée aucune commande réelle.
+
+`node outils/simulation/demo-quartier.mjs` crée trois commandes COD sur une **base démo**
+préparée avec `APP_DEMO_ENABLED=true`, le profil `demo` et `SPRINT9_DONNEES_DEMO=true`.
+Le script vérifie le mode démo, utilise seulement les comptes `@sprint9.demo`, marque
+les colis prêts et accepte leur lot. Le parcours avec les trois remises est automatisé
+dans `Sprint9QuartierParcoursTest`.

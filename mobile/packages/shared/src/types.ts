@@ -99,6 +99,12 @@ export interface Livraison {
   montantEncaisse: number | null;
   /** US-311 : annulee par le service client (responsable), pas par le client. */
   annuleeParService: boolean;
+  groupeQuartierId?: number | null;
+  voisinsQuartier?: number;
+  fraisNormauxQuartier?: number | null;
+  fraisAnnoncesQuartier?: number | null;
+  expirationQuartier?: string | null;
+  urlPaiementCarte?: string | null;
 }
 
 export interface LoginResponse {

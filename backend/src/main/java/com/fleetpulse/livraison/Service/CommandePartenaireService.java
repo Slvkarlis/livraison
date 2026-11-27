@@ -58,8 +58,10 @@ public class CommandePartenaireService {
         c.setNbAjustementsPreparation(0);
         // US-406 : promesse de livraison figee a l'acceptation (IA, sinon regles)
         EstimationLivraisonService.Promesse promesse = estimation.promesse(c, maintenant);
-        c.setPromesseLivraison(promesse.heure());
-        c.setSourcePromesse(promesse.source());
+        if (c.getPromesseLivraison() == null) {
+            c.setPromesseLivraison(promesse.heure());
+            c.setSourcePromesse(promesse.source());
+        }
         return vue(c);
     }
 

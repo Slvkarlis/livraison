@@ -6,6 +6,7 @@ import lombok.*;
 /** Commercant inscrit sur la marketplace ; son dossier est valide par le Responsable (US-104 / US-105). */
 @Entity @Getter @Setter @NoArgsConstructor
 public class Partenaire extends Utilisateur {
+    @Column(columnDefinition = "boolean default false") private boolean groupesQuartierActifs;
     private String nomCommerce;
     private String categorie;      // restaurant, boutique, alimentation...
     private String adresse;

@@ -2,18 +2,14 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Chargement, EntreeAnimee, FriseTrajet, MessageErreur, PanneauNotation, Pilule, Pressionnable, Ville3D, api, formatHeure, formatMontant, useEvenementsCommandes, type Mission } from '@fleetpulse/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
 import { PanneauCollecte } from './PanneauCollecte';
 import { PanneauRemise } from './PanneauRemise';
 import { DeclarerEchec } from './DeclarerEchec';
-
-/** Itineraire dans l'application de cartes du telephone (ou Google Maps dans le navigateur). */
-function lienItineraire(latitude: number | null, longitude: number | null): string | null {
-  if (latitude == null || longitude == null) return null;
-  return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-}
+import { BandeauConsigne, GuidageItineraire, useGuidage } from './GuidageItineraire';
+import { CarteNavigation } from '../navigation/CarteNavigation';
 
 // US-2B8 : detail d'une mission ; US-2B9 : collecte par scan du QR ; US-306 : encaissement et remise au client
 export default function EcranMission() {
@@ -23,6 +19,7 @@ export default function EcranMission() {
   const { height } = useWindowDimensions();
   const { top: haut } = useSafeAreaInsets();
   const hauteurCarte = Math.round(height * 0.5);
+  const guidage = useGuidage(mission);
 
   const charger = useCallback(async () => {
     try {
@@ -49,18 +46,25 @@ export default function EcranMission() {
     );
   }
 
-  const itineraire = lienItineraire(mission.latitudeCommerce, mission.longitudeCommerce);
-  const itineraireClient = lienItineraire(mission.latitudeLivraison, mission.longitudeLivraison);
   const enRoute = mission.statut === 'RECUPEREE' || mission.statut === 'A_PROXIMITE';
   const livree = mission.statut === 'LIVREE';
   const phase = livree ? 'Livrée' : enRoute ? 'Livraison' : 'Collecte';
-  const cible = enRoute ? itineraireClient : itineraire;
+  // Mission en cours avec une destination connue : vraie carte GPS (rues, itineraire, suivi du livreur).
+  const navigation = !livree && !!guidage.carte;
+  const hauteurNavigation = Math.round(height * 0.58);
   const avance = livree ? 1 : mission.statut === 'A_PROXIMITE' ? 0.85 : enRoute ? 0.55 : 0.15;
   const heureDe = (iso: string | null) => (iso ? formatHeure(new Date(iso)) : '--:--');
   return (
     <View style={styles.page}>
       {/* Carte plein ecran fixe ; la feuille blanche defile par-dessus (conception Doop « Direction 3 ») */}
-      <Ville3D ton="nuit" progression={avance} style={[styles.carte, { height: hauteurCarte + 60 }]} />
+      {navigation ? (
+        <CarteNavigation etat={guidage.carte} style={[styles.carte, { top: haut + 60, height: hauteurNavigation - haut - 40 }]} />
+      ) : (
+        <Ville3D ton="nuit" progression={avance} style={[styles.carte, { height: hauteurCarte + 60 }]} />
+      )}
+      {navigation ? (
+        <View style={[styles.consigne, { top: haut + 70 }]} pointerEvents="none"><BandeauConsigne guidage={guidage} /></View>
+      ) : null}
       <View style={[styles.barre, { paddingTop: haut + 8 }]} pointerEvents="box-none">
         <Pressionnable onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} accessibilityRole="button"
           accessibilityLabel="Retour aux missions" style={styles.rond}>
@@ -70,17 +74,10 @@ export default function EcranMission() {
         <View style={styles.rondVide} />
       </View>
 
-      <ScrollView style={StyleSheet.absoluteFill} contentContainerStyle={[styles.contenu, { paddingTop: hauteurCarte - 70 }]}
+      {/* En navigation, la feuille commence sous la carte : la carte reste manipulable (zoom, deplacement). */}
+      <ScrollView style={navigation ? [styles.feuilleNavigation, { top: hauteurNavigation }] : StyleSheet.absoluteFill}
+        contentContainerStyle={[styles.contenu, { paddingTop: navigation ? 20 : hauteurCarte - 70 }]}
         showsVerticalScrollIndicator={false}>
-        {cible && !livree ? (
-          <EntreeAnimee rang={0}>
-            <Pressionnable onPress={() => void Linking.openURL(cible)} accessibilityRole="link"
-              accessibilityLabel={enRoute ? 'Itinéraire vers le client' : 'Itinéraire vers le commerce'} style={styles.guidage}>
-              <View style={styles.guidageIcone}><Ionicons name="navigate" size={15} color={theme.surAccent} /></View>
-              <Text style={styles.guidageTexte}>{enRoute ? 'Itinéraire vers le client' : 'Itinéraire vers le commerce'}</Text>
-            </Pressionnable>
-          </EntreeAnimee>
-        ) : null}
 
         <EntreeAnimee rang={1} style={{ flexGrow: 1 }}>
           <View style={styles.feuille}>
@@ -95,6 +92,8 @@ export default function EcranMission() {
               <Fait libelle="Client" valeur={mission.clientPrenom} />
               <Fait libelle="À encaisser" valeur={formatMontant(mission.montantACollecter)} fort />
             </View>
+
+            {!livree ? <GuidageItineraire mission={mission} guidage={guidage} /> : null}
 
             <View style={styles.nuit}>
               <FriseTrajet depart={heureDe(mission.recupereeLe ?? mission.preteLe)} arrivee={heureDe(mission.livreeLe)}
@@ -152,9 +151,8 @@ const styles = StyleSheet.create({
   rond: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(27,28,31,0.72)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
   rondVide: { width: 44 },
   contenu: { flexGrow: 1 },
-  guidage: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center', marginBottom: 28, paddingVertical: 8, paddingLeft: 8, paddingRight: 14, borderRadius: 999, backgroundColor: 'rgba(27,28,31,0.78)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
-  guidageIcone: { width: 26, height: 26, borderRadius: 13, backgroundColor: theme.accent, alignItems: 'center', justifyContent: 'center' },
-  guidageTexte: { color: '#F4F3EF', fontSize: 13, fontWeight: '700' },
+  consigne: { position: 'absolute', left: 12, right: 12, zIndex: 3 },
+  feuilleNavigation: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   feuille: { minHeight: 520, backgroundColor: CLAIR.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 20, paddingTop: 26, paddingBottom: 48, gap: 6, flexGrow: 1 },
   encoche: { position: 'absolute', top: -18, alignSelf: 'center', width: 150, height: 38, borderTopLeftRadius: 75, borderTopRightRadius: 75, backgroundColor: CLAIR.surface, alignItems: 'center', paddingTop: 10 },
   poignee: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#DADAD5' },

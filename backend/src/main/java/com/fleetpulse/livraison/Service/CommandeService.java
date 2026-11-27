@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service @RequiredArgsConstructor @Transactional
 public class CommandeService {
+    @org.springframework.beans.factory.annotation.Autowired private QuartierService quartier;
+    @org.springframework.beans.factory.annotation.Autowired private PaiementQuartierService cartes;
     private final ClientRepository clients;
     private final PartenaireRepository partenaires;
     private final ProduitRepository produits;
@@ -65,12 +67,17 @@ public class CommandeService {
             lignes.add(new LigneVue(produit.getId(), produit.getNom(), a.quantite(), prix, prix.multiply(BigDecimal.valueOf(a.quantite()))));
         }
         BigDecimal articles = lignes.stream().map(LigneVue::sousTotal).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(3);
-        BigDecimal total = articles.add(zone.getFraisLivraison()).setScale(3);
+        GroupeQuartier groupe = quartier == null ? null : quartier.disponible(p, zone.getId(), adresse.getLatitude(), adresse.getLongitude(), Instant.now()).orElse(null);
+        BigDecimal frais = groupe == null ? zone.getFraisLivraison() : quartier.prixAdhesion(groupe, zone.getFraisLivraison());
+        BigDecimal total = articles.add(frais).setScale(3);
         if (articles.compareTo(minimum) < 0 || total.compareTo(maximum) > 0)
             throw new IllegalArgumentException("Montant invalide : articles minimum " + minimum + " DT, total maximum " + maximum + " DT.");
         String empreinte = hash(p.getId() + "|" + p.getNomCommerce() + "|" + zone.getId() + "|" + zone.getNom() + "|"
-                + adresse.getAdresse() + "|" + adresse.getLatitude() + "|" + adresse.getLongitude() + "|" + lignes + "|" + total);
-        return new DevisVue(p.getId(), p.getNomCommerce(), zone.getNom(), lignes, articles, zone.getFraisLivraison(), total, empreinte);
+                + adresse.getAdresse() + "|" + adresse.getLatitude() + "|" + adresse.getLongitude() + "|" + lignes + "|" + total + "|" + (groupe == null ? "" : groupe.getId()));
+        var offre = groupe == null ? null : new QuartierDto.GroupeProche(groupe.getId(), p.getId(), p.getNomCommerce(), groupe.getCommandes().size(),
+                groupe.getCommandes().size() == 2 ? BigDecimal.ONE : groupe.getReductionDeux(), frais, groupe.getExpiration(),
+                Math.max(0, Duration.between(Instant.now(), groupe.getExpiration()).toSeconds()));
+        return new DevisVue(p.getId(), p.getNomCommerce(), zone.getNom(), lignes, articles, frais, total, empreinte, offre);
     }
     public LivraisonResponse commander(String email, PanierRequest r) {
         verifier(r);
@@ -81,7 +88,7 @@ public class CommandeService {
         Client c = clients.verrouiller(email).orElseThrow(MarketplaceException::absent);
         String cle = c.getId() + ":" + r.cleIdempotence();
         String requete = hash(r.partenaireId() + "|" + r.adresseId() + "|" + r.lignes().stream().sorted(Comparator.comparing(Article::produitId)).toList()
-                + "|" + (r.notes() == null ? "" : r.notes().trim()) + "|" + r.devisEmpreinte());
+                + "|" + (r.notes() == null ? "" : r.notes().trim()) + "|" + r.devisEmpreinte() + "|" + (r.modePaiement() == null ? ModePaiement.COD : r.modePaiement()));
         Optional<Livraison> existante = commandes.findByCleIdempotence(cle);
         if (existante.isPresent()) {
             if (!requete.equals(existante.get().getEmpreinteRequete())) throw MarketplaceException.conflit("Cette clé a déjà servi pour un autre panier.");
@@ -103,6 +110,7 @@ public class CommandeService {
         // Champs historiques conservés ; aucune promesse de délai ni décision partenaire au Sprint 2.
         l.setCreneauDebut(Instant.now()); l.setCreneauFin(l.getCreneauDebut()); l.setTypeLivraison(TypeLivraison.IMMEDIATE);
         l.setStatut(StatutLivraison.PENDING_PARTNER); l.setModePaiement(ModePaiement.COD); l.setStatutPaiement(StatutPaiement.A_LA_LIVRAISON);
+        if (r.modePaiement() == ModePaiement.CARTE) { l.setModePaiement(ModePaiement.CARTE); l.setStatutPaiement(StatutPaiement.EN_ATTENTE); }
         l.setNotes(r.notes() == null ? null : r.notes().trim()); l.setFraisLivraison(d.fraisLivraison().doubleValue());
         l.setCleIdempotence(cle); l.setEmpreinteRequete(requete);
         for (LigneVue article : d.lignes()) {
@@ -111,6 +119,9 @@ public class CommandeService {
         }
         l.calculerTotal(); l.setMontantACollecter(l.getTotal().doubleValue());
         Livraison creee = commandes.saveAndFlush(l);
+        if (quartier != null) quartier.inscrire(creee, d.groupeDisponible() == null ? null : d.groupeDisponible().id(),
+                l.getPartenaire().getZone().getFraisLivraison(), d.fraisLivraison(), Instant.now());
+        if (l.getModePaiement() == ModePaiement.CARTE) { cartes.ouvrir(l, d.total()); l.setMontantACollecter(0); }
         workflow.creer(creee, c);
         return LivraisonResponse.from(creee);
     }

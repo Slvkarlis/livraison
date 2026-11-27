@@ -76,10 +76,10 @@ public class MarketplaceController {
     @Operation(summary = "Consulter le catalogue d’un commerce", description = "adresseId obligatoire. Le commerce doit être ouvert et desservir cette adresse.")
     public List<ProduitVue> produits(Authentication a, @PathVariable Long id, @RequestParam Long adresseId) { return catalogue.catalogue(a.getName(), id, adresseId); }
     @PostMapping("/commandes/devis") @PreAuthorize("hasRole('CLIENT')")
-    @Operation(summary = "Calculer un devis", description = "Le serveur calcule les prix, les frais de zone, le total COD et l’empreinte du devis. Un panier ne peut contenir qu’un seul partenaire.")
+    @Operation(summary = "Calculer un devis", description = "Le serveur calcule les prix, les frais de zone et la réduction du groupe de quartier disponible, le total et l’empreinte du devis. Un panier ne peut contenir qu’un seul partenaire.")
     public DevisVue devis(Authentication a, @RequestBody PanierRequest r) { return commandes.devis(a.getName(), r); }
     @PostMapping("/commandes") @ResponseStatus(HttpStatus.CREATED) @PreAuthorize("hasRole('CLIENT')")
-    @Operation(summary = "Confirmer une commande COD", description = "Fournir devisEmpreinte et une cleIdempotence unique de 16 à 100 caractères. Vérifie les prix et les limites de fréquence/commandes actives ; le rejeu identique ne crée pas de doublon.")
+    @Operation(summary = "Confirmer une commande COD ou carte", description = "Fournir devisEmpreinte et une cleIdempotence unique de 16 à 100 caractères. modePaiement vaut COD par défaut ; CARTE retourne une URL Stripe si configuré, avec capture au prix final après fermeture du groupe. Vérifie les prix et les limites ; le rejeu identique ne crée pas de doublon.")
     public LivraisonResponse commander(Authentication a, @RequestBody PanierRequest r) { return commandes.commander(a.getName(), r); }
     @PutMapping("/commandes/{id}/annuler") @PreAuthorize("hasRole('CLIENT')")
     @Operation(summary = "Annuler sa commande", description = "Annulation possible seulement en attente du partenaire ou après acceptation, avant le début de préparation. Motif facultatif de 300 caractères maximum.")

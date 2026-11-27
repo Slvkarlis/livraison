@@ -34,11 +34,12 @@ export async function enregistrerPush(): Promise<string | null> {
 }
 
 /** Notification touchee (application ouverte ou lancee par elle) : fn(commandeId). */
-export function ecouterTouches(fn: (commandeId: number) => void): () => void {
+export function ecouterTouches(fn: (commandeId: number) => void, ouvrirQuartier?: () => void): () => void {
   const traiter = (r: Notifications.NotificationResponse | null) => {
     if (!r || r.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
     const id = commandeDuPush(r.notification.request.content.data);
     if (id) fn(id);
+    else if (Number(r.notification.request.content.data?.groupeQuartierId) > 0) ouvrirQuartier?.();
   };
   void Notifications.getLastNotificationResponseAsync().then((r) => {
     traiter(r);

@@ -64,6 +64,19 @@ class DispatchServiceTest {
         verifyNoInteractions(lots, offres, workflow);
     }
 
+    @Test void lotQuartierImposeNePassePasAuRegroupementOrdinaire() {
+        Lot lot = lot(StatutLot.PROPOSE); lot.setSource("QUARTIER");
+        when(lots.findAllByStatutOrderByIdAsc(StatutLot.PROPOSE)).thenReturn(List.of(lot));
+        when(commandes.findAllByLotIdOrderByIdAsc(50L)).thenReturn(List.of(commande));
+        when(commandes.findAllByStatutAndLivreurIsNullOrderByPreteLeAscIdAsc(StatutLivraison.PRETE)).thenReturn(List.of(commande));
+        when(affectations.findAllByZoneId(2L)).thenReturn(List.of(affectation(sami, TypeAffectation.PRINCIPALE)));
+        when(offres.save(any())).thenAnswer(a -> a.getArgument(0));
+        service.dispatcher(Instant.now());
+        verify(lots, never()).save(any()); verifyNoInteractions(ia);
+        ArgumentCaptor<OffreLot> capture = ArgumentCaptor.forClass(OffreLot.class); verify(offres).save(capture.capture());
+        assertSame(lot, capture.getValue().getLot());
+    }
+
     @Test void commandePreteFormeUnLotEtLeProposeAuCoursierDeLaZone() {
         when(commandes.findAllByStatutAndLivreurIsNullOrderByPreteLeAscIdAsc(StatutLivraison.PRETE)).thenReturn(List.of(commande));
         when(zones.findAllByOrderByIdAsc()).thenReturn(List.of(zone()));

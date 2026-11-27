@@ -32,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service @RequiredArgsConstructor @Transactional
 public class DispatchService {
+    @org.springframework.beans.factory.annotation.Autowired private QuartierService quartier;
+    @org.springframework.beans.factory.annotation.Autowired private PaiementQuartierService cartes;
     static final int MOTIF_MIN = 5, MOTIF_MAX = 300;
 
     private final ParametresDispatch parametres;
@@ -111,9 +113,12 @@ public class DispatchService {
         if (!livreur.estDisponible()) throw MarketplaceException.conflit("Déclarez-vous disponible pour accepter une offre.");
 
         Lot lot = lots.verrouiller(offre.getLot().getId()).orElseThrow(MarketplaceException::absent);
+        if ("QUARTIER".equals(lot.getSource()) && quartier != null)
+            quartier.securiserLot(lot, livreur.positionConnue() ? new Point(livreur.getDerniereLatitude(), livreur.getDerniereLongitude()) : null, maintenant);
         List<Livraison> retenues = new ArrayList<>();
         for (Livraison c : commandes.findAllByLotIdOrderByIdAsc(lot.getId())) {
             Livraison commande = commandes.verrouiller(c.getId()).orElseThrow();
+            if (!paiementValide(commande)) throw MarketplaceException.conflit("Le paiement carte doit être confirmé avant le départ.");
             if (commande.getStatut() == StatutLivraison.PRETE && commande.getLivreur() == null) retenues.add(commande);
         }
         if (retenues.isEmpty()) throw MarketplaceException.conflit("Les commandes de cette offre ne sont plus à livrer.");
@@ -202,7 +207,7 @@ public class DispatchService {
             throw new IllegalArgumentException("Motif de l'affectation : de " + MOTIF_MIN + " à " + MOTIF_MAX + " caractères.");
         Utilisateur responsable = utilisateurs.findByEmail(email).orElseThrow(MarketplaceException::absent);
         Livraison c = commandes.verrouiller(commandeId).orElseThrow(MarketplaceException::absent);
-        if (c.getStatut() != StatutLivraison.PRETE || c.getLivreur() != null)
+        if (c.getStatut() != StatutLivraison.PRETE || c.getLivreur() != null || !paiementValide(c))
             throw MarketplaceException.conflit("Seule une commande prête et sans livreur peut être affectée.");
         Livreur livreur = livreurs.findById(r.livreurId()).filter(Livreur::isActif)
                 .orElseThrow(() -> new IllegalArgumentException("Livreur introuvable ou inactif."));
@@ -211,6 +216,19 @@ public class DispatchService {
 
         Instant maintenant = maintenant();
         Lot ancien = c.getLot();
+        if (c.getGroupeQuartier() != null && c.getGroupeQuartier().getStatut() == StatutGroupeQuartier.OUVERT)
+            throw MarketplaceException.conflit("Le groupe de quartier attend encore ses voisins.");
+        if (ancien != null && "QUARTIER".equals(ancien.getSource())) {
+            List<Livraison> membres = commandes.findAllByLotIdOrderByIdAsc(ancien.getId());
+            if (membres.stream().anyMatch(x -> x.getStatut() != StatutLivraison.PRETE || x.getLivreur() != null || !paiementValide(x))
+                    || missions(livreur) + membres.size() > AffectationMissionService.MISSIONS_MAX)
+                throw MarketplaceException.conflit("Tous les membres du groupe doivent être prêts et le coursier doit pouvoir prendre le lot entier.");
+            for (OffreLot o : offres.findAllByLotIdAndStatut(ancien.getId(), StatutOffre.EN_ATTENTE)) clore(o, StatutOffre.ANNULEE, maintenant, motif);
+            planifier(ancien, livreur, membres); ancien.setStatut(StatutLot.ACCEPTE); ancien.setLivreur(livreur); ancien.setAccepteLe(maintenant);
+            for (Livraison membre : membres) affecter(membre, livreur, responsable, maintenant, "Groupe de quartier imposé : " + motif);
+            audit.enregistrer(ActionAudit.AFFECTATION_FORCEE, "COMMANDE", c.getId(), "Lot quartier entier : " + motif);
+            return supervision();
+        }
         if (ancien != null && ancien.getStatut() == StatutLot.PROPOSE) {
             Lot verrou = lots.verrouiller(ancien.getId()).orElseThrow();
             for (OffreLot o : offres.findAllByLotIdAndStatut(verrou.getId(), StatutOffre.EN_ATTENTE))
@@ -238,6 +256,8 @@ public class DispatchService {
 
     /** Propose les lots en attente, puis forme et propose de nouveaux lots. Retourne le nombre d'offres creees. */
     int dispatcher(Instant maintenant) {
+        if (cartes != null) cartes.synchroniser();
+        if (quartier != null) quartier.fermerExpires(maintenant);
         int proposees = 0;
         for (Lot lot : lots.findAllByStatutOrderByIdAsc(StatutLot.PROPOSE)) {
             List<OffreLot> enCours = offres.findAllByLotIdAndStatut(lot.getId(), StatutOffre.EN_ATTENTE);
@@ -252,8 +272,22 @@ public class DispatchService {
         }
 
         List<Livraison> libres = commandes.findAllByStatutAndLivreurIsNullOrderByPreteLeAscIdAsc(StatutLivraison.PRETE).stream()
+                .filter(DispatchService::paiementValide)
+                .filter(c -> c.getGroupeQuartier() == null || c.getGroupeQuartier().getStatut() == StatutGroupeQuartier.FERME
+                        || c.getGroupeQuartier().getStatut() == StatutGroupeQuartier.ANNULE)
                 .filter(c -> c.getLot() == null || c.getLot().getStatut() == StatutLot.ANNULE)
                 .filter(DispatchService::localisee).toList();
+        if (libres.isEmpty()) return proposees;
+        // Une commande libérée à l'expiration ou pour sa promesse part seule, sans la fenêtre habituelle.
+        for (Livraison c : libres.stream().filter(Livraison::isQuartierSeule).toList()) {
+            var r = Itineraire.optimiser(null, List.of(new Course(c.getId(), commerce(c), client(c))), EstimationLivraisonService.vitesse(c.getPartenaire()), null).orElseThrow();
+            var candidat = choisir(List.of(c), commerce(c), Set.of(), maintenant);
+            if (candidat.isPresent()) {
+                LotCree cree = creerLot(new LotPropose(List.of(new CommandeEnAttente(c.getId(), EntrepotService.zoneId(c), commerce(c), client(c), c.getPreteLe())), r), "QUARTIER_SEULE", maintenant);
+                if (cree != null) { offrir(cree.lot(), cree.commandes(), candidat.get(), maintenant); proposees++; }
+            }
+        }
+        libres = libres.stream().filter(c -> !c.isQuartierSeule()).toList();
         if (libres.isEmpty()) return proposees;
         Instant seuil = maintenant.minusSeconds(Math.max(0, parametres.fenetreRegroupementSecondes()));
         Regroupement regroupement = regrouper(libres, maintenant);
@@ -361,6 +395,12 @@ public class DispatchService {
 
     /** Lot deja forme (refus, expiration, coursier devenu indisponible) : reproposition. false : aucun candidat. */
     boolean proposer(Lot lot, Instant maintenant) {
+        if ("QUARTIER".equals(lot.getSource())) {
+            List<Livraison> membres = commandes.findAllByLotIdOrderByIdAsc(lot.getId()).stream()
+                    .filter(c -> c.getStatut() != StatutLivraison.ANNULEE && c.getStatut() != StatutLivraison.REFUSEE).toList();
+            if (membres.stream().anyMatch(c -> c.getStatut() != StatutLivraison.PRETE || c.getLivreur() != null || !paiementValide(c))) return false;
+            if (quartier != null) quartier.securiserLot(lot, null, maintenant.plus(EstimationLivraisonService.APPROCHE_COURSIER));
+        }
         List<Livraison> contenu = commandes.findAllByLotIdOrderByIdAsc(lot.getId()).stream()
                 .filter(c -> c.getStatut() == StatutLivraison.PRETE && c.getLivreur() == null).toList();
         if (contenu.isEmpty()) {
@@ -432,6 +472,12 @@ public class DispatchService {
     /** US-404 : itineraire recalcule depuis la position du coursier qui prend le lot (sans limite : le lot est deja forme). */
     private void planifier(Lot lot, Livreur livreur, List<Livraison> contenu) {
         Point depart = livreur.positionConnue() ? new Point(livreur.getDerniereLatitude(), livreur.getDerniereLongitude()) : null;
+        if ("QUARTIER".equals(lot.getSource()) && contenu.size() > 1) {
+            var r = QuartierService.optimiser(contenu, depart, Instant.now());
+            if (r.isEmpty()) throw MarketplaceException.conflit("L'heure promise ne permet plus cette tournée. Relancez le dispatch.");
+            lot.setItineraire(r.get().code()); lot.setDistanceKm(arrondi(r.get().distanceKm()));
+            lot.setDureeMinutes(minutesArrondies(r.get().duree())); return;
+        }
         double vitesse = contenu.stream().mapToDouble(c -> EstimationLivraisonService.vitesse(c.getPartenaire())).min()
                 .orElse(Zone.VITESSE_PAR_DEFAUT_KMH);
         Itineraire.optimiser(depart, contenu.stream().filter(DispatchService::localisee)
@@ -456,7 +502,7 @@ public class DispatchService {
                 .filter(c -> c.getStatut() == StatutLivraison.PRETE && c.getLivreur() == null).toList();
         BigDecimal montant = contenu.stream().map(RemiseLivreurService::montantAttendu).reduce(BigDecimal.ZERO, BigDecimal::add);
         return new OffreVue(o.getId(), lot.getId(), o.getProposeeLe(), o.getExpireLe(), o.isHorsZone(), o.getDistanceLivreurKm(),
-                contenu.size(), lot.getDistanceKm(), lot.getDureeMinutes(), montant, etapes(lot, contenu));
+                contenu.size(), lot.getDistanceKm(), lot.getDureeMinutes(), montant, etapes(lot, contenu), lot.getSource());
     }
 
     LotVue lotVue(Lot lot) {
@@ -544,6 +590,7 @@ public class DispatchService {
         return c.getPartenaire() != null && c.getPartenaire().getLatitude() != null && c.getPartenaire().getLongitude() != null
                 && c.getLatitude() != null && c.getLongitude() != null;
     }
+    static boolean paiementValide(Livraison c) { return c.getModePaiement() != ModePaiement.CARTE || c.getStatutPaiement() == StatutPaiement.PAYE; }
 
     static Point commerce(Livraison c) { return new Point(c.getPartenaire().getLatitude(), c.getPartenaire().getLongitude()); }
 

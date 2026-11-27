@@ -8,6 +8,7 @@ import type {
 
 import { ApiError, creerClientHttp } from './http';
 import { creerApiMarche } from './sprint2';
+import { creerApiQuartier } from './quartier';
 import { creerApiPartenaire, creerApiSuiviClient } from './sprint2bis';
 import { creerApiLivreur } from './espaceLivreur';
 import { creerApiSuivi } from './suivi';
@@ -34,6 +35,7 @@ function estConfigurationAuth(value: unknown): value is ConfigurationAuth {
 }
 
 export const api = {
+  ...creerApiQuartier(request),
   ...creerApiMarche(request),
   ...creerApiSprintSept(request),
   ...creerApiPartenaire(request),

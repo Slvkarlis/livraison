@@ -45,10 +45,10 @@ export default function Zones() {
         <label className="champ">Nom de la zone<input aria-label="Nom de la zone" value={nom} maxLength={100} required disabled={envoi} onChange={e => setNom(e.target.value)} /></label>
         <label className="champ">Frais de livraison (DT)<input aria-label="Frais de livraison (DT)" value={frais} type="number" min="0" max="100000" step="0.001" required disabled={envoi} onChange={e => setFrais(e.target.value)} /></label>
         <label className="champ">Vitesse moyenne des livreurs (km/h)<input aria-label="Vitesse moyenne (km/h)" value={vitesse} type="number" min="5" max="80" step="1" required disabled={envoi} onChange={e => setVitesse(e.target.value)} /><small>Sert à l’heure d’arrivée estimée affichée au client.</small></label>
-        <p>Cliquez sur la carte dans l’ordre des sommets. Le contour se ferme automatiquement. Les croisements et chevauchements sont refusés.</p>
+        <p>Tracez le contour sur la carte : il se ferme automatiquement. Les croisements et chevauchements sont refusés à l’enregistrement.</p>
         <CarteZones zones={(donnees ?? []).filter(z => edition === 'nouvelle' || z.id !== edition.id)} points={points.filter(p => Number.isFinite(p.latitude) && Number.isFinite(p.longitude))} edition={!envoi} onPoints={onPoints} />
         <label className="champ">Sommets : latitude,longitude (un par ligne)<textarea aria-label="Sommets" value={trace} rows={5} disabled={envoi} onChange={e => setTrace(e.target.value)} /></label>
-        <div className="actions"><button className="bouton secondaire" type="button" disabled={envoi || !trace.trim()} onClick={() => setTrace(t => t.trim().split('\n').slice(0, -1).join('\n'))}>Annuler le dernier point</button><button className="bouton secondaire" type="button" disabled={envoi} onClick={() => setTrace('')}>Effacer le tracé</button><button className="bouton" disabled={envoi}>{envoi ? 'Enregistrement…' : 'Enregistrer la zone'}</button></div>
+        <div className="actions"><button className="bouton" disabled={envoi}>{envoi ? 'Enregistrement…' : 'Enregistrer la zone'}</button></div>
       </form>
     </Modale>}
     {suppression && <Modale titre="Supprimer la zone" onFermer={() => { if (!envoi) setSuppression(null); }}><p>Supprimer « {suppression.nom} » ? Une zone couvrant encore des partenaires ne peut pas être supprimée. Les anciennes commandes restent lisibles.</p>{echec && <Alerte message={echec} />}<button className="bouton" disabled={envoi} onClick={() => {

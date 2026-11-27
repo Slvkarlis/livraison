@@ -20,7 +20,12 @@ public final class DispatchDto {
 
     /** Offre de lot en attente de reponse ; horsZone : coursier sollicite depuis une zone voisine (debordement). */
     public record OffreVue(Long id, Long lotId, Instant proposeeLe, Instant expireLe, boolean horsZone, Double distanceLivreurKm,
-                           int nbCommandes, double distanceKm, int dureeMinutes, BigDecimal montantACollecter, List<EtapeVue> etapes) { }
+                           int nbCommandes, double distanceKm, int dureeMinutes, BigDecimal montantACollecter, List<EtapeVue> etapes, String source) {
+        public OffreVue(Long id, Long lotId, Instant proposeeLe, Instant expireLe, boolean horsZone, Double distanceLivreurKm,
+                        int nbCommandes, double distanceKm, int dureeMinutes, BigDecimal montantACollecter, List<EtapeVue> etapes) {
+            this(id, lotId, proposeeLe, expireLe, horsZone, distanceLivreurKm, nbCommandes, distanceKm, dureeMinutes, montantACollecter, etapes, null);
+        }
+    }
 
     public record RefusOffreRequest(String motif) { }
 
@@ -53,4 +58,13 @@ public final class DispatchDto {
     /** parLots false : affectation simple (Sprint 2 bis). ia : service d'IA configure (sinon regles). */
     public record SupervisionVue(Instant maintenant, boolean parLots, boolean ia, int delaiOffreSecondes, int delaiRechercheMaxMinutes,
                                  List<CommandeAttenteVue> enAttente, List<LotSupervisionVue> lots, List<LivreurSupervisionVue> livreurs) { }
+
+    /** Carte du responsable : commerce geolocalise (les partenaires sans coordonnees sont omis). */
+    public record PartenaireCarteVue(Long id, String nomCommerce, String categorie, String adresse, double latitude, double longitude,
+                                     boolean ouvert, String zoneNom) {
+        public static PartenaireCarteVue from(com.fleetpulse.livraison.Model.Partenaire p) {
+            return new PartenaireCarteVue(p.getId(), p.getNomCommerce(), p.getCategorie(), p.getAdresse(), p.getLatitude(), p.getLongitude(),
+                    Boolean.TRUE.equals(p.getOuvert()), p.getZone() == null ? null : p.getZone().getNom());
+        }
+    }
 }

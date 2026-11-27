@@ -98,6 +98,8 @@ export interface VehiculeRequest {
 export interface Livraison {
   /** Champ existant dans LivraisonResponse ; aucun identifiant de coursier exposé. */
   livreurPrenom?: string | null;
+  /** Collecte du colis au commerce (LivraisonResponse.recupereeLe). */
+  recupereeLe?: string | null;
   partenaireId: number | null;
   nomPartenaire: string | null;
   zoneNom: string | null;
@@ -109,6 +111,9 @@ export interface Livraison {
   clientEmail: string;
   adresse: string;
   latitude: number;
+  /** Position du commerce (collecte) : null si le partenaire n a pas de coordonnees. */
+  latitudeCommerce?: number | null;
+  longitudeCommerce?: number | null;
   longitude: number;
   creneauDebut: string | null;
   creneauFin: string | null;
@@ -164,6 +169,11 @@ export interface LotSupervision {
 export interface LivreurSupervision {
   id: number; prenom: string; nom: string; missions: number; offreEnCours: boolean;
   latitude: number | null; longitude: number | null; dernierePositionLe: string | null;
+}
+/** Miroir de DispatchDto.PartenaireCarteVue. */
+export interface PartenaireCarte {
+  id: number; nomCommerce: string; categorie: string | null; adresse: string | null;
+  latitude: number; longitude: number; ouvert: boolean; zoneNom: string | null;
 }
 export interface Supervision {
   maintenant: string; parLots: boolean; ia: boolean; delaiOffreSecondes: number; delaiRechercheMaxMinutes: number;

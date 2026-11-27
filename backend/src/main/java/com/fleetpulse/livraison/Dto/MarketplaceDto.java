@@ -53,12 +53,23 @@ public final class MarketplaceDto {
     @Schema(description = "Panier d’un seul commerce. Devis : IDs et lignes suffisent. Confirmation : ajouter la clé et l’empreinte du devis reçu.")
     public record PanierRequest(Long partenaireId, Long adresseId, List<Article> lignes, String notes,
                                 @Schema(description = "Unique pour cette confirmation ; réutiliser la même clé uniquement pour rejouer la même requête", example = "commande-demo-000001", minLength = 16, maxLength = 100) String cleIdempotence,
-                                @Schema(description = "Copier exactement empreinte depuis la réponse de /api/commandes/devis", minLength = 64, maxLength = 64) String devisEmpreinte) { }
+                                @Schema(description = "Copier exactement empreinte depuis la réponse de /api/commandes/devis", minLength = 64, maxLength = 64) String devisEmpreinte,
+                                com.fleetpulse.livraison.Model.enums.ModePaiement modePaiement) {
+        public PanierRequest(Long partenaireId, Long adresseId, List<Article> lignes, String notes, String cleIdempotence, String devisEmpreinte) {
+            this(partenaireId, adresseId, lignes, notes, cleIdempotence, devisEmpreinte, com.fleetpulse.livraison.Model.enums.ModePaiement.COD);
+        }
+    }
     public record LigneVue(Long produitId, String nomProduit, int quantite, BigDecimal prixUnitaire, BigDecimal sousTotal) {
         public static LigneVue from(LigneCommande l) { return new LigneVue(l.getProduit().getId(), l.getNomProduit(), l.getQuantite(), l.getPrixUnitaire(), l.getSousTotal()); }
     }
     /** US-2B12 : motif facultatif de l'annulation par le client. */
     public record AnnulationRequest(String motif) { }
     public record DevisVue(Long partenaireId, String nomPartenaire, String zoneNom, List<LigneVue> lignes,
-                           BigDecimal montantArticles, BigDecimal fraisLivraison, BigDecimal total, String empreinte) { }
+                           BigDecimal montantArticles, BigDecimal fraisLivraison, BigDecimal total, String empreinte,
+                           QuartierDto.GroupeProche groupeDisponible) {
+        public DevisVue(Long partenaireId, String nomPartenaire, String zoneNom, List<LigneVue> lignes,
+                        BigDecimal montantArticles, BigDecimal fraisLivraison, BigDecimal total, String empreinte) {
+            this(partenaireId, nomPartenaire, zoneNom, lignes, montantArticles, fraisLivraison, total, empreinte, null);
+        }
+    }
 }

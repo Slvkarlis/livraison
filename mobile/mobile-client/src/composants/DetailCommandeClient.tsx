@@ -26,14 +26,34 @@ import {
   type Livraison,
 } from '@fleetpulse/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AnnulationCommande } from './AnnulationCommande';
-import { CarteLeaflet, type CarteLeafletRef } from './CarteLeaflet';
+import { CarteSuivi } from './suivi/CarteSuivi';
+import { useCarteSuivi } from './suivi/useCarteSuivi';
 import { FriseHistorique } from './FriseHistorique';
 import { ReclamationClient } from './ReclamationClient';
 import { useSuiviLivraison } from './suivi/useSuiviLivraison';
 import { theme } from '../theme';
+import * as Linking from 'expo-linking';
+
+/** Libelle de la frise selon l'etape reelle (plus de « En route » une fois le livreur arrive). */
+function libelleFrise(statut: Livraison['statut'], arrive: boolean): string {
+  if (statut === 'LIVREE') return 'Livrée';
+  if (arrive) return 'Livreur arrivé';
+  if (statut === 'A_PROXIMITE') return 'Arrive bientôt';
+  if (statut === 'RECUPEREE' || statut === 'EN_COURS') return 'En route';
+  if (statut === 'AFFECTEE') return 'Vers le commerce';
+  if (statut === 'PRETE') return 'Prête';
+  return 'En préparation';
+}
+
+/** Avance du livreur sur la frise : distance reelle parcourue une fois le colis a bord. */
+function progressionFrise(statut: Livraison['statut'], arrive: boolean, resteKm: number | null, totalKm: number | null): number {
+  if (statut === 'LIVREE' || arrive) return 1;
+  if (resteKm != null && totalKm) return Math.min(0.97, 0.3 + 0.7 * (1 - resteKm / totalKm));
+  return ({ PRETE: 0.08, AFFECTEE: 0.15, RECUPEREE: 0.3, EN_COURS: 0.55, A_PROXIMITE: 0.85, ARRIVEE: 1 } as Record<string, number>)[statut] ?? 0.05;
+}
 
 export default function DetailCommande() {
   const { id, message } = useLocalSearchParams<{ id: string; message?: string }>();
@@ -43,13 +63,11 @@ export default function DetailCommande() {
   const [rafraichissement, setRafraichissement] = useState(false);
   const avis = message ?? null;
   // US-302 / US-303 : coursier sur la carte (colis a bord) et heure d'arrivee estimee
-  const carte = useRef<CarteLeafletRef>(null);
-  const [cartePrete, setCartePrete] = useState(false);
   const { suivi, maintenant } = useSuiviLivraison(livraison?.id ?? null, livraison?.statut ?? null);
-  const livreur = suivi?.livreur ?? null;
-  useEffect(() => {
-    if (cartePrete && livreur) carte.current?.placerLivreur({ latitude: livreur.latitude, longitude: livreur.longitude });
-  }, [cartePrete, livreur]);
+  // Carte de suivi type GPS : livreur anime, chemin parcouru et itineraire restant jusqu'a la maison
+  const { etat: etatCarte, resteKm, resteMin, totalKm } = useCarteSuivi(livraison, suivi);
+  // Livreur a moins de 50 m par la route : arrive, meme si le statut serveur dit encore « a proximite ».
+  const arrive = livraison?.statut === 'ARRIVEE' || (!!etatCarte?.livreur && etatCarte.phase === 'livraison' && resteKm != null && resteKm < 0.05);
 
   // Rechargee a chaque retour sur l'ecran, en tirant vers le bas et a chaque evenement temps reel de cette commande
   const charger = useCallback(async () => {
@@ -57,6 +75,7 @@ export default function DetailCommande() {
       const trouvee = (await api.mesLivraisons()).find((l) => String(l.id) === id);
       if (!trouvee) { setErreur('Commande introuvable.'); return; }
       setLivraison(trouvee);
+      if (trouvee.modePaiement === 'CARTE' && trouvee.statutPaiement === 'EN_ATTENTE') setLivraison(await api.confirmerCarteQuartier(trouvee.id));
       setEtapes(trouvee.partenaireId ? await api.historiqueCommande(trouvee.id) : []);
     } catch (e) {
       setErreur(e instanceof Error ? e.message : 'Chargement impossible.');
@@ -75,7 +94,6 @@ export default function DetailCommande() {
   if (erreur) return <View style={styles.erreur}><MessageErreur message={erreur} /></View>;
   if (!livraison) return <Chargement />;
 
-  const position = { latitude: livraison.latitude, longitude: livraison.longitude };
   const creee = new Date(livraison.dateCreation);
   const immediate = livraison.typeLivraison === 'IMMEDIATE';
   const statutPaiement = STATUTS_PAIEMENT[livraison.statutPaiement ?? 'A_LA_LIVRAISON'];
@@ -85,28 +103,56 @@ export default function DetailCommande() {
       style={styles.page}
       refreshControl={<RefreshControl refreshing={rafraichissement} onRefresh={rafraichir} tintColor={theme.accent} />}
     >
-      {/* Apercu fige : les gestes vont au defilement de la page, pas a la carte. */}
-      <View pointerEvents="none">
-        <CarteLeaflet ref={carte} style={styles.carteGeo} centre={position} zoom={16} interactive={false} marqueur
-          onPret={() => setCartePrete(true)} />
+      <View>
+        <CarteSuivi etat={etatCarte} style={styles.carteGeo} />
+        {etatCarte?.livreur && resteKm != null ? (
+          <View style={styles.bulle} pointerEvents="none">
+            <View style={styles.bulleIcone}><Ionicons name="bicycle" size={20} color="#15171A" /></View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bulleTitre} numberOfLines={1}>
+                {etatCarte.phase === 'collecte' ? `${etatCarte.initiale} va chercher votre commande` : arrive ? `${etatCarte.initiale} est arrivé` : `${etatCarte.initiale} arrive chez vous`}
+              </Text>
+              <Text style={styles.bulleTexte}>{resteKm < 0.05 ? 'Votre livreur est devant chez vous'
+                : `${resteKm < 1 ? `${Math.round(resteKm * 100) * 10} m` : `${resteKm.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km`} par la route · ≈ ${resteMin} min`}</Text>
+            </View>
+          </View>
+        ) : etatCarte && etatCarte.phase === 'preparation' && livraison.statut !== 'LIVREE' ? (
+          <View style={styles.bulle} pointerEvents="none">
+            <View style={styles.bulleIcone}><Ionicons name="storefront-outline" size={18} color="#15171A" /></View>
+            <Text style={[styles.bulleTitre, { flex: 1 }]}>Trajet prévu du commerce jusqu’à chez vous</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.feuille}>
         <View style={styles.encoche}><View style={styles.poignee} /></View>
         <PastilleStatut statut={livraison.statut} />
+        {livraison.modePaiement === 'CARTE' && livraison.statutPaiement === 'EN_ATTENTE' && livraison.urlPaiementCarte ? <View style={{ gap: 8 }}>
+          <Text style={{ color: '#5B21B6' }}>Autorisation carte en attente. Le débit attend le prix final du groupe.</Text>
+          <Bouton titre="Ouvrir le paiement carte" onPress={() => { void Linking.openURL(livraison.urlPaiementCarte!).catch(e => setErreur(e.message)); }} />
+          <Bouton titre="Vérifier mon paiement" variante="secondaire" onPress={() => void charger()} />
+        </View> : null}
+        {livraison.groupeQuartierId ? <View style={{ backgroundColor: '#EDE9FE', padding: 14, borderRadius: 16, gap: 5 }}>
+          <Text style={{ color: '#5B21B6', fontWeight: '800' }}>Livraison de quartier</Text>
+          <Text style={{ color: '#5B21B6' }}>{(livraison.voisinsQuartier ?? 0) > 0
+            ? `${livraison.statut === 'LIVREE' ? 'Livré' : 'Livraison prévue'} avec ${livraison.voisinsQuartier} voisin${livraison.voisinsQuartier === 1 ? '' : 's'}`
+            : livraison.expirationQuartier && Date.parse(livraison.expirationQuartier) <= maintenant.getTime()
+              ? 'La fenêtre est terminée. Votre commande part individuellement.' : 'Vos voisins peuvent rejoindre la commande pendant la fenêtre de quartier.'}</Text>
+          <Text style={{ color: '#5B21B6' }}>Livraison : {formatMontant(livraison.fraisLivraison)} · prix garanti au maximum {formatMontant(livraison.fraisAnnoncesQuartier ?? livraison.fraisLivraison)}</Text>
+        </View> : null}
         {STATUTS_SUIVIS.includes(livraison.statut) || livraison.statut === 'LIVREE' ? (
           <View style={styles.trajet}>
             <FriseTrajet depart={formatHeure(new Date(livraison.creneauDebut))} arrivee={formatHeure(new Date(livraison.creneauFin))}
-              duree={livraison.statut === 'LIVREE' ? 'Livrée' : 'En route'} de={livraison.nomPartenaire ?? 'Départ'}
+              duree={libelleFrise(livraison.statut, arrive)} de={livraison.nomPartenaire ?? 'Départ'}
               vers="Chez vous" distance={livraison.distanceKm ? formatDistance(livraison.distanceKm) : livraison.codeSuivi}
-              progression={({ AFFECTEE: 0.12, RECUPEREE: 0.3, EN_COURS: 0.55, A_PROXIMITE: 0.8, ARRIVEE: 0.94, LIVREE: 1 } as Record<string, number>)[livraison.statut] ?? 0.05}
+              progression={progressionFrise(livraison.statut, arrive, etatCarte?.phase === 'livraison' ? resteKm : null, totalKm)}
               icone={<Ionicons name="bicycle" size={16} color="#15171A" />} />
           </View>
         ) : null}
         {suivi?.arriveeEstimee ? (
           <View style={styles.eta}>
             <Ionicons name="time-outline" size={18} color={theme.accent} />
-            <Text style={styles.etaTexte}>{messageArrivee(suivi.arriveeEstimee, maintenant)}</Text>
+            <Text style={styles.etaTexte}>{arrive ? 'Votre livreur est arrivé' : messageArrivee(suivi.arriveeEstimee, maintenant)}</Text>
           </View>
         ) : null}
         {suivi?.promesseLivraison && STATUTS_SUIVIS.includes(livraison.statut) ? (
@@ -186,7 +232,13 @@ export default function DetailCommande() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: theme.surface },
   erreur: { flex: 1, padding: 20, paddingTop: 120, backgroundColor: theme.fond },
-  carteGeo: { height: 300 },
+  carteGeo: { height: 380 },
+  bulle: { position: 'absolute', bottom: 46, left: 14, right: 70, flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18, backgroundColor: 'rgba(21,23,26,0.92)',
+    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  bulleIcone: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.accent, alignItems: 'center', justifyContent: 'center' },
+  bulleTitre: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  bulleTexte: { color: '#F2C66D', fontSize: 13, fontWeight: '700', marginTop: 2 },
   feuille: {
     backgroundColor: theme.surface,
     borderTopLeftRadius: 28,

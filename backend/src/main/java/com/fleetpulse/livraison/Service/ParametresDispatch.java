@@ -1,7 +1,6 @@
 package com.fleetpulse.livraison.Service;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
  * Sprint 4 : reglages du dispatch par lots (prefixe app.dispatch).
@@ -16,15 +15,32 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param intervalleMs periode du cycle
  */
 @ConfigurationProperties(prefix = "app.dispatch")
-public record ParametresDispatch(
-        @DefaultValue("true") boolean parLots,
-        @DefaultValue("60") int delaiOffreSecondes,
-        @DefaultValue("10") int delaiRechercheMaxMinutes,
-        @DefaultValue("35") int dureeABordMaxMinutes,
-        @DefaultValue("1.5") double rayonCollecteKm,
-        @DefaultValue("30") int fenetreRegroupementSecondes,
-        @DefaultValue("true") boolean planificateur,
-        @DefaultValue("15000") long intervalleMs) {
+@lombok.Getter @lombok.Setter @lombok.NoArgsConstructor
+public class ParametresDispatch {
+    private boolean parLots = true;
+    private int delaiOffreSecondes = 60, delaiRechercheMaxMinutes = 10, dureeABordMaxMinutes = 35;
+    private double rayonCollecteKm = 1.5;
+    private int fenetreRegroupementSecondes = 30;
+    private boolean planificateur = true;
+    private long intervalleMs = 15000;
+    @org.springframework.beans.factory.annotation.Autowired private ParametresQuartier parametresQuartier;
+
+    public ParametresDispatch(boolean parLots, int delaiOffreSecondes, int delaiRechercheMaxMinutes, int dureeABordMaxMinutes,
+                             double rayonCollecteKm, int fenetreRegroupementSecondes, boolean planificateur, long intervalleMs) {
+        this.parLots = parLots; this.delaiOffreSecondes = delaiOffreSecondes; this.delaiRechercheMaxMinutes = delaiRechercheMaxMinutes;
+        this.dureeABordMaxMinutes = dureeABordMaxMinutes; this.rayonCollecteKm = rayonCollecteKm;
+        this.fenetreRegroupementSecondes = fenetreRegroupementSecondes; this.planificateur = planificateur; this.intervalleMs = intervalleMs;
+    }
+    public boolean parLots() { return parLots; }
+    public int delaiOffreSecondes() { return delaiOffreSecondes; }
+    public int delaiRechercheMaxMinutes() { return delaiRechercheMaxMinutes; }
+    public int dureeABordMaxMinutes() { return dureeABordMaxMinutes; }
+    public double rayonCollecteKm() { return rayonCollecteKm; }
+    public int fenetreRegroupementSecondes() { return fenetreRegroupementSecondes; }
+    public boolean planificateur() { return planificateur; }
+    public long intervalleMs() { return intervalleMs; }
+    public ParametresQuartier.Reglages quartier() { return parametresQuartier.vue(); }
+    public ParametresQuartier.Reglages modifierQuartier(ParametresQuartier.Reglages r) { return parametresQuartier.modifier(r); }
 
     public java.time.Duration aBordMax() { return java.time.Duration.ofMinutes(dureeABordMaxMinutes); }
 }

@@ -50,7 +50,7 @@ export function pageHtml(centre: Point, zoom: number, interactive: boolean, marq
   .leaflet-control-attribution { font-size: 9px; background: rgba(255,255,255,0.7) !important; }
   .ma-position { width: 16px; height: 16px; border-radius: 50%; background: #2563EB;
     border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(37,99,235,0.2); box-sizing: border-box; }
-  .livreur { width: 34px; height: 34px; border-radius: 50%; background: #111827; border: 3px solid #fff;
+  .livreur { width: 34px; height: 34px; border-radius: 50%; background: #111827; color: #fff; border: 3px solid #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.35); box-sizing: border-box; display: flex; align-items: center;
     justify-content: center; font-size: 17px; line-height: 1; }
 </style>
@@ -100,7 +100,7 @@ export function pageHtml(centre: Point, zoom: number, interactive: boolean, marq
     window.placerLivreur = function (lat, lng) {
       if (livreur) livreur.setLatLng([lat, lng]);
       else livreur = L.marker([lat, lng], {
-        icon: L.divIcon({ html: '<div class="livreur">🛵</div>', className: '', iconSize: [34, 34], iconAnchor: [17, 17] }),
+        icon: L.divIcon({ html: '<div class="livreur"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg></div>', className: '', iconSize: [34, 34], iconAnchor: [17, 17] }),
         interactive: false, zIndexOffset: 1000
       }).addTo(carte);
       carte.fitBounds(L.latLngBounds([[cfg.latitude, cfg.longitude], [lat, lng]]), { padding: [48, 48], maxZoom: 16 });

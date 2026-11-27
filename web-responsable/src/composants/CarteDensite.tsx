@@ -1,22 +1,25 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import type { ZoneBi } from '../../../mobile/packages/shared/src/bi';
+import { pointValide, type BulleCarte } from '../suivi';
+
+// Meme moteur et meme style que le suivi en direct (MapLibre, fond sombre 3D).
+const CarteMission = lazy(() => import('./CarteMission'));
 
 export default function CarteDensite({ zones }: { zones: ZoneBi[] }) {
-  const cadre = useRef<HTMLIFrameElement>(null);
-  const [prete, setPrete] = useState(false), [erreur, setErreur] = useState(false);
-  useEffect(() => {
-    const recevoir = (e: MessageEvent) => {
-      if (e.source !== cadre.current?.contentWindow) return;
-      if (e.data?.type === 'densite-prete') { window.clearTimeout(delai); setPrete(true); }
-      if (e.data?.type === 'densite-erreur') setErreur(true);
-    };
-    window.addEventListener('message', recevoir);
-    const delai = window.setTimeout(() => setErreur(true), 15000);
-    return () => { window.removeEventListener('message', recevoir); window.clearTimeout(delai); };
-  }, []);
-  useEffect(() => { if (prete) { setErreur(false); cadre.current?.contentWindow?.postMessage({ type: 'densite', zones }, window.location.origin); } }, [prete, zones]);
-  return <section><h2>Carte thermique par zone</h2><p className="bi-legende">Une bulle au centre de chaque zone : rayon et couleur proportionnels aux commandes créées sur la période. Aucune adresse client affichée. Le tableau ci-dessous fournit les mêmes valeurs.</p>
-    {erreur && <p role="alert">Carte indisponible. Consultez les valeurs dans le tableau des zones.</p>}
-    <iframe ref={cadre} title="Densité des commandes par zone" src="/carte-bi.html" sandbox="allow-scripts allow-same-origin" style={{ width: '100%', height: 340, border: 0, borderRadius: 12 }} />
+  const bulles = useMemo<BulleCarte[]>(() => {
+    const max = Math.max(1, ...zones.map(z => z.commandes));
+    return zones.filter(z => pointValide(z.longitude, z.latitude)).map(z => ({
+      id: `z${z.id}`, position: [z.longitude, z.latitude], valeur: z.commandes, intensite: z.commandes / max, titre: z.nom,
+      lignes: [`${z.commandes} commande(s) sur la période`, `${z.livrees} livrée(s)`, `${z.commandesActives} active(s) maintenant`,
+        `${z.coursiersDisponibles} coursier(s) disponible(s)`, `Couverture : ${z.couverturePourcent == null ? 'non disponible' : `${z.couverturePourcent} %`}`],
+    }));
+  }, [zones]);
+  return <section><h2>Carte thermique par zone</h2>
+    <p className="bi-legende">Halo et badge au centre de chaque zone : taille et couleur proportionnelles aux commandes créées sur la période. Cliquez sur un badge pour le détail. Aucune adresse client affichée ; le tableau ci-dessous fournit les mêmes valeurs.</p>
+    <div className="mission mission-lots">
+      <Suspense fallback={<p className="mission-message" role="status">Chargement de la carte…</p>}>
+        <CarteMission bulles={bulles} legende="Densité des commandes · chiffre = commandes de la période" />
+      </Suspense>
+    </div>
   </section>;
 }

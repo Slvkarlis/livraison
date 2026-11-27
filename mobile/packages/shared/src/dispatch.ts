@@ -12,6 +12,7 @@ export interface EtapeLot {
 export interface OffreLot {
   id: number; lotId: number; proposeeLe: string; expireLe: string; horsZone: boolean; distanceLivreurKm: number | null;
   nbCommandes: number; distanceKm: number; dureeMinutes: number; montantACollecter: number; etapes: EtapeLot[];
+  source?: string;
 }
 
 export interface LotLivreur {

@@ -1,4 +1,5 @@
 import type {
+  PartenaireCarte,
   AffectationRequest, AffectationZone, Bareme, CaisseCoursier, Caisses, Closing, Commissions, Ecriture, Livraison, SuiviResponsable,
   Livreur, LivreurRequest, LoginResponse, PorteeCommission, Profil, Recu, Supervision, TauxCommission, Vehicule, VehiculeRequest,
 } from './types';
@@ -108,6 +109,8 @@ export const api = {
 
   // Sprint 4 (US-407) : supervision du dispatch par lots et affectation forcee (motif obligatoire, auditee)
   supervision: () => request<Supervision>('GET', '/api/admin/dispatch'),
+  /** Commerces geolocalises pour la carte de suivi en direct. */
+  partenairesCarte: () => request<PartenaireCarte[]>('GET', '/api/admin/dispatch/partenaires'),
   forcerAffectation: (commandeId: number, livreurId: number, motif: string) =>
     request<Supervision>('PUT', `/api/admin/dispatch/commandes/${commandeId}/forcer`, { livreurId, motif }),
   cycleDispatch: () => request<{ offresExpirees: number; offresProposees: number }>('POST', '/api/admin/dispatch/cycle'),

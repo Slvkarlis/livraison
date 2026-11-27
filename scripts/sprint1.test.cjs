@@ -93,7 +93,7 @@ test('Réseau en échec : message français et code 0', async () => {
 });
 test('Guards : opérations, finance et administrateur principal', () => {
   const p = { role: 'RESPONSABLE', statut: 'ACTIF', sousRole: null };
-  assert.ok(regles.peutOperations(p)); assert.ok(regles.peutAudit(p)); assert.equal(regles.destination(p), '/dossiers');
+  assert.ok(regles.peutOperations(p)); assert.ok(regles.peutAudit(p)); assert.equal(regles.destination(p), '/accueil');
   assert.ok(regles.peutOperations({ ...p, sousRole: 'OPERATIONS' }));
   const finance = { ...p, sousRole: 'FINANCE' };
   assert.equal(regles.peutOperations(finance), false); assert.ok(regles.peutAudit(finance)); assert.equal(regles.destination(finance), '/audit');

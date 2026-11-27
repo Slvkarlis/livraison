@@ -18,6 +18,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
+import { BandeauQuartier } from '../../composants/BandeauQuartier';
 
 export default function MesCommandes() {
   const { profil } = useAuth();
@@ -74,6 +75,7 @@ export default function MesCommandes() {
             </View>
 
             <MessageErreur message={erreur} />
+            <BandeauQuartier />
             {livraisons && livraisons.length > 0 ? <Text style={styles.section}>Mes commandes</Text> : null}
           </View>
         }

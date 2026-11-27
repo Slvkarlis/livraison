@@ -49,9 +49,15 @@ public final class Itineraire {
      * @return vide si aucune tournee ne respecte la duree maximale a bord (ou si le lot est vide)
      */
     public static Optional<Resultat> optimiser(Point depart, List<Course> courses, double vitesseKmh, Duration aBordMax) {
+        return optimiser(depart, courses, vitesseKmh, aBordMax, java.time.Instant.EPOCH, Map.of());
+    }
+
+    /** Variante quartier : chaque remise, arrêt compris, doit précéder la promesse individuelle. */
+    public static Optional<Resultat> optimiser(Point depart, List<Course> courses, double vitesseKmh, Duration aBordMax,
+                                               java.time.Instant heureDepart, Map<Long, java.time.Instant> promesses) {
         if (courses == null || courses.isEmpty() || vitesseKmh <= 0) return Optional.empty();
         if (courses.size() > 4) throw new IllegalArgumentException("Un lot compte au plus 4 commandes.");
-        Recherche r = new Recherche(courses, vitesseKmh, aBordMax);
+        Recherche r = new Recherche(courses, vitesseKmh, aBordMax, heureDepart, promesses);
         r.explorer(depart, new ArrayList<>(), new HashMap<>(), Duration.ZERO, 0, new HashSet<>(), new HashSet<>());
         return Optional.ofNullable(r.meilleur);
     }
@@ -91,12 +97,16 @@ public final class Itineraire {
         private final List<Course> courses;
         private final double vitesse;
         private final Duration aBordMax;
+        private final java.time.Instant heureDepart;
+        private final Map<Long, java.time.Instant> promesses;
         private Resultat meilleur;
 
-        Recherche(List<Course> courses, double vitesse, Duration aBordMax) {
+        Recherche(List<Course> courses, double vitesse, Duration aBordMax, java.time.Instant heureDepart, Map<Long, java.time.Instant> promesses) {
             this.courses = courses;
             this.vitesse = vitesse;
             this.aBordMax = aBordMax;
+            this.heureDepart = heureDepart;
+            this.promesses = promesses;
         }
 
         void explorer(Point position, List<Etape> etapes, Map<Long, Duration> collecteLe, Duration ecoule, double km,
@@ -126,6 +136,8 @@ public final class Itineraire {
                              Duration ecoule, double km, Set<Long> collectees, Set<Long> livrees) {
             double distance = position == null ? 0 : km(position, cible);
             Duration arrivee = position == null ? ecoule : ecoule.plus(trajet(position, cible, vitesse));
+            if (type == TypeEtape.LIVRAISON && promesses.containsKey(c.commandeId())
+                    && heureDepart.plus(arrivee).plus(TEMPS_ARRET).isAfter(promesses.get(c.commandeId()))) return;
             if (type == TypeEtape.LIVRAISON && !c.aBord() && aBordMax != null
                     && arrivee.minus(collecteLe.get(c.commandeId())).compareTo(aBordMax) > 0) return;   // colis trop longtemps a bord
             etapes.add(new Etape(c.commandeId(), type, cible, arrivee));

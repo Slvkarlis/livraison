@@ -104,6 +104,7 @@ public class RemiseLivreurService {
 
     /** Total des commandes marketplace ; anciennes livraisons : montant a collecter. */
     static BigDecimal montantAttendu(Livraison c) {
+        if (c.getModePaiement() == ModePaiement.CARTE) return BigDecimal.ZERO.setScale(3);
         BigDecimal total = c.getTotal() != null ? c.getTotal() : BigDecimal.valueOf(c.getMontantACollecter());
         return total.setScale(3, RoundingMode.HALF_UP);
     }
